@@ -84,19 +84,21 @@
 
 
 
-<meta name="description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick">
+<meta name="description" content="捣鼓了两天自己的直播通项目，终于大概有了雏形，在主页的视图函数中集成了爬虫，爬取用户关注主播的在线hangtag。但在运行时发现打开主页时延迟明显，有时候竟然长达数秒，突然想起了之前了解到的celery，试试能不能解决这一问题。
+celery是什么关于celery的知识全部在网上了解，星星点点，但还是有所收获。celery是一个典型的异步任务系统，在应用上下文之外执行任务，将消耗资源的东西通通交给">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hello World">
-<meta property="og:url" content="http://yoursite.com/2017/01/07/hello-world/index.html">
+<meta property="og:title" content="celery初探">
+<meta property="og:url" content="http://yoursite.com/2017/01/11/celery初探/index.html">
 <meta property="og:site_name" content="AwakeBird">
-<meta property="og:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick">
-<meta property="og:updated_time" content="2017-01-07T15:55:10.628Z">
+<meta property="og:description" content="捣鼓了两天自己的直播通项目，终于大概有了雏形，在主页的视图函数中集成了爬虫，爬取用户关注主播的在线hangtag。但在运行时发现打开主页时延迟明显，有时候竟然长达数秒，突然想起了之前了解到的celery，试试能不能解决这一问题。
+celery是什么关于celery的知识全部在网上了解，星星点点，但还是有所收获。celery是一个典型的异步任务系统，在应用上下文之外执行任务，将消耗资源的东西通通交给">
+<meta property="og:image" content="http://i1.piimg.com/567571/88020dc0eeab8185.png">
+<meta property="og:updated_time" content="2017-01-11T13:28:32.443Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Hello World">
-<meta name="twitter:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick">
+<meta name="twitter:title" content="celery初探">
+<meta name="twitter:description" content="捣鼓了两天自己的直播通项目，终于大概有了雏形，在主页的视图函数中集成了爬虫，爬取用户关注主播的在线hangtag。但在运行时发现打开主页时延迟明显，有时候竟然长达数秒，突然想起了之前了解到的celery，试试能不能解决这一问题。
+celery是什么关于celery的知识全部在网上了解，星星点点，但还是有所收获。celery是一个典型的异步任务系统，在应用上下文之外执行任务，将消耗资源的东西通通交给">
+<meta name="twitter:image" content="http://i1.piimg.com/567571/88020dc0eeab8185.png">
 
 
 
@@ -124,13 +126,13 @@ Quick">
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2017/01/07/hello-world/"/>
+  <link rel="canonical" href="http://yoursite.com/2017/01/11/celery初探/"/>
 
 
 
 
 
-  <title> Hello World | AwakeBird </title>
+  <title> celery初探 | AwakeBird </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -243,7 +245,7 @@ Quick">
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/07/hello-world/">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/11/celery初探/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="Cui1994">
@@ -267,7 +269,7 @@ Quick">
             
             
               
-                Hello World
+                celery初探
               
             
           </h1>
@@ -282,8 +284,8 @@ Quick">
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-07T23:55:10+08:00">
-                2017-01-07
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-11T20:51:23+08:00">
+                2017-01-11
               </time>
             
 
@@ -301,8 +303,8 @@ Quick">
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2017/01/07/hello-world/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/01/07/hello-world/" itemprop="commentCount"></span>
+                <a href="/2017/01/11/celery初探/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/01/11/celery初探/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -328,15 +330,41 @@ Quick">
       
 
       
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
+        <p>捣鼓了两天自己的直播通项目，终于大概有了雏形，在主页的视图函数中集成了爬虫，爬取用户关注主播的在线hangtag。但在运行时发现打开主页时延迟明显，有时候竟然长达数秒，突然想起了之前了解到的celery，试试能不能解决这一问题。</p>
+<h1 id="celery是什么"><a href="#celery是什么" class="headerlink" title="celery是什么"></a>celery是什么</h1><p>关于celery的知识全部在网上了解，星星点点，但还是有所收获。celery是一个典型的异步任务系统，在应用上下文之外执行任务，将消耗资源的东西通通交给celery来做，可以让主机迅速向应客户端的请求。<br>celery有三个核心组件：</p>
+<ul>
+<li>客户端：在flask系统中和flask一起运行</li>
+<li>workers：就是传说中的second terminal，用来执行异步任务，可以有多个</li>
+<li>消息代理：用来进行celery的通信，一般用redis。</li>
+</ul>
+<p>为什么用redis？因为其实时性强，一般用作数据频繁插入，更新或者删除的任务中，以减少对数据库的操作</p>
+<h1 id="让celery跑起来"><a href="#让celery跑起来" class="headerlink" title="让celery跑起来"></a>让celery跑起来</h1><p>这部分还是比较简单的，有几个主要步骤。</p>
+<ul>
+<li><p>安装之后要在配置文件中写入用作消息代理的redis的服务器，两行搞定</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">CELERY_BROKER_URL = &apos;redis://localhost:6379/0&apos;</div><div class="line">CELERY_RESULT_BACKEND = &apos;redis://localhost:6379/0&apos;</div></pre></td></tr></table></figure>
+</li>
+<li><p>之后创建celery实例，这里是直接抄来的，至于原因还没搞懂</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">celery = Celery(__name__, broker=Config.CELERY_BROKER_URL)</div><div class="line">celery.conf.update(app.config)</div></pre></td></tr></table></figure>
+</li>
+<li><p>创建celery任务，使用装饰器，先跑起来再说</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">@celery.task(name=&apos;circle_task&apos;)</div><div class="line">def circletask():</div><div class="line">	logging.info(&apos;lalala&apos;)</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>之后满怀信心，直接打开三个终端开始有样学样，第一个打开redis-server，第二个运行app，第三个打开celery，抄了个命令<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ celery -A manage.celery worker --loglevel=info</div></pre></td></tr></table></figure></p>
+<p>然而打开后发现没有动静，才想起并没有提供任务执行的delay。随即又想到我的目的是进行计划任务，让任务可以固定时间重复进行，直接开始搜celery进行实现的方法，还好google够强大，又找到了下面的配置方法：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">CELERYBEAT_SCHEDULE = &#123;</div><div class="line">        &apos;every-minute&apos;: &#123;</div><div class="line">            &apos;task&apos;: &apos;circle_task&apos;,</div><div class="line">            #&apos;schedule&apos;: crontab(minute=&apos;*/1&apos;),</div><div class="line">            # &apos;args&apos;: (1,2),</div><div class="line">            &apos;schedule&apos;: timedelta(seconds=60)</div><div class="line">        	&#125;,</div><div class="line">    	&#125;</div></pre></td></tr></table></figure></p>
+<p>至于里面的参数，只知道timedelta和crontab都可以设置间隔时间，其他的没有深入了解。将代码改好后运行celery，问题来了。</p>
+<ul>
+<li>首先是celery说任务方法没有注册：<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Received unregistered task of type &apos;circle_task&apos;.</div><div class="line">The message has been ignored and discarded.</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>在stack overflow溜达了一圈，终于找到解决方法，在配置文件中声明这个方法即可，于是：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">CELERY_IMPORTS = [&apos;app.task&apos;]</div></pre></td></tr></table></figure></p>
+<p>解决成功。这里千万注意加app，天知道我经历了什么。</p>
+<ul>
+<li>之后运行celery，终于不报错了天呐，屏幕上也出现了lalala的logging，这还说什么，改代码！在task中添加了之前在index视图函数中的爬虫部分，运行celery，好，可以运行。等等，这一大片红字是什么！<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">&apos;RuntimeError: application not registered on db </div><div class="line">           instance and no application bound to current context</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>原来是没有程序上下文不能进行sqlalchemy的操作，于是，在程序段前添加<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">with app.app_context():</div></pre></td></tr></table></figure></p>
+<p>成功！<br><img src="http://i1.piimg.com/567571/88020dc0eeab8185.png" alt="和发麻麻合影留念"><br>最后终于成功看到了模拟上线提醒的logging字样，激动万分，编程的大起大落真是…哈！</p>
 
       
     </div>
@@ -363,15 +391,15 @@ Quick">
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
+              <a href="/2017/01/09/redis/" rel="next" title="redis">
+                <i class="fa fa-chevron-left"></i> redis
+              </a>
+            
           </div>
 
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2017/01/08/重新认识后端/" rel="prev" title="重新认识后端">
-                重新认识后端 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -397,8 +425,8 @@ Quick">
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2017/01/07/hello-world/"
-           data-title="Hello World" data-url="http://yoursite.com/2017/01/07/hello-world/">
+      <div class="ds-thread" data-thread-key="2017/01/11/celery初探/"
+           data-title="celery初探" data-url="http://yoursite.com/2017/01/11/celery初探/">
       </div>
     
   </div>
@@ -484,7 +512,7 @@ Quick">
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Quick-Start"><span class="nav-number">1.</span> <span class="nav-text">Quick Start</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Create-a-new-post"><span class="nav-number">1.1.</span> <span class="nav-text">Create a new post</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Run-server"><span class="nav-number">1.2.</span> <span class="nav-text">Run server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Generate-static-files"><span class="nav-number">1.3.</span> <span class="nav-text">Generate static files</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Deploy-to-remote-sites"><span class="nav-number">1.4.</span> <span class="nav-text">Deploy to remote sites</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#celery是什么"><span class="nav-number">1.</span> <span class="nav-text">celery是什么</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#让celery跑起来"><span class="nav-number">2.</span> <span class="nav-text">让celery跑起来</span></a></li></ol></div>
             
 
           </div>
