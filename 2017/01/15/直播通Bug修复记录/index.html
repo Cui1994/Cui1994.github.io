@@ -85,27 +85,27 @@
 
 
 <meta name="description" content="此文章用来记录直播通上线后遇到的各种Bug和解决方案，不定期更新。
-2017.1.15网络搜索模块龙珠搜索结果未显示
+2017/01/15网络搜索模块龙珠搜索结果未显示
 排查：app.Searh中search_longzhu函数出现问题，如果搜索主播未上线就不会出现主播搜索结果。
 
-解决方案：因为抓包网址返回的json数据中如果主播上线总是排在第一位的，因此修改函数直接将所抓数据的第一个默认为主播返回搜索结果，当然这样也有问题，就是不管搜索的是不是">
+解决方案：因为抓包网址返回的json数据中如果主播上线总是排在第一位的，因此修改函数直接将所抓数据的第一个默认为主播返回搜索结果，当然这样也有问题，就是不管搜索的是不">
 <meta property="og:type" content="article">
 <meta property="og:title" content="直播通Bug修复记录">
 <meta property="og:url" content="http://yoursite.com/2017/01/15/直播通Bug修复记录/index.html">
 <meta property="og:site_name" content="AwakeBird">
 <meta property="og:description" content="此文章用来记录直播通上线后遇到的各种Bug和解决方案，不定期更新。
-2017.1.15网络搜索模块龙珠搜索结果未显示
+2017/01/15网络搜索模块龙珠搜索结果未显示
 排查：app.Searh中search_longzhu函数出现问题，如果搜索主播未上线就不会出现主播搜索结果。
 
-解决方案：因为抓包网址返回的json数据中如果主播上线总是排在第一位的，因此修改函数直接将所抓数据的第一个默认为主播返回搜索结果，当然这样也有问题，就是不管搜索的是不是">
-<meta property="og:updated_time" content="2017-01-15T12:19:25.368Z">
+解决方案：因为抓包网址返回的json数据中如果主播上线总是排在第一位的，因此修改函数直接将所抓数据的第一个默认为主播返回搜索结果，当然这样也有问题，就是不管搜索的是不">
+<meta property="og:updated_time" content="2017-01-15T19:20:02.292Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="直播通Bug修复记录">
 <meta name="twitter:description" content="此文章用来记录直播通上线后遇到的各种Bug和解决方案，不定期更新。
-2017.1.15网络搜索模块龙珠搜索结果未显示
+2017/01/15网络搜索模块龙珠搜索结果未显示
 排查：app.Searh中search_longzhu函数出现问题，如果搜索主播未上线就不会出现主播搜索结果。
 
-解决方案：因为抓包网址返回的json数据中如果主播上线总是排在第一位的，因此修改函数直接将所抓数据的第一个默认为主播返回搜索结果，当然这样也有问题，就是不管搜索的是不是">
+解决方案：因为抓包网址返回的json数据中如果主播上线总是排在第一位的，因此修改函数直接将所抓数据的第一个默认为主播返回搜索结果，当然这样也有问题，就是不管搜索的是不">
 
 
 
@@ -338,13 +338,13 @@
 
       
         <p>此文章用来记录直播通上线后遇到的各种Bug和解决方案，不定期更新。</p>
-<h1 id="2017-1-15"><a href="#2017-1-15" class="headerlink" title="2017.1.15"></a>2017.1.15</h1><h3 id="网络搜索模块龙珠搜索结果未显示"><a href="#网络搜索模块龙珠搜索结果未显示" class="headerlink" title="网络搜索模块龙珠搜索结果未显示"></a>网络搜索模块龙珠搜索结果未显示</h3><ul>
+<h1 id="2017-01-15"><a href="#2017-01-15" class="headerlink" title="2017/01/15"></a>2017/01/15</h1><h2 id="网络搜索模块龙珠搜索结果未显示"><a href="#网络搜索模块龙珠搜索结果未显示" class="headerlink" title="网络搜索模块龙珠搜索结果未显示"></a>网络搜索模块龙珠搜索结果未显示</h2><ul>
 <li><p>排查：<br><code>app.Searh</code>中<code>search_longzhu</code>函数出现问题，如果搜索主播未上线就不会出现主播搜索结果。</p>
 </li>
 <li><p>解决方案：<br>因为抓包网址返回的json数据中如果主播上线总是排在第一位的，因此修改函数直接将所抓数据的第一个默认为主播返回搜索结果，当然这样也有问题，就是不管搜索的是不是龙珠主播总会出现一个龙珠搜索结果，不过应该不影响使用。</p>
 </li>
 </ul>
-<h3 id="主播状态验证模块熊猫主播的状态出错"><a href="#主播状态验证模块熊猫主播的状态出错" class="headerlink" title="主播状态验证模块熊猫主播的状态出错"></a>主播状态验证模块熊猫主播的状态出错</h3><ul>
+<h2 id="主播状态验证模块熊猫主播的状态出错"><a href="#主播状态验证模块熊猫主播的状态出错" class="headerlink" title="主播状态验证模块熊猫主播的状态出错"></a>主播状态验证模块熊猫主播的状态出错</h2><ul>
 <li><p>排查：<br>查看<code>LiveChecker</code>的日志记录发现访问熊猫网址时出现网络错误<code>max retries exceeded with url</code></p>
 </li>
 <li><p>解决方案：<br>在网上发现了错误原因，是链接数量太多没有关闭。直接借用其解决方案，增加最大重连次数，并设置http connection的keep-alive状态为关闭。在<code>LiveChecker</code>中加入如下代码：</p>
@@ -352,10 +352,28 @@
 </li>
 </ul>
 <p>目前还未发现问题。</p>
-<h3 id="Hot页面出现同名主播"><a href="#Hot页面出现同名主播" class="headerlink" title="Hot页面出现同名主播"></a>Hot页面出现同名主播</h3><ul>
+<h2 id="Hot页面出现同名主播"><a href="#Hot页面出现同名主播" class="headerlink" title="Hot页面出现同名主播"></a>Hot页面出现同名主播</h2><ul>
 <li><p>排查<br>出现同名的原因：如果在网络搜索结果中出现数据库中已有的主播并添加关注时，<code>main.view</code>中的<code>add_new</code>函数会创建一个一模一样的主播，因此出现同名状态。</p>
 </li>
 <li><p>解决方案<br>这个问题比较简单，只要在<code>add_new</code>函数中添加两行判断函数即可，如果数据库中可以搜到<code>name</code>和<code>tv</code>都相同的主播，则不会新建主播对象，而是对数据库中已有的主播对象执行<code>add_user</code>方法即可。</p>
+</li>
+</ul>
+<h1 id="2017-01-16"><a href="#2017-01-16" class="headerlink" title="2017/01/16"></a>2017/01/16</h1><h2 id="龙珠主播状态爬虫再出问题"><a href="#龙珠主播状态爬虫再出问题" class="headerlink" title="龙珠主播状态爬虫再出问题"></a>龙珠主播状态爬虫再出问题</h2><ul>
+<li><p>排查<br>龙珠主播状态爬虫再次挂掉，分析原因可能是因为爬虫每次要访问两次龙珠网站，因而容易挂掉。</p>
+</li>
+<li><p>解决方案<br>重写龙珠这部分代码，用Search中龙珠的api中返回的isLive数据。</p>
+</li>
+</ul>
+<h2 id="遇到了最大的一个Bug：celery的任务重复执行严重"><a href="#遇到了最大的一个Bug：celery的任务重复执行严重" class="headerlink" title="遇到了最大的一个Bug：celery的任务重复执行严重"></a>遇到了最大的一个Bug：celery的任务重复执行严重</h2><ul>
+<li><p>排查<br>我一直以为爬虫老是挂掉是因为爬虫代码问题，直到刚才打开服务器的celery.err记录，我的天呐，惊呆我了。celery的task重复执行程度让人瞠目结舌，本来5分钟一次的爬虫硬生生跑成了10秒钟一次。天知道我当时有多失落，而且到网上搜相关问题根本没有。这是直播通的核心部分，不能修复意味着什么？</p>
+</li>
+<li><p>解决方案<br>一篇文章救了我。翻了很久才翻到，看了之后才知道celery定位是实时的异步队列，因此对这种长时间定时的支持并不是很好。当任务的执行时间超过<code>visibility_timeout</code>的时间时，celery就会认为这个任务没有被worker执行成功，重新分给别的worker执行，然而调整visibility参数也无济于事，还是重复执行。于是根据文章作者给的经验，我在我的task函数中加入了一段判断代码，向redis中写入一个唯一的<code>time</code>key存储当前的时间戳，并判断当前时间是否离该时间戳有5分钟，如果有，再执行循环任务，并重新写入<code>time</code>当前的时间戳，这样，及时celery任务重复执行，但是我们的实际代码依然是5分钟跑一次，大赞！</p>
+</li>
+</ul>
+<h2 id="熊猫及龙珠直播状态出错"><a href="#熊猫及龙珠直播状态出错" class="headerlink" title="熊猫及龙珠直播状态出错"></a>熊猫及龙珠直播状态出错</h2><ul>
+<li><p>排查<br>这里又发生了奇怪的事，logger并没有记录爬虫链接出错，但主播状态明显错误。测试了好久，终于发现是<code>LiveChecker</code>中主播状态只更新True不会更新False，意思就是主播上线后状态就永远不会改变。不只是熊猫龙珠，全民战旗都是如此。天呐，原来在这儿！</p>
+</li>
+<li><p>解决方案<br>在代码中添加了主播状态为False的返回代码，done！</p>
 </li>
 </ul>
 
@@ -509,7 +527,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#2017-1-15"><span class="nav-number">1.</span> <span class="nav-text">2017.1.15</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#网络搜索模块龙珠搜索结果未显示"><span class="nav-number">1.0.1.</span> <span class="nav-text">网络搜索模块龙珠搜索结果未显示</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#主播状态验证模块熊猫主播的状态出错"><span class="nav-number">1.0.2.</span> <span class="nav-text">主播状态验证模块熊猫主播的状态出错</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hot页面出现同名主播"><span class="nav-number">1.0.3.</span> <span class="nav-text">Hot页面出现同名主播</span></a></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#2017-01-15"><span class="nav-number">1.</span> <span class="nav-text">2017/01/15</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#网络搜索模块龙珠搜索结果未显示"><span class="nav-number">1.1.</span> <span class="nav-text">网络搜索模块龙珠搜索结果未显示</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#主播状态验证模块熊猫主播的状态出错"><span class="nav-number">1.2.</span> <span class="nav-text">主播状态验证模块熊猫主播的状态出错</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Hot页面出现同名主播"><span class="nav-number">1.3.</span> <span class="nav-text">Hot页面出现同名主播</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2017-01-16"><span class="nav-number">2.</span> <span class="nav-text">2017/01/16</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#龙珠主播状态爬虫再出问题"><span class="nav-number">2.1.</span> <span class="nav-text">龙珠主播状态爬虫再出问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#遇到了最大的一个Bug：celery的任务重复执行严重"><span class="nav-number">2.2.</span> <span class="nav-text">遇到了最大的一个Bug：celery的任务重复执行严重</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#熊猫及龙珠直播状态出错"><span class="nav-number">2.3.</span> <span class="nav-text">熊猫及龙珠直播状态出错</span></a></li></ol></li></ol></div>
             
 
           </div>
