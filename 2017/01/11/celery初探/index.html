@@ -93,7 +93,7 @@ celery是什么关于celery的知识全部在网上了解，星星点点，但�
 <meta property="og:description" content="捣鼓了两天自己的直播通项目，终于大概有了雏形，在主页的视图函数中集成了爬虫，爬取用户关注主播的在线hangtag。但在运行时发现打开主页时延迟明显，有时候竟然长达数秒，突然想起了之前了解到的celery，试试能不能解决这一问题。
 celery是什么关于celery的知识全部在网上了解，星星点点，但还是有所收获。celery是一个典型的异步任务系统，在应用上下文之外执行任务，将消耗资源的东西通通交给">
 <meta property="og:image" content="http://i1.piimg.com/567571/88020dc0eeab8185.png">
-<meta property="og:updated_time" content="2017-01-11T13:36:42.095Z">
+<meta property="og:updated_time" content="2017-01-12T05:19:37.716Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="celery初探">
 <meta name="twitter:description" content="捣鼓了两天自己的直播通项目，终于大概有了雏形，在主页的视图函数中集成了爬虫，爬取用户关注主播的在线hangtag。但在运行时发现打开主页时延迟明显，有时候竟然长达数秒，突然想起了之前了解到的celery，试试能不能解决这一问题。
@@ -352,7 +352,7 @@ celery是什么关于celery的知识全部在网上了解，星星点点，但�
 </ul>
 <p>之后满怀信心，直接打开三个终端开始有样学样，第一个打开redis-server，第二个运行app，第三个打开celery，抄了个命令<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ celery -A manage.celery worker --loglevel=info</div></pre></td></tr></table></figure></p>
 <p>然而打开后发现没有动静，才想起并没有提供任务执行的delay。随即又想到我的目的是进行计划任务，让任务可以固定时间重复进行，直接开始搜celery进行实现的方法，还好google够强大，又找到了下面的配置方法：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">CELERYBEAT_SCHEDULE = &#123;</div><div class="line">        &apos;every-minute&apos;: &#123;</div><div class="line">            &apos;task&apos;: &apos;circle_task&apos;,</div><div class="line">            #&apos;schedule&apos;: crontab(minute=&apos;*/1&apos;),</div><div class="line">            # &apos;args&apos;: (1,2),</div><div class="line">            &apos;schedule&apos;: timedelta(seconds=60)</div><div class="line">        	&#125;,</div><div class="line">    	&#125;</div></pre></td></tr></table></figure></p>
-<p>运行命令也变成了：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ celery -A manage.celery worker --loglevel=info --beat</div></pre></td></tr></table></figure></p>
+<p>运行命令也变成了：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ celery -A manage.celery worker --loglevel=info --beat</div><div class="line">$ celery -A proj worker -B -l info</div></pre></td></tr></table></figure></p>
 <p>至于里面的参数，只知道timedelta和crontab都可以设置间隔时间，其他的没有深入了解。将代码改好后运行celery，问题来了。</p>
 <ul>
 <li>首先是celery说任务方法没有注册：<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Received unregistered task of type &apos;circle_task&apos;.</div><div class="line">The message has been ignored and discarded.</div></pre></td></tr></table></figure>
@@ -401,6 +401,10 @@ celery是什么关于celery的知识全部在网上了解，星星点点，但�
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/01/15/直播通Bug修复记录/" rel="prev" title="直播通Bug修复记录">
+                直播通Bug修复记录 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -474,7 +478,7 @@ celery是什么关于celery的知识全部在网上了解，星星点点，但�
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-count">5</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>

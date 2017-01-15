@@ -84,19 +84,28 @@
 
 
 
-<meta name="description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick">
+<meta name="description" content="此文章用来记录直播通上线后遇到的各种Bug和解决方案，不定期更新。
+2017.1.15网络搜索模块龙珠搜索结果未显示
+排查：app.Searh中search_longzhu函数出现问题，如果搜索主播未上线就不会出现主播搜索结果。
+
+解决方案：因为抓包网址返回的json数据中如果主播上线总是排在第一位的，因此修改函数直接将所抓数据的第一个默认为主播返回搜索结果，当然这样也有问题，就是不管搜索的是不是">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hello World">
-<meta property="og:url" content="http://yoursite.com/2017/01/07/hello-world/index.html">
+<meta property="og:title" content="直播通Bug修复记录">
+<meta property="og:url" content="http://yoursite.com/2017/01/15/直播通Bug修复记录/index.html">
 <meta property="og:site_name" content="AwakeBird">
-<meta property="og:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick">
-<meta property="og:updated_time" content="2017-01-07T15:55:10.628Z">
+<meta property="og:description" content="此文章用来记录直播通上线后遇到的各种Bug和解决方案，不定期更新。
+2017.1.15网络搜索模块龙珠搜索结果未显示
+排查：app.Searh中search_longzhu函数出现问题，如果搜索主播未上线就不会出现主播搜索结果。
+
+解决方案：因为抓包网址返回的json数据中如果主播上线总是排在第一位的，因此修改函数直接将所抓数据的第一个默认为主播返回搜索结果，当然这样也有问题，就是不管搜索的是不是">
+<meta property="og:updated_time" content="2017-01-15T12:19:25.368Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Hello World">
-<meta name="twitter:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick">
+<meta name="twitter:title" content="直播通Bug修复记录">
+<meta name="twitter:description" content="此文章用来记录直播通上线后遇到的各种Bug和解决方案，不定期更新。
+2017.1.15网络搜索模块龙珠搜索结果未显示
+排查：app.Searh中search_longzhu函数出现问题，如果搜索主播未上线就不会出现主播搜索结果。
+
+解决方案：因为抓包网址返回的json数据中如果主播上线总是排在第一位的，因此修改函数直接将所抓数据的第一个默认为主播返回搜索结果，当然这样也有问题，就是不管搜索的是不是">
 
 
 
@@ -124,13 +133,13 @@ Quick">
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2017/01/07/hello-world/"/>
+  <link rel="canonical" href="http://yoursite.com/2017/01/15/直播通Bug修复记录/"/>
 
 
 
 
 
-  <title> Hello World | AwakeBird </title>
+  <title> 直播通Bug修复记录 | AwakeBird </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -243,7 +252,7 @@ Quick">
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/07/hello-world/">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/15/直播通Bug修复记录/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="Cui1994">
@@ -267,7 +276,7 @@ Quick">
             
             
               
-                Hello World
+                直播通Bug修复记录
               
             
           </h1>
@@ -282,8 +291,8 @@ Quick">
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-07T23:55:10+08:00">
-                2017-01-07
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-15T19:59:48+08:00">
+                2017-01-15
               </time>
             
 
@@ -301,8 +310,8 @@ Quick">
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2017/01/07/hello-world/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/01/07/hello-world/" itemprop="commentCount"></span>
+                <a href="/2017/01/15/直播通Bug修复记录/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/01/15/直播通Bug修复记录/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -328,15 +337,27 @@ Quick">
       
 
       
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
+        <p>此文章用来记录直播通上线后遇到的各种Bug和解决方案，不定期更新。</p>
+<h1 id="2017-1-15"><a href="#2017-1-15" class="headerlink" title="2017.1.15"></a>2017.1.15</h1><h3 id="网络搜索模块龙珠搜索结果未显示"><a href="#网络搜索模块龙珠搜索结果未显示" class="headerlink" title="网络搜索模块龙珠搜索结果未显示"></a>网络搜索模块龙珠搜索结果未显示</h3><ul>
+<li><p>排查：<br><code>app.Searh</code>中<code>search_longzhu</code>函数出现问题，如果搜索主播未上线就不会出现主播搜索结果。</p>
+</li>
+<li><p>解决方案：<br>因为抓包网址返回的json数据中如果主播上线总是排在第一位的，因此修改函数直接将所抓数据的第一个默认为主播返回搜索结果，当然这样也有问题，就是不管搜索的是不是龙珠主播总会出现一个龙珠搜索结果，不过应该不影响使用。</p>
+</li>
+</ul>
+<h3 id="主播状态验证模块熊猫主播的状态出错"><a href="#主播状态验证模块熊猫主播的状态出错" class="headerlink" title="主播状态验证模块熊猫主播的状态出错"></a>主播状态验证模块熊猫主播的状态出错</h3><ul>
+<li><p>排查：<br>查看<code>LiveChecker</code>的日志记录发现访问熊猫网址时出现网络错误<code>max retries exceeded with url</code></p>
+</li>
+<li><p>解决方案：<br>在网上发现了错误原因，是链接数量太多没有关闭。直接借用其解决方案，增加最大重连次数，并设置http connection的keep-alive状态为关闭。在<code>LiveChecker</code>中加入如下代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">requests.adapters.DEFAULT_RETRIES = 5</div><div class="line">s.keep_alive = False</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>目前还未发现问题。</p>
+<h3 id="Hot页面出现同名主播"><a href="#Hot页面出现同名主播" class="headerlink" title="Hot页面出现同名主播"></a>Hot页面出现同名主播</h3><ul>
+<li><p>排查<br>出现同名的原因：如果在网络搜索结果中出现数据库中已有的主播并添加关注时，<code>main.view</code>中的<code>add_new</code>函数会创建一个一模一样的主播，因此出现同名状态。</p>
+</li>
+<li><p>解决方案<br>这个问题比较简单，只要在<code>add_new</code>函数中添加两行判断函数即可，如果数据库中可以搜到<code>name</code>和<code>tv</code>都相同的主播，则不会新建主播对象，而是对数据库中已有的主播对象执行<code>add_user</code>方法即可。</p>
+</li>
+</ul>
 
       
     </div>
@@ -363,15 +384,15 @@ Quick">
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
+              <a href="/2017/01/11/celery初探/" rel="next" title="celery初探">
+                <i class="fa fa-chevron-left"></i> celery初探
+              </a>
+            
           </div>
 
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2017/01/08/重新认识后端/" rel="prev" title="重新认识后端">
-                重新认识后端 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -397,8 +418,8 @@ Quick">
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2017/01/07/hello-world/"
-           data-title="Hello World" data-url="http://yoursite.com/2017/01/07/hello-world/">
+      <div class="ds-thread" data-thread-key="2017/01/15/直播通Bug修复记录/"
+           data-title="直播通Bug修复记录" data-url="http://yoursite.com/2017/01/15/直播通Bug修复记录/">
       </div>
     
   </div>
@@ -484,7 +505,7 @@ Quick">
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Quick-Start"><span class="nav-number">1.</span> <span class="nav-text">Quick Start</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Create-a-new-post"><span class="nav-number">1.1.</span> <span class="nav-text">Create a new post</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Run-server"><span class="nav-number">1.2.</span> <span class="nav-text">Run server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Generate-static-files"><span class="nav-number">1.3.</span> <span class="nav-text">Generate static files</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Deploy-to-remote-sites"><span class="nav-number">1.4.</span> <span class="nav-text">Deploy to remote sites</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#2017-1-15"><span class="nav-number">1.</span> <span class="nav-text">2017.1.15</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#网络搜索模块龙珠搜索结果未显示"><span class="nav-number">1.0.1.</span> <span class="nav-text">网络搜索模块龙珠搜索结果未显示</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#主播状态验证模块熊猫主播的状态出错"><span class="nav-number">1.0.2.</span> <span class="nav-text">主播状态验证模块熊猫主播的状态出错</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hot页面出现同名主播"><span class="nav-number">1.0.3.</span> <span class="nav-text">Hot页面出现同名主播</span></a></li></ol></li></ol></li></ol></div>
             
 
           </div>
