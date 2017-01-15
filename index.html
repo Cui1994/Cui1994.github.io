@@ -241,6 +241,646 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/15/关于直播通/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Cui1994">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.gif">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AwakeBird">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AwakeBird" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/01/15/关于直播通/" itemprop="url">
+                  关于直播通
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-15T23:09:00+08:00">
+                2017-01-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/01/15/关于直播通/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/01/15/关于直播通/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="直播通是什么？"><a href="#直播通是什么？" class="headerlink" title="直播通是什么？"></a>直播通是什么？</h1><p>直播通是一款实现跨平台主播信息集合的web应用，在这里你可以：</p>
+<ul>
+<li>实现跨平台主播搜索</li>
+<li>实现不同平台主播的统一关注</li>
+<li>实现主播的上线提醒通知</li>
+<li>一键进入ta的直播间</li>
+</ul>
+<p>简单来说，就是将多家平台的主播搜索和关注系统集合到了一起。</p>
+<p>作为我个人来讲，这款web应用是我学习flask的第一个独立项目，也是我的第一个上线网站。从有想法，到最后部署成功，一共用了差不多一周时间。这其中的苦辣辛酸，波澜起伏想必只有各位开发者心里清楚，于是想写点东西记录下这个自己的处女作。</p>
+<h1 id="设想？"><a href="#设想？" class="headerlink" title="设想？"></a>设想？</h1><p>当我在琢磨用Python和flask能做什么事的时候，最开始也是陷入了惯性陷阱，就是做一个和书上差不多的个人博客，于是我决定仿个知乎。可我又不甘心于此，想把前端做的漂亮一点，然而这是个大坑，项目进行了几天，发现几乎多半时间都在和前端打交道，可我明明做的是后端啊，遂弃坑，想找个有趣点的东西做。这中间还要感谢老同学的提醒：和后端没关系的东西可以通通去掉。没错！</p>
+<p>于是，我从需求出发，考虑能否做一个解决实际问题的东西，于是想到了直播平台。</p>
+<p>看直播是一键很有趣的事情，尤其像嫖老师这种（捂脸），然而各大平台的竞争却给我们带来了不少困扰，之前只需要看斗鱼就可以了，喜欢的主播基本都在斗鱼。之后发生的事情大家也都知道，各大平台疯狂砸钱挖人，于是你发现你喜欢的那些主播可能分布于不同平台。这个时候怎么办呢，把每个主播的直播间都加入收藏夹？（我的收藏夹可是要放1024的哪有这么些地方）每天打开各大平台主页看看有没有自己的主播？（现在热门的直播平台已经有6家了，这么搞得累死）关注主播的微博或者QQ群及时掌握上线信息？（我往往看到微博消息的时候都过去几个小时了）</p>
+<p>于是我有了计划：<strong>我要把几个直播平台集合在一起，让用户在一个页面就能看到自己想看到的全部主播的信息</strong></p>
+<p>有了需求之后，就要开始寻求解决方法，于是有了直播通的最初设想：</p>
+<ul>
+<li>爬虫爬去平台主播数据</li>
+<li>flask做后端</li>
+<li>bootstrap做前端（真的不想和前端打太多交道）</li>
+</ul>
+<p>刚开始做的时候只是希望能做到让用户在一个页面看到主播信息就好了，在项目进行过程中又逐渐加入了主播上线提醒，主播搜索的功能，来源于需求而高于需求啊同志们！</p>
+<h1 id="项目进行"><a href="#项目进行" class="headerlink" title="项目进行"></a>项目进行</h1><p>设想归设想，实际进行起来还是有不少麻烦。</p>
+<p>项目中的用户部分，我直接从《Flask Web开发》这本书中拿出代码，将用户权限等无用部分去掉，进行了一些翻译工作。</p>
+<p>爬虫部分，分为了三个部分，<code>getName</code>用来爬取对应平台和房间号的主播名字，<code>LiveChecker</code>用来爬去主播的在线状态，<code>Search</code>用来拿到平台上的搜索结果。本来想把前两个爬虫放到一起做的，后来发现个别平台并不能一次爬到主播的名字和在线状态，之后又考虑到在线状态要放到计划任务中做并集成上线提醒，所以分开。</p>
+<p>开始时主播的在线状态时放在视图函数中的，即每次打开主页都会跑一次爬虫，更新主播在线状态。后来发现这一过程响应很慢，网页转圈要转好久，这肯定是不行的。后来考虑解决方法，想到了<code>celery</code>。然而<code>celery</code>任务要和前端互动的话需要一些js知识，在这里我跳过了这个坑，直接用了<code>celery</code>中的计划任务部分，让爬虫每5分钟在后台跑一次更新主播状态，惊奇的发现这个过程中可以加入用户提醒，折腾一晚上后成功。之后主播在线状态完全由这个后台负责，用户再也不用等待服务器响应主播在线状态了。</p>
+<p>部署的相关问题可以参照我的另一篇博客 <a href="https://cui1994.github.io2017/01/15/项目部署路上的坑/" target="_blank" rel="external">直播通部署路上的坑</a></p>
+<p>其他的一些小问题，大都在网上和别人的项目中找到了解决方案。</p>
+<h1 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h1><p>搞这个东西的状态现在回头想想，其实也就是瞎折腾。作为一个初学者，过程中遇到很多问题，也发现还有许多东西需要学习。学习flask的时间不长，其中的一些东西理解还没有很到位，很多地方也只能照葫芦画瓢，代码也可能写的很丑。但就像在一间黑暗的房子里看到了一束光，我期待，很期待，走出房子的那天。</p>
+<p>崔同学<br>2017.1.16</p>
+<p>最后附上一张图作为项目进行的历程留念。<br><img src="http://i1.piimg.com/567571/b548186b12f74d4c.jpg" alt=""></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/15/flask项目中添加搜索功能/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Cui1994">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.gif">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AwakeBird">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AwakeBird" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/01/15/flask项目中添加搜索功能/" itemprop="url">
+                  flask项目中添加搜索功能
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-15T22:23:42+08:00">
+                2017-01-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/01/15/flask项目中添加搜索功能/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/01/15/flask项目中添加搜索功能/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>这部分内容的起因是我想在自己的flask项目直播通中加入一个搜索框用来搜索数据库中的主播姓名，于是在网上搜索<code>flask 搜索</code>关键字，当时没注意出来的都是全文搜索的教程，一步步做下来却发现原来根本和自己的需求不符合，可见弄清需求是多么重要啊！虽然走了点弯路，却意外发现了全文搜索的方法。说不定哪天就用到了呢哼～！</p>
+<h1 id="设置搜索框"><a href="#设置搜索框" class="headerlink" title="设置搜索框"></a>设置搜索框</h1><p>考虑到用户体验，这里想做导航栏上的搜索框，也就是全局搜索框，这就要用到flask中的程序上下文<code>g</code>，在处理请求时用作临时存储的对象，每次请求都会重设这个变量。很显然，这里就需要将一个搜索框设置成为程序上下文，具体做法如下。</p>
+<ul>
+<li>创建搜索框<br>很简单，在<code>forms</code>中添加<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">class SearchForm(Form):</div><div class="line">	search = StringField(u&apos;&apos;, validators=[Required()])</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>这里的Required是必须的，否则每次点击搜索按钮都会运行搜索函数，web性能下降。</p>
+<ul>
+<li>定义全局变量<br>在<code>main.view</code>中写入：<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">@main.before_app_request</div><div class="line">def before_request(): #定义全局变量</div><div class="line">    g.search_form = SearchForm()</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>就将一个搜索框设置成为了程序上下文变量。</p>
+<ul>
+<li><p>创建搜索和搜索结果的视图函数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">@main.route(&apos;/search&apos;, methods = [&apos;POST&apos;])</div><div class="line">def search():</div><div class="line">    if not g.search_form.validate_on_submit():</div><div class="line">        return redirect(url_for(&apos;.index&apos;))</div><div class="line">    return redirect(url_for(&apos;.search_results&apos;, query = g.search_form.search.data))</div><div class="line">@main.route(&apos;/search-results/&lt;query&gt;&apos;)</div><div class="line">def search_results(query):</div><div class="line">	pass</div></pre></td></tr></table></figure>
+</li>
+<li><p>在模板中添加搜索框</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">&lt;form class=&quot;navbar-form navbar-left&quot; action=&quot;&#123;&#123; url_for(&apos;main.search&apos;) &#125;&#125;&quot; method=&quot;post&quot; role=&quot;search&quot;&gt;</div><div class="line">	&lt;div class=&quot;form-group&quot;&gt;</div><div class="line">		&#123;&#123; g.search_form.hidden_tag() &#125;&#125;</div><div class="line">		&lt;input type=&quot;text&quot; name=&quot;search&quot; class=&quot;form-control&quot; placeholder=&quot;Search&quot;&gt;</div><div class="line">	&lt;/div&gt;</div><div class="line">	&lt;button type=&quot;submit&quot; class=&quot;btn btn-default&quot;&gt;搜索&lt;/button&gt;</div><div class="line">&lt;/form&gt;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>要注意flask_wtf的请求跨站保护和表单的name属性设置。</p>
+<p>这样，一个全局搜索框就创建好啦！</p>
+<h1 id="模糊搜索"><a href="#模糊搜索" class="headerlink" title="模糊搜索"></a>模糊搜索</h1><p>模糊搜索其实很简单，只要对数据库中进行模糊检索即可，一条语句适用于很多场合：<br><code>User.query.filter(User.name.like(&#39;%&#39;+query+&#39;%&#39;)).all()</code></p>
+<h1 id="全文搜索"><a href="#全文搜索" class="headerlink" title="全文搜索"></a>全文搜索</h1><p>虽然有的时候模糊搜索很方便，但对于某些任务，比如搜索出现某些关键词的文章的时候就不能用模糊搜索了，因为不管关键词顺序还是空格都会影响模糊搜索的查询结果，这个时候就需要用到全文搜索。</p>
+<p>这里有一款实现全文搜索的良好flask扩展：<code>WhooshAlchemy</code>，在项目中应用也只需要简单几步：</p>
+<ul>
+<li>安装： <code>pip install flask_whooshalchemy</code></li>
+<li>配置： 在配置文件<code>config.py</code>中写入要应用全文搜索的数据库路径：<code>WHOOSH_BASE=</code></li>
+<li>索引对象：在<code>models.py</code>中需要全文搜索的对象中加入<code>__searchable__=[&#39;COLUMN&#39;]</code>,COLOMN为需要搜索的列</li>
+<li>在manage中添加索引：<code>whooshalchemy.whoosh_index(app, Model)</code></li>
+<li>最后在搜索时加入<code>Model.query.whoosh_search(&#39;keyword&#39;).all()</code>即可</li>
+</ul>
+<p>注意：使用<code>whooshalchemy</code>进行搜索要现将数据库中的要搜索的对象实例全部删除，这样才能创建索引，否则会报错。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/15/logging模块的学习/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Cui1994">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.gif">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AwakeBird">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AwakeBird" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/01/15/logging模块的学习/" itemprop="url">
+                  logging模块的学习
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-15T22:08:39+08:00">
+                2017-01-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/01/15/logging模块的学习/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/01/15/logging模块的学习/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>这部分内容其实是补充的，用来记录项目进行过程中学习到的logging模块，摘自<a href="http://www.jb51.net/article/88449.htm" target="_blank" rel="external">这里</a>。出发点是为自己项目模块中的三个爬虫部分添加日志记录功能，顺便学习了模块的大概，幸好也没什么难的。</p>
+<h1 id="概况"><a href="#概况" class="headerlink" title="概况"></a>概况</h1><p>Python的logging模块是通用日志系统，通log4j的机制相似。其中包括几个主要部分：</p>
+<ul>
+<li>logger：提供日志接口，供程序使用</li>
+<li>handler：将日志记录发往合适的目的地</li>
+<li>filter：提供一种优雅的方式决定是否将日志发往目的地</li>
+<li>formatter：指定日志记录输出的具体格式</li>
+</ul>
+<h1 id="具体用法"><a href="#具体用法" class="headerlink" title="具体用法"></a>具体用法</h1><ul>
+<li>初始化： <code>logger = logging.getLogger(&quot;name&quot;)</code>, 这里的name就是要用应用到的模块的名字</li>
+<li>设置级别： <code>logger.setLevel(logging.DEBUG)</code>， logging有NOTSET &lt; DEBUG &lt; INFO &lt; WARNING &lt; ERROR &lt; CRITICAL这几种级别，设置后会记录该机别及其以上级别的信息</li>
+<li>Handler，常用的是StreamHandler和FileHandler， 可以简单理解为一个是console和文件日志，一个打印在shell窗口上，一个记录在一个文件上</li>
+<li>formatter，定义了最终log信息的顺序,结构和内容。一般用<code>&#39;[%(asctime)s][%(name)s][%(levelname)s] %(message)s&#39;, &#39;%Y-%m-%d %H:%M:%S&#39;</code></li>
+</ul>
+<h1 id="模板"><a href="#模板" class="headerlink" title="模板"></a>模板</h1><p>下面的模板应该可以完成绝大多数项目的日志记录功能<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">class my_logger:</div><div class="line"></div><div class="line">    def __init__(self,loggername):</div><div class="line">        self.logger = logging.getLogger(&apos;app.&apos;+loggername)</div><div class="line">        self.logger.setLevel(logging.DEBUG)</div><div class="line"></div><div class="line">        fh = logging.FileHandler(&apos;./app/data/log/&apos; + time.strftime(&quot;%Y-%m-%d&quot;, time.localtime()) +loggername+&apos;.log&apos;)</div><div class="line">        fh.setLevel(logging.DEBUG)</div><div class="line">        ch = logging.StreamHandler()</div><div class="line">        ch.setLevel(logging.DEBUG)</div><div class="line"></div><div class="line">        formatter = logging.Formatter(&apos;[%(asctime)s][%(name)s][%(levelname)s] %(message)s&apos;)</div><div class="line">        fh.setFormatter(formatter)</div><div class="line">        ch.setFormatter(formatter)</div><div class="line">        self.logger.addHandler(fh)</div><div class="line">        self.logger.addHandler(ch)</div><div class="line"></div><div class="line">namelogger = my_logger(&apos;getName&apos;).logger  #如果有更多，则采用相同格式实例化</div></pre></td></tr></table></figure></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/15/项目部署路上的坑/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Cui1994">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.gif">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AwakeBird">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AwakeBird" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/01/15/项目部署路上的坑/" itemprop="url">
+                  项目部署路上的坑
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-15T20:32:50+08:00">
+                2017-01-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/01/15/项目部署路上的坑/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/01/15/项目部署路上的坑/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>直播通项目终于更新上线了，看到自己的第一个Web应用在服务器上正常运作并且各项功能正常，内心一阵暗爽。看了一眼时间，从有想法到最终项目上线，一共用了大概一周左右时间，作为一个简单的flask应用，这点时间不算长也不算短，其中部署只花了一晚上就弄好了，在这里要感谢已经工作的老友提供思路，虽然部署的时候也踩过不少坑，但确实少走了许多弯路。所谓前人栽树后人？哈？</p>
+<h1 id="服务器选择"><a href="#服务器选择" class="headerlink" title="服务器选择"></a>服务器选择</h1><p>这里直接选择了朋友推荐的腾讯云，一路低配，在选择内存时担心1G内存不够选了2G（心疼），最终抛过代金券还是花了90大洋。不过，值！</p>
+<h1 id="部署思路"><a href="#部署思路" class="headerlink" title="部署思路"></a>部署思路</h1><p>这里有两种思路可供选择，</p>
+<ul>
+<li>gunicorn + supervisor + nginx, 部署流程简单清晰，但听说性能不好。</li>
+<li>朋友推荐的gunicorn + pm2方案，但看了一眼pm2， 全部时node.js相关的代码，超纲了啊！</li>
+</ul>
+<p>我的目的是让自。己的项目尽快跑起来，因此，选择了有较多参考资料和前人经验的第一种思路，第二种的话，以后在说吧。</p>
+<h1 id="开始部署"><a href="#开始部署" class="headerlink" title="开始部署"></a>开始部署</h1><h2 id="部署准备"><a href="#部署准备" class="headerlink" title="部署准备"></a>部署准备</h2><p>好，登录服务器，输入用户名和密码登录Linux（这里选择和我平时用的一样的Ubuntu 16.04 64位机），先按照网上的教程将python和虚拟环境弄好，之后<code>git clone</code>代码。等等，者一大堆错误是什么，又是用户权限又是链接错误，折腾了许久未果，于是退而求其此，直接将本地代码复制到服务器上：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ scp -r easySee ubuntu@www.mydomain.com:/var/www/easySee</div></pre></td></tr></table></figure></p>
+<p>刚开始不清楚这行代码的作用，照葫芦画瓢，于是很自然的在easySee目录下又嵌套了一个同名文件，好low。不过既然是自己的服务器，就先这样吧。之后在虚拟环境中安装<code>requirements</code>中的需求模块，部署准备完成。</p>
+<h2 id="Gunicorn"><a href="#Gunicorn" class="headerlink" title="Gunicorn"></a>Gunicorn</h2><h3 id="是什么"><a href="#是什么" class="headerlink" title="是什么"></a>是什么</h3><p>关于这部分内容，在部署的时候时完全没有考虑的，因为目的就是让项目尽快跑起来嘛。但不求甚解终归不是好的学习方法，还是要了解以下部署的每个部分是什么，能干嘛，于是补了这部分知识。</p>
+<p>gunicorn是一个Python WSGI UNIX的HTTP服务器，是一个per-fork worker模型。换句话说，Gunicorn一般用来管理多个进程，有进程挂了Gunicorn就可以把它拉起来，防止服务器长时间停止服务，还可以动态调整worker的数量，请求多的时候增加worker的数量，请求少的时候减少，这就是所谓的per-fork模型，也是Gunicorn的主要优点。其他优点还有能与各种web框架兼容，只需要非常简单的执行，轻量级的资源消耗以及很快的响应速度。</p>
+<h3 id="怎么用"><a href="#怎么用" class="headerlink" title="怎么用"></a>怎么用</h3><ul>
+<li><p>安装</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(venv) $ pip install gunicorn</div></pre></td></tr></table></figure>
+</li>
+<li><p>运行(在项目根目录下)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(venv) $ gunicorn -w 4 -b 127.0.0.1:8080 manage:app</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>在本机上输入服务器ip及端口号后，马上看到了自己的应用。Yeah！这其实就是gunicorn的好处吧，根本不需要什么配置文件，一格指令就能将它启动。<br><strong>tip:</strong> 这里网上教程说还需要添加一个<code>wsgi.py</code>的文件替换掉<code>manage.py</code>，并特别注明<code>wsgi.py</code>和<code>manage.py</code>没有半毛钱关系。然而我的试验结果是，这两个完全就是一模一样的嘛-，- ,先这样吧，出了问题再说。</p>
+<h2 id="Nignx"><a href="#Nignx" class="headerlink" title="Nignx"></a>Nignx</h2><h3 id="是什么-1"><a href="#是什么-1" class="headerlink" title="是什么"></a>是什么</h3><p>一个完整的代理请求过程为：客户端首先与代理服务器创建链接，接着根据代理服务器所使用的代理协议，请求对目标服务器创建链接或者获得目标服务器的指定资源。Web代理服务器（proxy）是网络的中间实体，代理位于Web客户端与Web服务器之间，扮演中间人的角色。HTTP的代理服务器即是Web服务器，又是Web客户端。</p>
+<p>正向代理时一个介于客户端与原始服务器之间的服务器，为了从原始服务器获得内容，客户端向代理发送一个请求并指定目标，然后代理向原始服务器转交请求并将获得的内容返回给客户端。</p>
+<p>反向代理服务器：在服务器端接受客户端的请求，然后把请求分给具体的服务器进行处理，再将服务器的响应结果返回给客户端。</p>
+<p>Nginx(“engine x”)是一款高性能的HTTP和反向代理服务器软件，既可以托管网站，进行HTTP服务，也可以作为反向代理服务器使用。</p>
+<p>那么在Gunicorn前部署一层Nginx的目的是什么呢？</p>
+<ul>
+<li>负载均衡。</li>
+<li>静态文件支持</li>
+<li>伪静态化并缓存，减少动态请求数量</li>
+<li>依赖于nginx强大的功能和性能，可以做到访问控制，限速，限制链接数等。</li>
+</ul>
+<p>也就是说，nginx可以缓冲请求和响应，也能缓存客户端发起的请求，这个过程时nginx擅长处理的，可以有效提高Gunicorn的处理能力。</p>
+<h3 id="怎么用-1"><a href="#怎么用-1" class="headerlink" title="怎么用"></a>怎么用</h3><p>这里同样参照教程，安装完成后，直接进入Nginx的配置文件<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sudo vim /etc/nginx/site-avalidable/default</div></pre></td></tr></table></figure></p>
+<p>当然，如果你怕搞错（就像我一样），可以先将配置文件备份<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sudo cp /etc/nginx/site-avalidable/default /etc/nginx/site-avalidable/default.bak</div></pre></td></tr></table></figure></p>
+<p>之后将default暴力修改成下面的内容：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">server &#123;</div><div class="line">    listen 80;</div><div class="line">    server_name 119.29.3.128; # 这是HOST机器的地址也</div><div class="line"></div><div class="line">    location / &#123;</div><div class="line">        proxy_pass http://127.0.0.1:8080; # 这里是指向 gunicorn host 的服务地址</div><div class="line">        proxy_set_header Host $host;</div><div class="line">        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">  &#125;</div></pre></td></tr></table></figure></p>
+<p>之后保存，重启Nignx服务器<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sudo service nginx restart</div></pre></td></tr></table></figure></p>
+<p>这时候在本地打开网址，不需要输入端口号也能访问页面了，说明Nginx配置成功。</p>
+<h2 id="supervisor"><a href="#supervisor" class="headerlink" title="supervisor"></a>supervisor</h2><h3 id="是什么-2"><a href="#是什么-2" class="headerlink" title="是什么"></a>是什么</h3><p>Supervisor是一个用Python写的进程管理工具，可以很方便的用来启动，重启，关闭进程（不仅仅是Python进程），还可以很方便的管理多个进程，同时启动同时关闭等等。因此将gunicorn用supervisor来包装，很方便的管理进程运行，并且可以防止gunicorn服务器挂掉。而且如果项目中需要多进程运行时，也可以用supervisor来配置。</p>
+<h3 id="怎么用-2"><a href="#怎么用-2" class="headerlink" title="怎么用"></a>怎么用</h3><p>安装后首先将原始配置文件重定向到程序根目录：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ echo_supervisor_conf&gt;supervisor.conf</div></pre></td></tr></table></figure></p>
+<p>其实也可以不用进行这个步骤，但是每次打开supervisor服务时都要输入配置文件目录比较麻烦。</p>
+<p>之后打开<code>supervisor.conf</code>，在最后加上自己的进程信息：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">[program:easySee]</div><div class="line">command=/home/ubuntu/venv/bin/gunicorn -w 4 -b 0.0.0.0:8080 manage:app     ; supervisor启动命令</div><div class="line">directory=/var/www/easySee/easySee                                         ; 项目的文件夹路径</div><div class="line">startsecs=0                                                                ; 启动时间</div><div class="line">stopwaitsecs=0                                                             ; 终止等待时间</div><div class="line">autostart=false                                                            ; 是否自动启动</div><div class="line">autorestart=true                                                           ; 是否自动重启</div><div class="line">stdout_logfile=/.../app/data/log/gunicorn.log                              ; log 日志</div><div class="line">stderr_logfile=/.../app/data/log/gunicorn.err                              ; 错误日志</div><div class="line"></div><div class="line">[program:XXXXX]                                                            ; 用于多进程</div></pre></td></tr></table></figure></p>
+<p>之后启动supervisor<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ supervisord -c supervisor.conf</div></pre></td></tr></table></figure></p>
+<p>之后的事不多说了，操作命令：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">supervisord -c supervisor.conf                             通过配置文件启动supervisor</div><div class="line">supervisorctl -c supervisor.conf status                    察看supervisor的状态</div><div class="line">supervisorctl -c supervisor.conf reload                    重新载入 配置文件</div><div class="line">supervisorctl -c supervisor.conf start [all]|[appname]     启动指定/所有 supervisor管理的程序进程</div><div class="line">supervisorctl -c supervisor.conf stop [all]|[appname]      关闭指定/所有 supervisor管理的程序进程</div></pre></td></tr></table></figure></p>
+<p>这里要说下自己部署时出现的问题，在supervisor已经启动的状态下修改了配置文件，又不知道<code>reload</code>这个命令，于是想重新导入supervisor文件启动时出现了错误，提示端口正在被监听，这里给出解决方法：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ ps -ef | grep supervisord</div></pre></td></tr></table></figure></p>
+<p>然后看到：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">root   2503  1  0 Nov19 ?  00:03:23 /usr/bin/python /usr/bin/supervisord</div><div class="line">root   21337 2556  0 18:15 pts/8   00:00:00 grep --color=auto supervisord</div></pre></td></tr></table></figure></p>
+<p>再执行：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">kill -s SIGTERM 2503</div></pre></td></tr></table></figure></p>
+<p>即可。</p>
+<h1 id="再说一点"><a href="#再说一点" class="headerlink" title="再说一点"></a>再说一点</h1><p>写到这里，把部署期间的所有流程和问题处理基本又复习了一遍，主要用到的部分也大概知道都有什么作用了，再深入了解的话大概就到运维的范畴了，这次真的可以浅尝辄止了。</p>
+<p>部署并没有想象中的恐怖，只是折腾的时间要久一点罢了。CS这东西还真就全凭折腾，耐下性子干就是了，之后及时回头看看，收获颇丰呢。</p>
+<p>就这样啦。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
   <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/15/直播通Bug修复记录/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1025,7 +1665,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-count">9</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>

@@ -84,19 +84,19 @@
 
 
 
-<meta name="description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick">
+<meta name="description" content="这部分内容的起因是我想在自己的flask项目直播通中加入一个搜索框用来搜索数据库中的主播姓名，于是在网上搜索flask 搜索关键字，当时没注意出来的都是全文搜索的教程，一步步做下来却发现原来根本和自己的需求不符合，可见弄清需求是多么重要啊！虽然走了点弯路，却意外发现了全文搜索的方法。说不定哪天就用到了呢哼～！
+设置搜索框考虑到用户体验，这里想做导航栏上的搜索框，也就是全局搜索框，这就要用到flas">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hello World">
-<meta property="og:url" content="http://yoursite.com/2017/01/07/hello-world/index.html">
+<meta property="og:title" content="flask项目中添加搜索功能">
+<meta property="og:url" content="http://yoursite.com/2017/01/15/flask项目中添加搜索功能/index.html">
 <meta property="og:site_name" content="AwakeBird">
-<meta property="og:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick">
-<meta property="og:updated_time" content="2017-01-07T15:55:10.628Z">
+<meta property="og:description" content="这部分内容的起因是我想在自己的flask项目直播通中加入一个搜索框用来搜索数据库中的主播姓名，于是在网上搜索flask 搜索关键字，当时没注意出来的都是全文搜索的教程，一步步做下来却发现原来根本和自己的需求不符合，可见弄清需求是多么重要啊！虽然走了点弯路，却意外发现了全文搜索的方法。说不定哪天就用到了呢哼～！
+设置搜索框考虑到用户体验，这里想做导航栏上的搜索框，也就是全局搜索框，这就要用到flas">
+<meta property="og:updated_time" content="2017-01-15T15:05:48.472Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Hello World">
-<meta name="twitter:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick">
+<meta name="twitter:title" content="flask项目中添加搜索功能">
+<meta name="twitter:description" content="这部分内容的起因是我想在自己的flask项目直播通中加入一个搜索框用来搜索数据库中的主播姓名，于是在网上搜索flask 搜索关键字，当时没注意出来的都是全文搜索的教程，一步步做下来却发现原来根本和自己的需求不符合，可见弄清需求是多么重要啊！虽然走了点弯路，却意外发现了全文搜索的方法。说不定哪天就用到了呢哼～！
+设置搜索框考虑到用户体验，这里想做导航栏上的搜索框，也就是全局搜索框，这就要用到flas">
 
 
 
@@ -124,13 +124,13 @@ Quick">
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2017/01/07/hello-world/"/>
+  <link rel="canonical" href="http://yoursite.com/2017/01/15/flask项目中添加搜索功能/"/>
 
 
 
 
 
-  <title> Hello World | AwakeBird </title>
+  <title> flask项目中添加搜索功能 | AwakeBird </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -243,7 +243,7 @@ Quick">
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/07/hello-world/">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/15/flask项目中添加搜索功能/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="Cui1994">
@@ -267,7 +267,7 @@ Quick">
             
             
               
-                Hello World
+                flask项目中添加搜索功能
               
             
           </h1>
@@ -282,8 +282,8 @@ Quick">
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-07T23:55:10+08:00">
-                2017-01-07
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-15T22:23:42+08:00">
+                2017-01-15
               </time>
             
 
@@ -301,8 +301,8 @@ Quick">
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2017/01/07/hello-world/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/01/07/hello-world/" itemprop="commentCount"></span>
+                <a href="/2017/01/15/flask项目中添加搜索功能/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/01/15/flask项目中添加搜索功能/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -328,15 +328,39 @@ Quick">
       
 
       
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
+        <p>这部分内容的起因是我想在自己的flask项目直播通中加入一个搜索框用来搜索数据库中的主播姓名，于是在网上搜索<code>flask 搜索</code>关键字，当时没注意出来的都是全文搜索的教程，一步步做下来却发现原来根本和自己的需求不符合，可见弄清需求是多么重要啊！虽然走了点弯路，却意外发现了全文搜索的方法。说不定哪天就用到了呢哼～！</p>
+<h1 id="设置搜索框"><a href="#设置搜索框" class="headerlink" title="设置搜索框"></a>设置搜索框</h1><p>考虑到用户体验，这里想做导航栏上的搜索框，也就是全局搜索框，这就要用到flask中的程序上下文<code>g</code>，在处理请求时用作临时存储的对象，每次请求都会重设这个变量。很显然，这里就需要将一个搜索框设置成为程序上下文，具体做法如下。</p>
+<ul>
+<li>创建搜索框<br>很简单，在<code>forms</code>中添加<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">class SearchForm(Form):</div><div class="line">	search = StringField(u&apos;&apos;, validators=[Required()])</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>这里的Required是必须的，否则每次点击搜索按钮都会运行搜索函数，web性能下降。</p>
+<ul>
+<li>定义全局变量<br>在<code>main.view</code>中写入：<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">@main.before_app_request</div><div class="line">def before_request(): #定义全局变量</div><div class="line">    g.search_form = SearchForm()</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>就将一个搜索框设置成为了程序上下文变量。</p>
+<ul>
+<li><p>创建搜索和搜索结果的视图函数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">@main.route(&apos;/search&apos;, methods = [&apos;POST&apos;])</div><div class="line">def search():</div><div class="line">    if not g.search_form.validate_on_submit():</div><div class="line">        return redirect(url_for(&apos;.index&apos;))</div><div class="line">    return redirect(url_for(&apos;.search_results&apos;, query = g.search_form.search.data))</div><div class="line">@main.route(&apos;/search-results/&lt;query&gt;&apos;)</div><div class="line">def search_results(query):</div><div class="line">	pass</div></pre></td></tr></table></figure>
+</li>
+<li><p>在模板中添加搜索框</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">&lt;form class=&quot;navbar-form navbar-left&quot; action=&quot;&#123;&#123; url_for(&apos;main.search&apos;) &#125;&#125;&quot; method=&quot;post&quot; role=&quot;search&quot;&gt;</div><div class="line">	&lt;div class=&quot;form-group&quot;&gt;</div><div class="line">		&#123;&#123; g.search_form.hidden_tag() &#125;&#125;</div><div class="line">		&lt;input type=&quot;text&quot; name=&quot;search&quot; class=&quot;form-control&quot; placeholder=&quot;Search&quot;&gt;</div><div class="line">	&lt;/div&gt;</div><div class="line">	&lt;button type=&quot;submit&quot; class=&quot;btn btn-default&quot;&gt;搜索&lt;/button&gt;</div><div class="line">&lt;/form&gt;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>要注意flask_wtf的请求跨站保护和表单的name属性设置。</p>
+<p>这样，一个全局搜索框就创建好啦！</p>
+<h1 id="模糊搜索"><a href="#模糊搜索" class="headerlink" title="模糊搜索"></a>模糊搜索</h1><p>模糊搜索其实很简单，只要对数据库中进行模糊检索即可，一条语句适用于很多场合：<br><code>User.query.filter(User.name.like(&#39;%&#39;+query+&#39;%&#39;)).all()</code></p>
+<h1 id="全文搜索"><a href="#全文搜索" class="headerlink" title="全文搜索"></a>全文搜索</h1><p>虽然有的时候模糊搜索很方便，但对于某些任务，比如搜索出现某些关键词的文章的时候就不能用模糊搜索了，因为不管关键词顺序还是空格都会影响模糊搜索的查询结果，这个时候就需要用到全文搜索。</p>
+<p>这里有一款实现全文搜索的良好flask扩展：<code>WhooshAlchemy</code>，在项目中应用也只需要简单几步：</p>
+<ul>
+<li>安装： <code>pip install flask_whooshalchemy</code></li>
+<li>配置： 在配置文件<code>config.py</code>中写入要应用全文搜索的数据库路径：<code>WHOOSH_BASE=</code></li>
+<li>索引对象：在<code>models.py</code>中需要全文搜索的对象中加入<code>__searchable__=[&#39;COLUMN&#39;]</code>,COLOMN为需要搜索的列</li>
+<li>在manage中添加索引：<code>whooshalchemy.whoosh_index(app, Model)</code></li>
+<li>最后在搜索时加入<code>Model.query.whoosh_search(&#39;keyword&#39;).all()</code>即可</li>
+</ul>
+<p>注意：使用<code>whooshalchemy</code>进行搜索要现将数据库中的要搜索的对象实例全部删除，这样才能创建索引，否则会报错。</p>
 
       
     </div>
@@ -363,14 +387,18 @@ Quick">
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
+              <a href="/2017/01/15/logging模块的学习/" rel="next" title="logging模块的学习">
+                <i class="fa fa-chevron-left"></i> logging模块的学习
+              </a>
+            
           </div>
 
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2017/01/08/重新认识后端/" rel="prev" title="重新认识后端">
-                重新认识后端 <i class="fa fa-chevron-right"></i>
+              <a href="/2017/01/15/关于直播通/" rel="prev" title="关于直播通">
+                关于直播通 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -397,8 +425,8 @@ Quick">
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2017/01/07/hello-world/"
-           data-title="Hello World" data-url="http://yoursite.com/2017/01/07/hello-world/">
+      <div class="ds-thread" data-thread-key="2017/01/15/flask项目中添加搜索功能/"
+           data-title="flask项目中添加搜索功能" data-url="http://yoursite.com/2017/01/15/flask项目中添加搜索功能/">
       </div>
     
   </div>
@@ -484,7 +512,7 @@ Quick">
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Quick-Start"><span class="nav-number">1.</span> <span class="nav-text">Quick Start</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Create-a-new-post"><span class="nav-number">1.1.</span> <span class="nav-text">Create a new post</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Run-server"><span class="nav-number">1.2.</span> <span class="nav-text">Run server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Generate-static-files"><span class="nav-number">1.3.</span> <span class="nav-text">Generate static files</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Deploy-to-remote-sites"><span class="nav-number">1.4.</span> <span class="nav-text">Deploy to remote sites</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#设置搜索框"><span class="nav-number">1.</span> <span class="nav-text">设置搜索框</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#模糊搜索"><span class="nav-number">2.</span> <span class="nav-text">模糊搜索</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#全文搜索"><span class="nav-number">3.</span> <span class="nav-text">全文搜索</span></a></li></ol></div>
             
 
           </div>
