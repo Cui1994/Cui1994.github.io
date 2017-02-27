@@ -98,7 +98,7 @@
 排查：app.Searh中search_longzhu函数出现问题，如果搜索主播未上线就不会出现主播搜索结果。
 
 解决方案：因为抓包网址返回的json数据中如果主播上线总是排在第一位的，因此修改函数直接将所抓数据的第一个默认为主播返回搜索结果，当然这样也有问题，就是不管搜索的是不">
-<meta property="og:updated_time" content="2017-01-15T19:20:02.292Z">
+<meta property="og:updated_time" content="2017-01-17T11:34:47.963Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="直播通Bug修复记录">
 <meta name="twitter:description" content="此文章用来记录直播通上线后遇到的各种Bug和解决方案，不定期更新。
@@ -376,6 +376,24 @@
 <li><p>解决方案<br>在代码中添加了主播状态为False的返回代码，done！</p>
 </li>
 </ul>
+<h2 id="手动添加熊猫错误的房间名会出现乱码主播"><a href="#手动添加熊猫错误的房间名会出现乱码主播" class="headerlink" title="手动添加熊猫错误的房间名会出现乱码主播"></a>手动添加熊猫错误的房间名会出现乱码主播</h2><ul>
+<li><p>排查<br>如果手动添加的主播不存在，熊猫tv网站会自动将请求链接重定向到主页，从而出现乱码问题。</p>
+</li>
+<li><p>解决方案<br>经过对爬虫部分测试，拿出了系统重定向到主页过程中的链接内容，在<code>getName</code>加入判断函数，done！</p>
+</li>
+</ul>
+<h1 id="2017-01-17"><a href="#2017-01-17" class="headerlink" title="2017/01/17"></a>2017/01/17</h1><h2 id="一觉起来发现主播状态不更新了，重启服务后正常运行"><a href="#一觉起来发现主播状态不更新了，重启服务后正常运行" class="headerlink" title="一觉起来发现主播状态不更新了，重启服务后正常运行"></a>一觉起来发现主播状态不更新了，重启服务后正常运行</h2><ul>
+<li><p>排查<br>前一天好好的，过了午夜就出问题。检查日志文件发现第二天的日志没有自动生成，因此没有错误记录。检查<code>celery.err</code>文件也没有发现报错。重启全部服务后，主播状态瞬间变正常，推测不是爬虫问题。</p>
+</li>
+<li><p>解决方案<br>猜想是因为日志文件没有生成，因此每次到logging执行的时候总会出错，尝试放弃使用每天记录日志的方法，而将所有日志放在一个文件中，错误也不多。目前效果未知。</p>
+</li>
+</ul>
+<h2 id="根据贴吧网友反映，hot排序出现随即排序，刷新会改变序列"><a href="#根据贴吧网友反映，hot排序出现随即排序，刷新会改变序列" class="headerlink" title="根据贴吧网友反映，hot排序出现随即排序，刷新会改变序列"></a>根据贴吧网友反映，hot排序出现随即排序，刷新会改变序列</h2><ul>
+<li><p>排查<br>原因很简单，数据库中拿出的anchors排序方式为按<code>users_count</code>，而这个数值并不是唯一的，所以该数值相同的anchor就会被随即排序。主页中的用户关注和搜索列表应该都有这个问题，这里选择修复主页中的关注。</p>
+</li>
+<li><p>解决方案<br>在<code>order_by</code>中再加入一个唯一参数<code>name</code>即可。</p>
+</li>
+</ul>
 
       
     </div>
@@ -488,7 +506,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-count">10</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -527,7 +545,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#2017-01-15"><span class="nav-number">1.</span> <span class="nav-text">2017/01/15</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#网络搜索模块龙珠搜索结果未显示"><span class="nav-number">1.1.</span> <span class="nav-text">网络搜索模块龙珠搜索结果未显示</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#主播状态验证模块熊猫主播的状态出错"><span class="nav-number">1.2.</span> <span class="nav-text">主播状态验证模块熊猫主播的状态出错</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Hot页面出现同名主播"><span class="nav-number">1.3.</span> <span class="nav-text">Hot页面出现同名主播</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2017-01-16"><span class="nav-number">2.</span> <span class="nav-text">2017/01/16</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#龙珠主播状态爬虫再出问题"><span class="nav-number">2.1.</span> <span class="nav-text">龙珠主播状态爬虫再出问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#遇到了最大的一个Bug：celery的任务重复执行严重"><span class="nav-number">2.2.</span> <span class="nav-text">遇到了最大的一个Bug：celery的任务重复执行严重</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#熊猫及龙珠直播状态出错"><span class="nav-number">2.3.</span> <span class="nav-text">熊猫及龙珠直播状态出错</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#2017-01-15"><span class="nav-number">1.</span> <span class="nav-text">2017/01/15</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#网络搜索模块龙珠搜索结果未显示"><span class="nav-number">1.1.</span> <span class="nav-text">网络搜索模块龙珠搜索结果未显示</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#主播状态验证模块熊猫主播的状态出错"><span class="nav-number">1.2.</span> <span class="nav-text">主播状态验证模块熊猫主播的状态出错</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Hot页面出现同名主播"><span class="nav-number">1.3.</span> <span class="nav-text">Hot页面出现同名主播</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2017-01-16"><span class="nav-number">2.</span> <span class="nav-text">2017/01/16</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#龙珠主播状态爬虫再出问题"><span class="nav-number">2.1.</span> <span class="nav-text">龙珠主播状态爬虫再出问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#遇到了最大的一个Bug：celery的任务重复执行严重"><span class="nav-number">2.2.</span> <span class="nav-text">遇到了最大的一个Bug：celery的任务重复执行严重</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#熊猫及龙珠直播状态出错"><span class="nav-number">2.3.</span> <span class="nav-text">熊猫及龙珠直播状态出错</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#手动添加熊猫错误的房间名会出现乱码主播"><span class="nav-number">2.4.</span> <span class="nav-text">手动添加熊猫错误的房间名会出现乱码主播</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2017-01-17"><span class="nav-number">3.</span> <span class="nav-text">2017/01/17</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#一觉起来发现主播状态不更新了，重启服务后正常运行"><span class="nav-number">3.1.</span> <span class="nav-text">一觉起来发现主播状态不更新了，重启服务后正常运行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#根据贴吧网友反映，hot排序出现随即排序，刷新会改变序列"><span class="nav-number">3.2.</span> <span class="nav-text">根据贴吧网友反映，hot排序出现随即排序，刷新会改变序列</span></a></li></ol></li></ol></div>
             
 
           </div>
