@@ -1,0 +1,74 @@
+---
+layout: post
+category: "work"
+title:  "利用flask_socketio实现与前段的socket通信"
+tags: [socketio]
+---
+
+## Demo
+`flask_socketio`将`flask`应用用socketio包装了一层，可以与web端实现websocket连接。
+```
+from flask import Flask, render_template
+from flask_socketio import SocketIO, emit
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret'
+socketio = SocketIO(app)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+    
+@socketio.on('connect')
+def client_msg():
+    print 'connect!'
+    
+@socketio.on('connect with token')
+def connect_with_token(message):
+    token = message['token']
+    emit('notification', {'msg': 'done!'})
+    
+    
+if __name__ == '__main__':
+    socketio.run(app, debug=True, host='0.0.0.0', port=5300)
+```
+`index.html`代码：
+```
+<script src="/static/node_modules/socket.io-client/dist/socket.io.js"></script>
+<script>
+    function localConnectSocket(){
+    var socket = io.connect('http://localhost:5300');
+    socket.emit("connect with token", {'token': 'xxxx'});
+    socket.on("notification", function (data) {
+        alert(data.msg)
+    });
+    }
+</script>
+
+<body>
+    <button type="button" onclick="localConnectSocket()">localConnectSocket</button>
+    <br />
+</body>
+```
+
+## 发送消息到特定连接
+每个连接有一个`sid`，存在`request.sid`中。
+每个链接socketio会将其分配至一个以其`sid`为名的`room`中，据此可发送消息至每一个特定连接.
+```
+# Object that represents a socket connection
+class Socket:
+    def __init__(self, sid):
+        self.sid = sid
+        self.connected = True
+
+    # Emits data to a socket's unique room
+    def emit(self, event, data):
+        emit(event, data, room=self.sid)
+
+@socketio.on('connect')
+def foo():
+    sockets[request.sid] = Socket(request.sid)
+```
+
+
+

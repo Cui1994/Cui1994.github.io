@@ -4,9 +4,9 @@
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <meta name="description" content="页面不存在：Page Not Found - 崔金涛个人博客 - 作者:崔金涛"/> 
-	
-    <title>页面不存在：Page Not Found - 崔金涛个人博客</title>
+    <meta name="description" content="利用flask_socketio实现与前段的socket通信 - 崔金涛个人博客 - 作者:崔金涛"/> 
+	<meta name="keywords" content="socketio"/>
+    <title>利用flask_socketio实现与前段的socket通信 - 崔金涛个人博客</title>
     <!-- Bootstrap Core CSS -->
     <link href="/css/bootstrap.min.css" rel="stylesheet"/>
     <!-- Custom CSS -->
@@ -81,14 +81,115 @@
       <div class="row">
         <!-- Blog Entries Column -->
         <div class="col-md-8">
-          <p align="center">
-<h1></h1>Page Not Found!</h1>
-Please wait...
+          <!-- Navi -->
+<a href="/">首页</a>&nbsp;>&nbsp;<a href="/posts/work.html">工作经验</a>&nbsp;>&nbsp;正文
+<!-- Title -->
+<h2>利用flask_socketio实现与前段的socket通信</h2>
+<b>标签：</b><a href="/tags.html#socketio"><i>socketio</i></a>
+<div class="post-date">
+	<span class="glyphicon glyphicon-time"></span>
+	2017-05-16
+</div>
 <br/>
-<br/>
-thanks!
-</p>
 
+<!-- content -->
+<div style="text-indent:2em;">
+<h2 id="demo">Demo</h2>
+<p><code>flask_socketio</code>将<code>flask</code>应用用socketio包装了一层，可以与web端实现websocket连接。</p>
+<pre><code>from flask import Flask, render_template
+from flask_socketio import SocketIO, emit
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret'
+socketio = SocketIO(app)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+    
+@socketio.on('connect')
+def client_msg():
+    print 'connect!'
+    
+@socketio.on('connect with token')
+def connect_with_token(message):
+    token = message['token']
+    emit('notification', {'msg': 'done!'})
+    
+    
+if __name__ == '__main__':
+    socketio.run(app, debug=True, host='0.0.0.0', port=5300)
+</code></pre>
+<p><code>index.html</code>代码：</p>
+<pre><code>&lt;script src="/static/node_modules/socket.io-client/dist/socket.io.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+    function localConnectSocket(){
+    var socket = io.connect('http://localhost:5300');
+    socket.emit("connect with token", {'token': 'xxxx'});
+    socket.on("notification", function (data) {
+        alert(data.msg)
+    });
+    }
+&lt;/script&gt;
+
+&lt;body&gt;
+    &lt;button type="button" onclick="localConnectSocket()"&gt;localConnectSocket&lt;/button&gt;
+    &lt;br /&gt;
+&lt;/body&gt;
+</code></pre>
+
+<h2 id="发送消息到特定连接">发送消息到特定连接</h2>
+<p>每个连接有一个<code>sid</code>，存在<code>request.sid</code>中。
+每个链接socketio会将其分配至一个以其<code>sid</code>为名的<code>room</code>中，据此可发送消息至每一个特定连接.</p>
+<pre><code># Object that represents a socket connection
+class Socket:
+    def __init__(self, sid):
+        self.sid = sid
+        self.connected = True
+
+    # Emits data to a socket's unique room
+    def emit(self, event, data):
+        emit(event, data, room=self.sid)
+
+@socketio.on('connect')
+def foo():
+    sockets[request.sid] = Socket(request.sid)
+</code></pre>
+
+
+</div>
+
+<br/>
+<b>原创文章，转载请注明出处！</b>
+<br/>
+<b>本文链接：</b><a href="http://localhost:4000/posts/socketio.html" title="">http://localhost:4000/posts/socketio.html</a>
+
+<!-- next and previous -->
+<div style="margin-top:15px; margin-bottom:10px">
+  
+  <span class="next">
+    上篇：
+    <a href="/posts/shejimoshi.html">
+      大话设计模式Python实现
+    </a>
+  </span>
+   
+  
+  <div style="float:right">
+  <span class="prev" >
+    下篇：
+    <a href="/posts/bmpn.html">
+      BPMN2.0概念
+    </a>
+  </span>
+  </div>
+  
+</div>
+<hr>
+<!-- Blog Comments -->
+<div class="media">
+   
+</div>
         </div>
         <!-- Blog Sidebar Widgets Column -->
         <div class="col-md-4">

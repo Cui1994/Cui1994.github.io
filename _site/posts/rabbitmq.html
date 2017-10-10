@@ -4,9 +4,9 @@
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <meta name="description" content="页面不存在：Page Not Found - 崔金涛个人博客 - 作者:崔金涛"/> 
-	
-    <title>页面不存在：Page Not Found - 崔金涛个人博客</title>
+    <meta name="description" content="RabbitMQ泛式 - 崔金涛个人博客 - 作者:崔金涛"/> 
+	<meta name="keywords" content="rabbitmq"/>
+    <title>RabbitMQ泛式 - 崔金涛个人博客</title>
     <!-- Bootstrap Core CSS -->
     <link href="/css/bootstrap.min.css" rel="stylesheet"/>
     <!-- Custom CSS -->
@@ -81,14 +81,126 @@
       <div class="row">
         <!-- Blog Entries Column -->
         <div class="col-md-8">
-          <p align="center">
-<h1></h1>Page Not Found!</h1>
-Please wait...
+          <!-- Navi -->
+<a href="/">首页</a>&nbsp;>&nbsp;<a href="/posts/study.html">学习笔记</a>&nbsp;>&nbsp;正文
+<!-- Title -->
+<h2>RabbitMQ泛式</h2>
+<b>标签：</b><a href="/tags.html#rabbitmq"><i>rabbitmq</i></a>
+<div class="post-date">
+	<span class="glyphicon glyphicon-time"></span>
+	2017-03-24
+</div>
 <br/>
-<br/>
-thanks!
-</p>
 
+<!-- content -->
+<div style="text-indent:2em;">
+<p>掌握了一种rabbitmq设计的初步泛式，原理部分以后补充。</p>
+
+<h2 id="概念">概念</h2>
+
+<p>由4部分构成，消息生产者(P)，交换机(X)，队列(Q)，消息消费者(C)。
+X：direct，topic，headers，fanout</p>
+
+<h3 id="pub泛式">pub泛式</h3>
+
+<pre><code>from librabbitmq import Connection
+
+def connection_rabbit():
+    global connection
+    global channel
+    connection = Connection(host=config["host"], virtual_host=config["vhost"],
+                            userid=config["userid"], password=config["password"])
+    channel = connection.channel()
+    channel.exchange_declare(exchange="name", type="direct")
+    print "rabbitmq connect done"
+    
+def send_message(routing, body):
+    global channel
+    channel.basic_publish(exchange="name", 
+                        routing_key=routing,
+                        body=body,
+                        deliver_mode=2) # 消息持久化
+    print "[*] send message {0}: {1}: {2}".format(routing, body, "timestamp")
+    
+if __name__ == '__main__':
+    send_message(routing, params)
+    # routing从参数中对应字典取出
+
+</code></pre>
+
+<h3 id="sub泛式">sub泛式</h3>
+
+<pre><code class="language-python">import ast
+import sys
+from librabbitmq import connection
+
+def consume(queue_name, callback):
+    connection = Connection(host=config["host"], virtual_host=config["vhost"],
+                            userid=config["userid"], password=config["password"])
+    channel = connection.channel()
+    channel.exchange_declare(exchange="name", type="direct")
+    channel.queue_declare(queue=queue_name, durable=True) #队列持久化
+    channel.queue_bind(exchange="direct", queue=queue_name,                     
+                    routing_key=queue_name)
+    channel.basic_qos(prefetch_count=1) #每个worker在接受到一条消息后不会再被分配消息
+    channel.basic_consume(callback=callback, queue=queue_name)
+    
+    print "[*] Waiting for tasks. To exit press CTRL+C"
+    while True:
+        connection.drain_events()
+        
+def callback(message):
+    # callback会将body作为参数传入
+    params = ast,literal_eval(str(message.body))
+    print "[*] Receive message {}".format(params)
+    global routing
+    if routing == "1":
+        class1(params).func1()
+    elif ...
+    ...
+    else:
+        pass
+    message.ack()
+    
+if __name__ == "__main__":
+    global routing
+    routing = sys.argv[1]
+    consume(routing, callback)
+</code></pre>
+
+</div>
+
+<br/>
+<b>原创文章，转载请注明出处！</b>
+<br/>
+<b>本文链接：</b><a href="http://localhost:4000/posts/rabbitmq.html" title="">http://localhost:4000/posts/rabbitmq.html</a>
+
+<!-- next and previous -->
+<div style="margin-top:15px; margin-bottom:10px">
+  
+  <span class="next">
+    上篇：
+    <a href="/posts/redis.html">
+      再看redis
+    </a>
+  </span>
+   
+  
+  <div style="float:right">
+  <span class="prev" >
+    下篇：
+    <a href="/posts/sicp.html">
+      SICP
+    </a>
+  </span>
+  </div>
+  
+</div>
+<hr>
+<!-- Blog Comments -->
+<div class="media">
+   
+</div>
         </div>
         <!-- Blog Sidebar Widgets Column -->
         <div class="col-md-4">

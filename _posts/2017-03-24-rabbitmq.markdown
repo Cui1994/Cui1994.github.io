@@ -1,0 +1,83 @@
+---
+layout: post
+category: "study"
+title:  "RabbitMQ泛式"
+tags: [rabbitmq]
+---
+
+
+掌握了一种rabbitmq设计的初步泛式，原理部分以后补充。
+
+## 概念
+
+由4部分构成，消息生产者(P)，交换机(X)，队列(Q)，消息消费者(C)。
+X：direct，topic，headers，fanout
+
+### pub泛式
+
+```
+from librabbitmq import Connection
+
+def connection_rabbit():
+    global connection
+    global channel
+    connection = Connection(host=config["host"], virtual_host=config["vhost"],
+                            userid=config["userid"], password=config["password"])
+    channel = connection.channel()
+    channel.exchange_declare(exchange="name", type="direct")
+    print "rabbitmq connect done"
+    
+def send_message(routing, body):
+    global channel
+    channel.basic_publish(exchange="name", 
+                        routing_key=routing,
+                        body=body,
+                        deliver_mode=2) # 消息持久化
+    print "[*] send message {0}: {1}: {2}".format(routing, body, "timestamp")
+    
+if __name__ == '__main__':
+    send_message(routing, params)
+    # routing从参数中对应字典取出
+
+```
+
+### sub泛式
+
+```python
+import ast
+import sys
+from librabbitmq import connection
+
+def consume(queue_name, callback):
+    connection = Connection(host=config["host"], virtual_host=config["vhost"],
+                            userid=config["userid"], password=config["password"])
+    channel = connection.channel()
+    channel.exchange_declare(exchange="name", type="direct")
+    channel.queue_declare(queue=queue_name, durable=True) #队列持久化
+    channel.queue_bind(exchange="direct", queue=queue_name,                     
+                    routing_key=queue_name)
+    channel.basic_qos(prefetch_count=1) #每个worker在接受到一条消息后不会再被分配消息
+    channel.basic_consume(callback=callback, queue=queue_name)
+    
+    print "[*] Waiting for tasks. To exit press CTRL+C"
+    while True:
+        connection.drain_events()
+        
+def callback(message):
+    # callback会将body作为参数传入
+    params = ast,literal_eval(str(message.body))
+    print "[*] Receive message {}".format(params)
+    global routing
+    if routing == "1":
+        class1(params).func1()
+    elif ...
+    ...
+    else:
+        pass
+    message.ack()
+    
+if __name__ == "__main__":
+    global routing
+    routing = sys.argv[1]
+    consume(routing, callback)
+```

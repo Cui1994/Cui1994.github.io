@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="description" content="BPMN2.0概念 - 崔金涛个人博客 - 作者:崔金涛"/> 
+	<meta name="keywords" content="bpmn"/>
+    <title>BPMN2.0概念 - 崔金涛个人博客</title>
+    <!-- Bootstrap Core CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+    <!-- Custom CSS -->
+    <link href="/css/blog.css" rel="stylesheet"/>
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media
+    queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file://
+    -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js">
+      </script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js">
+      </script>
+    <![endif]-->
+        <!-- jQuery Version 1.11.0 -->
+    <script src="/js/jquery-1.11.0.js"> </script>
+    <!-- Bootstrap Core JavaScript -->
+    <script src="/js/bootstrap.min.js"></script>
+  </head>
+  
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+            <span class="sr-only">
+              Toggle navigation
+            </span>
+            <span class="icon-bar">
+            </span>
+            <span class="icon-bar">
+            </span>
+            <span class="icon-bar">
+            </span>
+          </button>
+          <a class="navbar-brand" href="/">
+            首页
+          </a>
+        </div>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          		<ul class="nav navbar-nav">
+			
+				<li>
+				  <a href="/posts/work.html">
+					工作经验
+				  </a>
+				</li>
+			
+				<li>
+				  <a href="/posts/study.html">
+					学习笔记
+				  </a>
+				</li>
+			
+				<li>
+				  <a href="/posts/other.html">
+					随笔
+				  </a>
+				</li>
+			
+		</ul>  
+        </div>
+        <!-- /.navbar-collapse -->
+      </div>
+      <!-- /.container -->
+    </nav>
+    <!-- Page Content -->
+    <div class="container">
+      <div class="row">
+        <!-- Blog Entries Column -->
+        <div class="col-md-8">
+          <!-- Navi -->
+<a href="/">首页</a>&nbsp;>&nbsp;<a href="/posts/work.html">工作经验</a>&nbsp;>&nbsp;正文
+<!-- Title -->
+<h2>BPMN2.0概念</h2>
+<b>标签：</b><a href="/tags.html#bpmn"><i>bpmn</i></a>
+<div class="post-date">
+	<span class="glyphicon glyphicon-time"></span>
+	2017-06-13
+</div>
+<br/>
+
+<!-- content -->
+<div style="text-indent:2em;">
+<h2 id="1简介">1.简介</h2>
+
+<p>BPMN（Business Process Model And Notation）- 业务流程模型和符号 是有BPMI（Business Process Management Initiative）开发的一套变准的业务流程建模符号。2004年5月发布了BPMN1.0规范.BPMI于2005年9月并入OMG（The Object Management Group)组织。OMG于2011年1月发布BPMI2.0的最终版本
+![此处输入图片的描述][4]</p>
+
+<h2 id="2规范">2.规范</h2>
+
+<h3 id="21-bpmn2-conformance-一致性">2.1 BPMN2-Conformance 一致性</h3>
+
+<ul>
+  <li>
+    <p>Process Modeling Conformance 流程模型一致性</p>
+  </li>
+  <li>
+    <p>Process Execution conformance 流程执行一致性</p>
+  </li>
+  <li>
+    <p>BPEL Process Execution Conformance BPEL 流程执行一致性</p>
+  </li>
+  <li>
+    <p>Choreography Modeling Conformance 编排模型一致性</p>
+  </li>
+</ul>
+
+<h3 id="22-bpmn2-element-元素">2.2 BPMN2-Element 元素</h3>
+<p>![此处输入图片的描述][5]</p>
+<h4 id="221-flow-objects-流对象">2.2.1 Flow Objects 流对象</h4>
+
+<ul>
+  <li>
+    <p>Events 事件
+![此处输入图片的描述][6]
+Event 用一个圆圈表示，它是流程中运行过程中发生的事情。事件的发生会影响到流程的流转.事件包含Start\Intermediate\End三种类型.启动、结束、边界条件以及每个活动的创建、开始、流转等都是流程事件，利用事件机制，可以通过事件控制器为系统增加辅助功能，如其它业务系统集成、活动预警等.</p>
+  </li>
+  <li>
+    <p>Activities 活动
+![此处输入图片的描述][7]
+活动用圆角矩形表示，一个活动多个活动组成，活动的类型分为Task和Sub-Process.     <br />
+Task能描述业务过程中所有能发生工时的行为，是流程在流转过程中的一个原子活动，它被用于流程中的工作不能被拆开到更细级别时的场景.
+Sub-Process事件子过程可以出现在过程或子过程中，其开始事件触发它活动，它可以中断上一层过程，也可以与上一层过程中的活动平行执行，这一切取决于它开始事件的行为。</p>
+  </li>
+  <li>
+    <p>Gateways 网关
+![此处输入图片的描述][8]
+网关用菱形表示,用于控制流程的分支和聚合.决定流程流转指向.用来对流程中的决策进行建模。
+(1)排他网关
+(2)并行网关</p>
+  </li>
+</ul>
+
+<h4 id="222-data-数据">2.2.2 Data 数据</h4>
+<p>![此处输入图片的描述][9]
+数据对象向读者显示在活动中需要或产生哪些数据.</p>
+
+<ul>
+  <li>
+    <p>Data Objects 数据对象
+代表过程中流动的信息，例如：业务文件、E-mail、信件。</p>
+  </li>
+  <li>
+    <p>Data Inputs 数据输入
+整个过程中可以被活动读取的外部数据.</p>
+  </li>
+  <li>
+    <p>Data OutPuts 数据输出
+作为整个过程的输出数据量.</p>
+  </li>
+  <li>
+    <p>Data Stores 数据存储
+存放过程数据的地方，例如数据库或文件。其生命周期超过了过程实例的生命周期，即过程实例结束了，但数据依然存在。</p>
+  </li>
+  <li>
+    <p>Message 消息
+消息用来表示两个参与者之间通讯的内容。</p>
+  </li>
+</ul>
+
+<h4 id="223-connecting-objects-连接对象">2.2.3 Connecting Objects 连接对象</h4>
+<p>![此处输入图片的描述][10]</p>
+
+<ul>
+  <li>
+    <p>Sequence Flows 序列流
+Sequence Flows 用实线实心箭头表示，代表流程中将被执行的活动的执行顺序.
+是两个流程元素间的连接器.一个元素在流程执行期间被访问后，流程会沿着该元素输出的方向继续执行.</p>
+  </li>
+  <li>
+    <p>Message Flows 消息流
+Message Flows 用虚线空心箭头表示，第阿宝2个分开的流程参与者直接发送或者接收到的消息流.
+消息流可以与泳池、活动或消息事件连在一起.</p>
+  </li>
+  <li>
+    <p>Associations 结合关系
+Associations 用点状虚线表示，用于显示活动的输入输出.</p>
+  </li>
+  <li>
+    <p>Data Associations 数据结合关系</p>
+  </li>
+</ul>
+
+<h4 id="224-swimlanes-泳道">2.2.4 Swimlanes 泳道</h4>
+<p>![此处输入图片的描述][11]
+泳池和泳道都表示活动的参与者，即表示过程中活动的执行者，它可以是一个组织、角色或系统。泳池可以划分成多个泳道，泳道具有分层结构.
+是从视觉上对活动加以组织或分类的机制。它基于交叉功能流程图基础，在BPMN中有两种类型.</p>
+
+<ul>
+  <li>
+    <p>Pools 池
+表示流程中的主要参与者，典型地，用来分开不同的组织。一个池可容纳一个或多个道（像真实的泳池一样）。当池为展开的（显示出内部细节），绘做大的矩形；若为收起的（隐藏起内部细节），绘做沿着图的长或宽伸展的空的矩形。</p>
+  </li>
+  <li>
+    <p>Lanes 道
+在池中，用于活动按职能或角色归类。绘做按池的长或宽展开的矩形。道包含流对象、连接对象和人造物。</p>
+  </li>
+</ul>
+
+<h4 id="225-artifacts-工件">2.2.5 Artifacts 工件</h4>
+<p>![此处输入图片的描述][12]</p>
+
+<ul>
+  <li>
+    <p>Group 组</p>
+  </li>
+  <li>
+    <p>Text Annotation 文本注释</p>
+  </li>
+</ul>
+
+<h3 id="23-流程">2.3 流程</h3>
+
+<h4 id="231-流程图">2.3.1 流程图</h4>
+<ul>
+  <li>私有流程
+指某一组织内部的流程，也叫工作流.在Web Service领域指服务的编制.</li>
+  <li>共有流程
+表现为一个私有流程和其他流程或参与者之间的交互.</li>
+</ul>
+
+<h4 id="232-协作图">2.3.2 协作图</h4>
+<p>![此处输入图片的描述][13]
+描绘两个或多个业务实体之间的交互.</p>
+
+<h4 id="233-编排图">2.3.3 编排图</h4>
+<p>![此处输入图片的描述][14]
+表现多个参与者之间的交互，由编排活动直接表现多个参与者之间的消息交互，为协作模型提供了一种基于流程图的模型.</p>
+
+<h4 id="234-会话图">2.3.4 会话图</h4>
+<p>![此处输入图片的描述][15]
+协作模型的另一种表现形式.</p>
+
+</div>
+
+<br/>
+<b>原创文章，转载请注明出处！</b>
+<br/>
+<b>本文链接：</b><a href="http://localhost:4000/posts/bmpn.html" title="">http://localhost:4000/posts/bmpn.html</a>
+
+<!-- next and previous -->
+<div style="margin-top:15px; margin-bottom:10px">
+  
+  <span class="next">
+    上篇：
+    <a href="/posts/socketio.html">
+      利用flask_socketio实现与前段的socket通信
+    </a>
+  </span>
+   
+  
+  <div style="float:right">
+  <span class="prev" >
+    下篇：
+    <a href="/posts/mule.html">
+      通过MULE实现后端服务调用
+    </a>
+  </span>
+  </div>
+  
+</div>
+<hr>
+<!-- Blog Comments -->
+<div class="media">
+   
+</div>
+        </div>
+        <!-- Blog Sidebar Widgets Column -->
+        <div class="col-md-4">
+          <!-- Blog Categories Well -->
+          <div class="well">
+            <h4>
+              栏目分类
+            </h4>
+            <div class="row">
+                            <div class="col-lg-6">
+                <ul class="list-unstyled">
+                  <li>
+                    <a href="/posts/work.html">
+                      工作经验
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/posts/study.html">
+                      学习笔记
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/posts/other.html">
+                      随笔
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/archives.html">
+                      存档
+                    </a>
+                  </li>
+                </ul>
+              </div>
+ 
+ 
+            </div>
+            <!-- /.row -->
+          </div>
+		  <!-- Blog Recent Well -->
+          <div class="well">
+            <h4>
+              最新文章
+            </h4>
+			<div class="row">
+                            <div class="col-lg-12">
+                <ul class="list-unstyled">
+				
+                  <li>
+                    <a href="/posts/log.html">
+                      为Spring Boot添加日志模块
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/mule.html">
+                      通过MULE实现后端服务调用
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/bmpn.html">
+                      BPMN2.0概念
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/socketio.html">
+                      利用flask_socketio实现与前段的socket通信
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/shejimoshi.html">
+                      大话设计模式Python实现
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/iter.html">
+                      Python的迭代器，可迭代对象和生成器
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/git.html">
+                      Pro Git整理
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/sicp.html">
+                      SICP
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/rabbitmq.html">
+                      RabbitMQ泛式
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/redis.html">
+                      再看redis
+                    </a>
+                  </li>
+				  
+                </ul>
+              </div> 
+			</div>
+          </div>
+        </div>
+      </div>
+      <!-- /.row -->
+
+      <!-- Footer -->
+      <footer>
+        <div class="row">
+          <div class="col-lg-12">
+                        <div style="text-align:center;margin-top:15px;">
+				Copyright &copy; cuijintao.github.io, generated by Jekyll
+				<br/>
+            </div>
+ 
+          </div>
+          <!-- /.col-lg-12 -->
+        </div>
+        <!-- /.row -->
+      </footer>
+    </div>
+    <!-- /.container -->
+  </body>
+
+</html>

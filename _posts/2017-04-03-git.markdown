@@ -1,0 +1,167 @@
+---
+layout: post
+category: "study"
+title:  "Pro Git整理"
+tags: [git]
+---
+
+学习自Pro Git文档，在此处进行梳理。
+
+## 一些未知概念
+
++ Git 对待数据更像是一个 快照流。
++ 你执行的 Git 操作，几乎只往 Git 数据库中增加数据。
+
+## 配置
+
+git存在三个层级的配置级别，后一级别的配置项会覆盖前一层级的配置项。
++ `git config --system` 系统级别，读写`/etc/gitconfig`文件。
++ `git config --global` 当前用户级别，读写`~/.gitconfig`或`~/.config/git/config`文件。
++ `git config` 当前仓库级别，读写`.git/config`文件。
+
+### 用户配置
+只可填写一次，之后的任何一次commit都会使用该信息，不可修改。
+
+```
+$ git config --global user.name "John Doe"
+$ git config --global user.email johndoe@example.com
+```
+
+### 文本编辑器
+默认为vim。
+
+```
+$ git config --global core.editor emacs
+```
+
+### 检查配置信息
+```
+$ git config --list
+```
+
+## 命令
+
+### 状态概览
+```
+$ git status -s
+```
+新添加的未跟踪文件前面有 ?? 标记。
+新添加到暂存区中的文件前面有 A 标记。
+修改过的文件前面有 M 标记。 
+出现在右边的 M 表示该文件被修改了但是还没放入暂存区。
+出现在靠左边的 M 表示该文件被修改了并放入了暂存区。
+
+### 忽略文件
+通过创建`.gitignore`文件来选择无需纳入git中的文件。
+```
+# no .a files
+*.a
+
+# but do track lib.a, even though you're ignoring .a files above
+!lib.a
+
+# only ignore the TODO file in the current directory, not subdir/TODO
+/TODO
+
+# ignore all files in the build/ directory
+build/
+
+# ignore doc/notes.txt, but not doc/server/arch.txt
+doc/*.txt
+
+# ignore all .pdf files in the doc/ directory
+doc/**/*.pdf
+```
+
+### 查看修改
+```
+$ git diff 
+```
+工作区 vs 暂存区
+```
+$ git diff --cached
+```
+暂存区 vs 仓库
+
+### 跳过暂存区
+```
+$ git commit -a -m "message"
+```
+可以将所有被跟踪的文件都提交到仓库中
+
+### 重命名文件
+在git中体现的操作为先删除再新建
+
+### 提交历史
+```
+$ git log -p -2
+$ git log --stat
+```
+`-p`用来显示每次变动，`-2`显示近两次提交。
+`--stat`用来显示所有被修改过文件的修改情况。
+`--graph`用来显示分支合并情况。
+`--pretty`指定显示格式。
+`--graph`指定分支合并情况。
+
+### 撤销操作
+```
+$ git commit --amend
+```
+将暂存区里与上次提交历史合并并提交覆盖上次提交历史。
+```
+$ git reset HEAD
+```
+将暂存区内容恢复到与仓库一致
+
+## 远程仓库
+```
+$ git remote -v
+```
+列出所有远程仓库列表
+```
+$ git remote add <shortname> <url>
+```
+添加
+```
+$ git fetch origin
+```
+拉取远程仓库的分支引用，可以随时合并或查看。
+```
+$ git remote show origin 
+```
+查看远程分支信息
+
+## GIT分支
+提交对象除了有指向快照的指针和作者邮箱等信息外，还具有指向父级提交对象的指针。
+分支实际上为指向上一次提交对象的指针（可变指针）。
+`HEAD`是一个特殊指针，指向当前所在的本地分支。
+`git log --decorate`可查看各个分支指向的对象。
+`git log --oneline --decorate --graph --all`查看分支分叉情况。
+
+### 解决bug模式(本地)
+切换到线上分支->新建分支->修改bug->切换回线上分支->合并分支->返回工作分支
+```
+$ git checkout -b issbug
+$ git commit -a -m "fix bug"
+$ git checkout master
+$ git merge issbug  # git会自动选用合适的方式来合并分支，fast-forward或strage
+$ git branch -d issbug
+```
+
+### 分支管理
+`git branch --merged`已合并到当前分支的所有分支。
+`git branch -D test`强制删除分支（不推荐）
+
+### 远程分支
+`origin/master`远程分支是不能移动的本地指针，指向对远程分支状态的引用。只要不与远程仓库连接，该指针就不会移动。
+`git fetch origin`更新远程分支的引用，可以与本地分支分叉。
+`git merge origin/master`将远程分支合并到当前分支。
+
++ 跟踪分支：跟踪分支后在输入`git pull`后git可以知道到哪拉取并合并数据。
+`git checkout -b serverfix origin/serverfix`建立本地分支并跟踪远程分支。
+`git checkout --track origin/serverfix`等同。
+
+`git branch -vv`获取分支和跟踪信息。
+
++ 拉取
+`git pull`相当于`git fetch`和`git merge`操作。

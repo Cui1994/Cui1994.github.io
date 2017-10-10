@@ -1,0 +1,209 @@
+---
+layout: post
+category: "study"
+title:  "再看redis"
+tags: [redis]
+---
+
+
+之前只是将redis当做celery通信的中间件，并没有特别关注其独有特性。再回看redis，其许多特性可以应用到不同的场景中，且效率比一般关系型数据库要高。
+
+## 几种数据类型的优势
+redis作为一种NoSQL数据库，自然可以适应高并发和海量数据的存储，同样以key作为检索的唯一索引，不能对复杂的逻辑关系提供很好的支持。但其被广泛认作key-value型存储结构的数据库，其实有失偏颇。redis除了string是典型的key-value结构外，其余数据结构都有其独特应用。
+
+### list
+redis的list链表结构，由于其有序性，在链表的两头插入和删除元素都十分高效，时间复杂度为O(1)。但在链表中间插入和删除数据效率会下降，时间复杂度为O(N)。
+
+### hash
+hash结构是具有string类型的field-value的映射表，适合存储对象信息，hash中的字段较少时占用内存也比较低。
+
+### set
+set集合中的元素没有顺序，不允许重复，增查更新的时间复杂度均为O(1)，可以再服务器端进行求并集差集运算，效率很高。
+
+### ordered set
+同set集合一样，只不过对每个元素都结合了一个score关联进行排序，实现增删改的操作非常迅速，时间复杂度为O(logN)，这在其他关系型数据库中是比较难实现的。
+
+### 应用场景
+这里模拟了一些可以用redis解决的场景。
+
+- 典型Pub-Sub场景
+
+这是redis可以实现的最为典型的场景
+
+```python
+# pub.py
+
+import redis
+r = redis.Redis(host='localhost', port=6379)
+r.publish('en', 'hello, world')
+```
+```
+# sub.py
+
+import redis
+r = redis.Redis(host='localhost', port=6379)
+pubsub = r.pubsub()
+pubsub.subscribe('en')
+for item in pubsub.listen():
+    print item
+```
+
+- 最近登录列表
+
+模拟队列并保持队列内元素数目为定值。
+
+```
+uid = randint(0, 9)
+ret = r.lpush('login:last_login_times', uid)
+ret = r.ltrim('login:last_login_times', 0, 4)
+last_login_list = r.lrange('login:last_login_times', 0, 4)
+print last_login_list
+```
+
+- 生产者消费者模型
+
+生产者推送消息，消费者执行，生成备份消息队列防止消息丢失。
+
+```
+if r.llen('message') < 2:
+	r.lpush('message', 1,2,3)
+msg = randint(0, 9)
+r.lpush('message', msg)
+r.rpoplpush('message', 'message_backup')
+print r.lrange('message', 0, -1)
+print r.lrange('message_backup', 0, 5)
+```
+
+- 积分排行榜
+
+玩家分数变化时用zadd更新玩家分数，再用zrange获取积分top信息。
+
+```python
+if r.zcard('new_login_times') == 0:
+	r.zadd('new_login_times', 'Bob', 1)
+	r.zadd('new_login_times', 'Jack', 1)
+	r.zadd('new_login_times', 'Crool', 1)
+
+uid = randint(0, 2)
+name = ['Bob', 'Jack', 'Crool'][uid]
+print name
+ret = r.zincrby('new_login_times', name, 1)
+#login_times_list = r.zrevrange('new_login_times', 1, 3)
+print r.zrevrange('new_login_times', 0, -1, withscores=True)
+```
+
+- 共同关注
+利用set的高效intersections命令，类似的还有suninostore求并集命令。
+
+```
+r.sadd('s1', 'a', 'b', 'c', 'd')
+r.sadd('s2', 'b', 'c', 'd', 'e')
+r.sadd('s3', 'c', 'd', 'e', 'f')
+r.sinterstore('result', 's1', 's2', 's3')
+print r.smembers('result')
+r.delete('s1', 's2', 's3', 'result')
+```
+
++ Master/Slave模型
+利用list可以很容易实现分布式中的Master/Slave模型。
+
+```python
+# RedusQueue.py
+
+import redis
+
+class RedisQueue(object):
+    """Simple Queue with Redis Backend"""
+    def __init__(self, name, namespace='queue', **redis_kwargs):
+        """The default connection parameters are: host='localhost', port=6379, db=0"""
+        self.__db= redis.Redis(**redis_kwargs)
+        self.key = '%s:%s' %(namespace, name)
+
+    def qsize(self):
+        """Return the approximate size of the queue."""
+        return self.__db.llen(self.key)
+
+    def empty(self):
+        """Return True if the queue is empty, False otherwise."""
+        return self.qsize() == 0
+
+    def put(self, item):
+        """Put item into the queue."""
+        self.__db.rpush(self.key, item)
+
+    def get(self, block=True, timeout=None):
+        """Remove and return an item from the queue.
+
+        If optional args block is true and timeout is None (the default), block
+        if necessary until an item is available."""
+        if block:
+            item = self.__db.blpop(self.key, timeout=timeout)
+        else:
+            item = self.__db.lpop(self.key)
+
+        if item:
+            item = item[1]
+        return item
+
+    def get_nowait(self):
+        """Equivalent to get(False)."""
+        return self.get(False)
+```
+
+```
+# master.py
+
+from RedisQueue import RedisQueue
+
+rq = RedisQueue('test')
+for i in range(30):
+	rq.put(i)
+print rq.qsize()
+```
+
+```
+# slave.py
+
+import time
+from RedisQueue import RedisQueue
+
+rq = RedisQueue('test')
+while not rq.empty():
+	print rq.get()
+	time.sleep(1)
+```
+
+## redis事务
+redis事务被MULTI/EXEC/DISCARD/WATCH囊括，实际是串行顺序执行，执行期间redis不会再为客户端提供任何服务，从而保证事务的原子执行。
+
+EXEC/DISCARD类似于关系型数据库中的COMMIT/ROLLBACK语句。若在一次事务中发生错误redis将回滚所有操作。
+
+WATCH可以实现CAS即check-and-set锁。若在WATCH中监控的值发生改变，事务中的后续操作都不会被执行。这一特性可以很好地应用于多用户同时请求一个redis值时防止值得结果不一致。
+
+## redis主从复制
+redis可以很好地实现Master/Slave模型，此外其还有许多独有特性。
+
+ 1. 同一个Master可以为多个Slave服务。
+ 2. Slave和Slave之间也可以实现连接和同步请求。
+ 3. S响应M是非阻塞的，期间M仍可以为客户端提供请求。
+ 4. S之间的同步也是非阻塞的
+ 5. 可以设置S来实现只读的用户响应和保存数据的任务，以降低M的负荷。
+
+具体实现：
+```
+$ redis-server --port 6380 &
+$ redis-cli -p 6380
+127.0.0.1:6380> slaveof 127.0.0.1 6379
+```
+这样就实现了主从复制，服务关闭后这种关系也消失，若想永久保存需要修改配置文件。
+
+## redis持久化
+redis有三种（实际上是两种）持久化机制，快照（RDB)和追加式文件（AOF）。
+
+RDB会在固定时间将数据集快照写入磁盘，每一次写入都会覆盖之前的文件，因此只存在一个文件。方便归档和备份，但有数据丢失的危险。
+
+AOF则会在每次修改后将命令追加到AOF文件中，而且有redis-check-aof工具来解决命令执行一半宕机的问题。是一种非常可靠的持久化方式，缺点是速度慢，文件多。
+
+若有需求需要修改配置文件，此处不赘述。
+
+

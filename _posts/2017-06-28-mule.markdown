@@ -1,0 +1,229 @@
+---
+layout: post
+category: "work"
+title:  "通过MULE实现后端服务调用"
+tags: [mule]
+---
+
+
+# 概述
+
+## 1.简介
+Mule ESB是一个基于Java的轻量级企业服务总线和集成平台，允许开发人员快速便利地连接多个应用，并支持应用间的数据交换。Mule ESB支持集成现有系统而无论其底层采用何种技术，如JMS、Web Services、JDBC、HTTP以及其他技术。
+
+## 2.整体结构
+![此处输入图片的描述][1]
+Mule通过Transports/Connectors与外围的异构系统连接，提供Routing（路由）、Transaction Management（事务管理）、Transformation（转换）、Message Broker（消息代理）、Transportation Management（传输管理）、Security（安全）等核心模块。Mule可以单独使用，也可以架设在常用的应用服务器上。
+
+![此处输入图片的描述][2]
+外围系统的服务请求通过Mule ESB的Transport接入，Mule通过Transformer进行数据的格式转换，然后经过Inbound Router进行消息过滤（内部通过配置filter实现）后交给Mule的Component进行业务逻辑处理，处理后的结果通过Outbound Router确定传递给哪个接收方，然后通过Transformer进行数据格式转换，通过Transport连接至接收方，传递信息。
+
+此图描述的是Mule中的一个典型场景的处理过程，涵盖了Mule中的各个关键组件。其中某些处理步骤不是必须的，如Inbound Router、Transformer。
+
+## 3.功能
+### 服务中介
+
+将业务逻辑和消息发送分离
+屏蔽服务的消息格式和协议
+提供任意位置的服务调用
+提供协议桥接
+
+### 数据转换
+
+在应用间交换不同格式的信息 
+操作消息的负载内容，包括加密、压缩和编码转换
+在异构的传输协议的数据类型间格式化消息
+
+### 消息路由
+
+基于消息内容和复杂规则路由消息
+消息的过滤、聚合以及重新排列序号
+
+### 服务创建和托管
+
+暴露端点、EJB、Spring Bean以及POJO作为服务
+作为轻量级的服务容器进行服务托管
+
+# Mule的基本元素
+## 1.Flow
+使用`<flow>`元素在mule中配置Flow，Flow有一个name，消息源(一般由flow中定义的特定元素生成)和异常属性。
+```
+<flow name="">
+    - 0..1 MessageSource
+    - 1..n MessageProcessor(s)
+    - 0..1 ExceptionStrategy
+</flow>
+```
+消息源接收或生成消息时，一个Flow将被启动，并根据Flow中所配置好的元素顺序进行执行。
+特别的，当Flow为Request-Response模型时，Flow中最后一个消息处理器的处理结果作为相应返回，也可以在Flow中定义Response元素来处理相应。
+
+## 2.Message
+Message负责在Mule中的数据传递，在Mule中主要存在三种Message形式。
+
+### Property
+属性，键值对形式，分为入站和出站属性。
+
++ 入站属性(Inbound properties)不可变，由消息源直接生成。
+```
+#[message.inboundProperties]
+```
++ 出站属性(Outbound properties)可变，并可在流程中修改。
+```
+#[message.outboundProperties]
+```
+
+### Variables
+变量，完全由用户在流程内定义。
+
++ 流变量(Flow variables) 只在其所在的Flow中可以使用。
+```
+#[flowVars]
+```
++ 会话变量(Session variables) 适用于程序内所有的Flow。
+```
+#[sessionVars]
+```
++ 记录变量(Record variables) 仅适用于批量处理。
+
+### Payload
+参数传递，在Flow中流转的待处理参数，可以被修改和更改格式。
+```
+#[payload]
+```
+
+Message可以引入特定Component进行设置。
+
+## 3.Connector
+连接器将Mule应用程序与第三方API和标准集成协议集成，从而提供访问Web服务和资源的方法。
+使用Mule流中的连接器通过协议或使用API，发送和接收数据。
+
+目前业务中涉及的连接器主要有HTTP连接器和AMQP连接器，其余连接器若有需要再行补充。
+
+连接器的具体配置方法在下面业务场景中列出，配置好的连接器被储存在全局元素中，在任意的Flow中都可以引用并获得这个元素的实例。
+
+### HTTP-Listener-Connector
+HTTP侦听器连接器提供了最实际的方式来监听HTTP请求。
+
+连接器可以被配置为接受任何请求，或只接受寻址到特定URI的请求。可以选择连接器接受的方法：GET，POST等
+
+请求body被传递到Flow作为的下一个元素的Payload放入Message，而Header，Query参数，URI参数和HTTP请求的其它元件被传递作为入站属性。这些属性可以从Message中访问。
+
+此连接器还可以使用HTTPS协议，并通过TLS对通信进行加密。
+
+```
+<http:listener-config name="HTTP_Listener_Configuration" host="localhost" port="8081" doc:name="HTTP Listener Configuration"/>
+```
+
+### HTTP-Request-Connector
+HTTP请求连接器提供了消费外部HTTP服务的最实际的方法。发送HTTP请求时，您可以选择使用哪种方法（GET，POST等），并可能包含一个header，body，查询参数，表单参数和URI参数。然后响应由连接器接收，并传递给流中的下一个元素。
+
+该连接器还可以实现HTTPS协议，并通过TLS对通信进行加密，还可以通过基本身份验证，OAuth，NTLM或摘要来实现身份验证。
+
+```
+    <http:request-config name="HTTP_Request_Configuration" host="127.0.0.1" port="5000" doc:name="HTTP Request Configuration" basePath="/"/>
+```
+
+### AMQP-Connector
+高级消息队列协议（AMQP）是一种开放标准，用于定义在应用程序或组织之间传递业务消息的协议。
+AMQP连接器是先前引入的AMQP结构之上的一种抽象：连接，通道，交换，队列和消息。
+
+连接器隐藏了低级概念，例如处理通道，但是对其封装的所有结构进行了大量的控制，从而允许您访问AMQP的丰富性，而无需对其API进行编码。
+
+主要部件：
+
++ Connector： 建立与AMQP broker的联系，如rabbitmq，管理由使用此连接器的所有消费者或发布商共享的一组公共属性
++ inbound-endpoint： 消耗来自AMQP队列的消息，将消息存入Mule的Message中
++ outbound-endpoint： 从Mule Flow向AMQP交换机发布消息
+
+
+
+
+
+# Mule的几种适用场景
+
+## 1.一个经典的HTTP转发模型
+
+### 基本部件
+核心由三个部分组成：HTTP-Liten-Connector, HTTP-Request-Connector, Set-Payload-Component，也可在之中即加入Echo-Component用于在Console中输出消息。
+
+### 配置
+
++ HTTP-Listen配置：
+General->General Setting->Connector Configuration->edit 指定HOST, PORT和BASE PATH
+General->Basic Setting->Path 指定路由，*可以为任意路由，(此处可以应用到rest转发)
+General->Response 中指定返回值(如配置Header实现跨域请求)
+
++ Set-Payload配置:
+General->Setting->value 指定请求body的值(原值传递`#[payload]`)
+General->MIME Type Setting 指定请求body类型
+
++ HTTP-Request配置(大部分和Listen相似，只需增加请求类型):
+General->URL Settings->Method
+
+### demo
+
+```
+    <http:listener-config name="HTTP_Listener_Configuration" host="localhost" port="8081" doc:name="HTTP Listener Configuration"/>
+    <http:request-config name="HTTP_Request_Configuration" host="127.0.0.1" port="5000" doc:name="HTTP Request Configuration" basePath="/"/>
+    <flow name="helloworldFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="test" responseStreamingMode="ALWAYS" doc:name="HTTP-Listen">
+            <http:response-builder>
+                <http:header headerName="Access-Control-Allow-Origin" value="#[message.inboundProperties.'Access-Control-Allow-Origin']"/>
+            </http:response-builder>
+        </http:listener>
+        <echo-component doc:name="Echo"/>
+        <set-payload value="#[payload]" encoding="UTF-8" mimeType="application/json" doc:name="Set Payload"/>
+        <http:request config-ref="HTTP_Request_Configuration" path="test" method="POST" doc:name="HTTP-Request">
+            <http:request-builder>
+                <http:header headerName="Access-Control-Allow-Mthods" value="#[message.inboundProperties.'Access-Control-Allow-Mthods']"/>
+                <http:header headerName="Cookie" value="#[message.inboundProperties.'Cookie']"/>
+            </http:request-builder>
+        </http:request>
+    </flow>
+```
+
+
+## 2.一个经典的Rabbitmq消息转发
+
+### 基本部件
+Http-Listen-Connector, AMQP-Connector。其中AMQP相关连接器需要自行安装引入，我这里采用第三方软件包形式安装，还可通过官方软件包和Maven进行引入。
+
+### 配置
+以HTTP-Listen和AMQP-EndPoint组成，其中HTTP-Listen和上面配置相同。
+
++ AMQP配置
+Reference->Global Reference->Connector Reference->add 添加AMQP-Connector，Protoal全部采用默认值。
+General->Address Attribute 配置Exchange和Queue
+
+### demo
+```
+    <amqp:connector name="AMQP_0_9_Connector" validateConnections="true" doc:name="AMQP-0-9 Connector"/>
+    <http:listener-config name="HTTP_Listener_Configuration" host="localhost" port="8081" doc:name="HTTP Listener Configuration"/>
+    <amqp:endpoint exchangeName="Kong" queueName="hello" name="AMQP_0_91" responseTimeout="10000" doc:name="AMQP-0-9"/>
+    <flow name="test4Flow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/" doc:name="HTTP"/>
+        <amqp:outbound-endpoint connector-ref="AMQP_0_9_Connector" exchangeName="Kong" doc:name="AMQP-0-9" queueName="hello" responseTimeout="10000"/>
+    </flow>
+```
+
+## 3.REST格式请求
+
+大致与http格式相似，需要用到MULE表达式将HTTP-Listener中的path传递给HTTP-Request
+
+### demo
+```
+    <http:listener-config name="HTTP_Listener_Configuration" host="localhost" port="8081" doc:name="HTTP Listener Configuration"/>
+    <http:request-config name="HTTP_Request_Configuration" host="localhost" port="5000" doc:name="HTTP Request Configuration"/>
+    <flow name="test5Flow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/*" doc:name="HTTP"/>
+        <http:request config-ref="HTTP_Request_Configuration" path="#[message.inboundProperties.'http.request.path']" method="GET" doc:name="HTTP">
+            <http:request-builder>
+                <http:query-params expression="#[message.inboundProperties.'http.query.params']"/>
+            </http:request-builder>
+        </http:request>
+    </flow>
+```
+
+
+  [1]: http://my.oschina.net/uploads/space/2010/1206/131219_BfeJ_49921.jpg
+  [2]: http://my.oschina.net/uploads/space/2010/1206/104036_uBGk_49921.jpg

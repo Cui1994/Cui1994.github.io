@@ -4,9 +4,9 @@
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <meta name="description" content="页面不存在：Page Not Found - 崔金涛个人博客 - 作者:崔金涛"/> 
-	
-    <title>页面不存在：Page Not Found - 崔金涛个人博客</title>
+    <meta name="description" content="Python的迭代器，可迭代对象和生成器 - 崔金涛个人博客 - 作者:崔金涛"/> 
+	<meta name="keywords" content="python"/>
+    <title>Python的迭代器，可迭代对象和生成器 - 崔金涛个人博客</title>
     <!-- Bootstrap Core CSS -->
     <link href="/css/bootstrap.min.css" rel="stylesheet"/>
     <!-- Custom CSS -->
@@ -81,14 +81,176 @@
       <div class="row">
         <!-- Blog Entries Column -->
         <div class="col-md-8">
-          <p align="center">
-<h1></h1>Page Not Found!</h1>
-Please wait...
+          <!-- Navi -->
+<a href="/">首页</a>&nbsp;>&nbsp;<a href="/posts/other.html">随笔</a>&nbsp;>&nbsp;正文
+<!-- Title -->
+<h2>Python的迭代器，可迭代对象和生成器</h2>
+<b>标签：</b><a href="/tags.html#python"><i>python</i></a>
+<div class="post-date">
+	<span class="glyphicon glyphicon-time"></span>
+	2017-04-08
+</div>
 <br/>
-<br/>
-thanks!
-</p>
 
+<!-- content -->
+<div style="text-indent:2em;">
+<h2 id="可迭代对象和迭代器对象">可迭代对象和迭代器对象</h2>
+<p>可迭代对象<code>iterable</code>可通过内置方法<code>iter()</code>生成迭代器对象<code>iterator</code>。
+可以使用此方法的对象自身为迭代器或序列，即自身存在<code>__iter__</code>或<code>__getitem__</code>属性。
+迭代器可使用<code>next()</code>方法生成下一个元素，最终抛出<code>StopIteration</code>异常。</p>
+
+<p>for循环的实质：
+先调用可迭代对象的<code>__iter__</code>方法将其转换为一个迭代器，再对迭代器重复执行<code>next</code>方法直到捕获<code>StopIteration</code>异常。</p>
+
+<p>适用于一些惰性场合：
+通过构造可迭代对象可以实现在for循环过程中的延时访问, 并将所有函数运行结果封装到一个对象当中。</p>
+
+<p>构造可迭代对象的步骤：
+1.构造迭代器对象。继承<code>Iterator</code>对象并重写<code>next</code>接口，该接口中的方法为需要延时访问的函数或方法逻辑。
+2.构造可迭代对象。继承<code>Iterable</code>对象并重写<code>__iter__</code>接口，返回步骤1中构造的迭代器对象实例。</p>
+
+<p>demo：
+非迭代版本</p>
+
+<pre><code class="language-python">import time
+
+def func(x):
+	time.sleep(2)
+	print 'run func...'
+	return x
+
+if __name__ == '__main__':
+    # 结果对象为[func(1), func(2), func(3)]
+	for x in [func(1), func(2), func(3)]:
+		print x
+
+########################################
+# OUTPUT:
+# run func...
+# run func...
+# run func...
+# 1
+# 2
+# 3
+########################################
+</code></pre>
+
+<p>迭代版本：</p>
+
+<pre><code class="language-python">from collections import Iterable, Iterator
+import time
+
+class MyIterator(Iterator):
+
+	def __init__(self, num_list):
+		super(MyIterator, self).__init__()
+		self.num_list = num_list
+		self.index = 0
+
+	def next(self):
+		if self.index == len(self.num_list):
+			# tip:	can't return
+			raise StopIteration
+		else:
+			result = self.func(self.num_list[self.index])
+			self.index += 1
+			return result
+
+	def func(self, x):
+		time.sleep(2)
+		print 'run func...'
+		return x
+
+class MyIterable(Iterable):
+
+	def __init__(self, num_list):
+		super(MyIterable, self).__init__()
+		self.num_list = num_list
+
+	def __iter__(self):
+		return MyIterator(self.num_list)
+
+if __name__ == '__main__':
+    # 结果对象为MyIterable([1,2,3])
+	for x in MyIterable([1,2,3]):
+		print x
+
+########################################
+# OUTPUT:
+# run func...
+# 1
+# run func...
+# 2
+# run func...
+# 3
+########################################
+</code></pre>
+
+<h2 id="生成器函数">生成器函数</h2>
+<p>函数体中带有<code>yield</code>的函数几位生成器函数，调用生成器函数将返回一个生成器对象。
+生成器对象也是一个可迭代对象。(可以调用<code>__iter__</code>函数)
+也是一个迭代器对象。（可以调用<code>next</code>函数）</p>
+
+<p>因此可以将某个类的<code>__iter__</code>方法实现为生成器函数来实现可迭代对象。</p>
+
+<p>素数demo：</p>
+<pre><code>class PrimeNumber:
+
+	def __init__(self, start, stop):
+		self.start = start
+		self.stop = stop
+
+	def is_prime(self, num):
+		if num &lt; 2:
+			return False
+		for i in range(2, num):
+			if num % i == 0:
+				return False
+		return True
+
+	def __iter__(self):
+		for i in range(self.start, self.stop + 1):
+			if self.is_prime(i):
+				yield i
+
+for i in PrimeNumber(0, 100):
+	print i 
+
+</code></pre>
+
+</div>
+
+<br/>
+<b>原创文章，转载请注明出处！</b>
+<br/>
+<b>本文链接：</b><a href="http://localhost:4000/posts/iter.html" title="">http://localhost:4000/posts/iter.html</a>
+
+<!-- next and previous -->
+<div style="margin-top:15px; margin-bottom:10px">
+  
+  <span class="next">
+    上篇：
+    <a href="/posts/git.html">
+      Pro Git整理
+    </a>
+  </span>
+   
+  
+  <div style="float:right">
+  <span class="prev" >
+    下篇：
+    <a href="/posts/shejimoshi.html">
+      大话设计模式Python实现
+    </a>
+  </span>
+  </div>
+  
+</div>
+<hr>
+<!-- Blog Comments -->
+<div class="media">
+   
+</div>
         </div>
         <!-- Blog Sidebar Widgets Column -->
         <div class="col-md-4">

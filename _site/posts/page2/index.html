@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="description" content="AwakeBird - 崔金涛个人博客 - 作者:崔金涛"/>
+    <title>AwakeBird - 崔金涛个人博客</title>
+    <!-- Bootstrap Core CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+    <!-- Custom CSS -->
+    <link href="/css/blog.css" rel="stylesheet"/>
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media
+    queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file://
+    -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js">
+      </script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js">
+      </script>
+    <![endif]-->
+        <!-- jQuery Version 1.11.0 -->
+    <script src="/js/jquery-1.11.0.js"> </script>
+    <!-- Bootstrap Core JavaScript -->
+    <script src="/js/bootstrap.min.js"></script>
+  </head>
+  
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+            <span class="sr-only">
+              Toggle navigation
+            </span>
+            <span class="icon-bar">
+            </span>
+            <span class="icon-bar">
+            </span>
+            <span class="icon-bar">
+            </span>
+          </button>
+          <a class="navbar-brand" href="/">
+            首页
+          </a>
+        </div>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          		<ul class="nav navbar-nav">
+			
+				<li>
+				  <a href="/posts/work.html">
+					工作经验
+				  </a>
+				</li>
+			
+				<li>
+				  <a href="/posts/study.html">
+					学习笔记
+				  </a>
+				</li>
+			
+				<li>
+				  <a href="/posts/other.html">
+					随笔
+				  </a>
+				</li>
+			
+		</ul>  
+        </div>
+        <!-- /.navbar-collapse -->
+      </div>
+      <!-- /.container -->
+    </nav>
+    <!-- Page Content -->
+    <div class="container">
+      <div class="row">
+        <!-- Blog Entries Column -->
+        <div class="col-md-8">
+          <!-- Loop output paged posts -->
+
+<h2>
+  <a href="/posts/rabbitmq.html">
+    RabbitMQ泛式
+  </a> 
+  <div class="post-date">
+	<span class="glyphicon glyphicon-time"></span>
+	2017-03-24
+  </div>
+</h2>
+<hr>
+<p>掌握了一种rabbitmq设计的初步泛式，原理部分以后补充。</p>
+
+<h2 id="概念">概念</h2>
+
+<p>由4部分构成，消息生产者(P)，交换机(X)，队列(Q)，消息消费者(C)。
+X：direct，topic，headers，fanout</p>
+
+<h3 id="pub泛式">pub泛式</h3>
+
+<pre><code>from librabbitmq import Connection
+
+def connection_rabbit():
+    global connection
+    global channel
+    connection = Connection(host=config["host"], virtual_host=config["vhost"],
+                            userid=config["userid"], password=config["password"])
+    channel = connection.channel()
+    channel.exchange_declare(exchange="name", type="direct")
+    print "rabbitmq connect done"
+    
+def send_message(routing, body):
+    global channel
+    channel.basic_publish(exchange="name", 
+                        routing_key=routing,
+                        body=body,
+                        deliver_mode=2) # 消息持久化
+    print "[*] send message {0}: {1}: {2}".format(routing, body, "timestamp")
+    
+if __name__ == '__main__':
+    send_message(routing, params)
+    # routing从参数中对应字典取出
+
+</code></pre>
+
+<h3 id="sub泛式">sub泛式</h3>
+
+<pre><code class="language-python">import ast
+import sys
+from librabbitmq import connection
+
+def consume(queue_name, callback):
+    connection = Connection(host=config["host"], virtual_host=config["vhost"],
+                            userid=config["userid"], password=config["password"])
+    channel = connection.channel()
+    channel.exchange_declare(exchange="name", type="direct")
+    channel.queue_declare(queue=queue_name, durable=True) #队列持久化
+    channel.queue_bind(exchange="direct", queue=queue_name,                     
+                    routing_key=queue_name)
+    channel.basic_qos(prefetch_count=1) #每个worker在接受到一条消息后不会再被分配消息
+    channel.basic_consume(callback=callback, queue=queue_name)
+    
+    print "[*] Waiting for tasks. To exit press CTRL+C"
+    while True:
+        connection.drain_events()
+        
+def callback(message):
+    # callback会将body作为参数传入
+    params = ast,literal_eval(str(message.body))
+    print "[*] Receive message {}".format(params)
+    global routing
+    if routing == "1":
+        class1(params).func1()
+    elif ...
+    ...
+    else:
+        pass
+    message.ack()
+    
+if __name__ == "__main__":
+    global routing
+    routing = sys.argv[1]
+    consume(routing, callback)
+</code></pre>
+
+	<p><h3><a href="/posts/rabbitmq.html">阅读全文 &raquo;</a></h3></p>
+<hr>
+
+<h2>
+  <a href="/posts/redis.html">
+    再看redis
+  </a> 
+  <div class="post-date">
+	<span class="glyphicon glyphicon-time"></span>
+	2017-03-01
+  </div>
+</h2>
+<hr>
+<p>之前只是将redis当做celery通信的中间件，并没有特别关注其独有特性。再回看redis，其许多特性可以应用到不同的场景中，且效率比一般关系型数据库要高。</p>
+
+<h2 id="几种数据类型的优势">几种数据类型的优势</h2>
+<p>redis作为一种NoSQL数据库，自然可以适应高并发和海量数据的存储，同样以key作为检索的唯一索引，不能对复杂的逻辑关系提供很好的支持。但其被广泛认作key-value型存储结构的数据库，其实有失偏颇。redis除了string是典型的key-value结构外，其余数据结构都有其独特应用。</p>
+
+<h3 id="list">list</h3>
+<p>redis的list链表结构，由于其有序性，在链表的两头插入和删除元素都十分高效，时间复杂度为O(1)。但在链表中间插入和删除数据效率会下降，时间复杂度为O(N)。</p>
+
+<h3 id="hash">hash</h3>
+<p>hash结构是具有string类型的field-value的映射表，适合存储对象信息，hash中的字段较少时占用内存也比较低。</p>
+
+<h3 id="set">set</h3>
+<p>set集合中的元素没有顺序，不允许重复，增查更新的时间复杂度均为O(1)，可以再服务器端进行求并集差集运算，效率很高。</p>
+
+<h3 id="ordered-set">ordered set</h3>
+<p>同set集合一样，只不过对每个元素都结合了一个score关联进行排序，实现增删改的操作非常迅速，时间复杂度为O(logN)，这在其他关系型数据库中是比较难实现的。</p>
+
+<h3 id="应用场景">应用场景</h3>
+<p>这里模拟了一些可以用redis解决的场景。</p>
+
+<ul>
+  <li>典型Pub-Sub场景</li>
+</ul>
+
+<p>这是redis可以实现的最为典型的场景</p>
+
+<pre><code class="language-python"># pub.py
+
+import redis
+r = redis.Redis(host='localhost', port=6379)
+r.publish('en', 'hello, world')
+</code></pre>
+<pre><code># sub.py
+
+import redis
+r = redis.Redis(host='localhost', port=6379)
+pubsub = r.pubsub()
+pubsub.subscribe('en')
+for item in pubsub.listen():
+    print item
+</code></pre>
+
+<ul>
+  <li>最近登录列表</li>
+</ul>
+
+<p>模拟队列并保持队列内元素数目为定值。</p>
+
+<pre><code>uid = randint(0, 9)
+ret = r.lpush('login:last_login_times', uid)
+ret = r.ltrim('login:last_login_times', 0, 4)
+last_login_list = r.lrange('login:last_login_times', 0, 4)
+print last_login_list
+</code></pre>
+
+<ul>
+  <li>生产者消费者模型</li>
+</ul>
+
+<p>生产者推送消息，消费者执行，生成备份消息队列防止消息丢失。</p>
+
+<pre><code>if r.llen('message') &lt; 2:
+	r.lpush('message', 1,2,3)
+msg = randint(0, 9)
+r.lpush('message', msg)
+r.rpoplpush('message', 'message_backup')
+print r.lrange('message', 0, -1)
+print r.lrange('message_backup', 0, 5)
+</code></pre>
+
+<ul>
+  <li>积分排行榜</li>
+</ul>
+
+<p>玩家分数变化时用zadd更新玩家分数，再用zrange获取积分top信息。</p>
+
+<pre><code class="language-python">if r.zcard('new_login_times') == 0:
+	r.zadd('new_login_times', 'Bob', 1)
+	r.zadd('new_login_times', 'Jack', 1)
+	r.zadd('new_login_times', 'Crool', 1)
+
+uid = randint(0, 2)
+name = ['Bob', 'Jack', 'Crool'][uid]
+print name
+ret = r.zincrby('new_login_times', name, 1)
+#login_times_list = r.zrevrange('new_login_times', 1, 3)
+print r.zrevrange('new_login_times', 0, -1, withscores=True)
+</code></pre>
+
+<ul>
+  <li>共同关注
+利用set的高效intersections命令，类似的还有suninostore求并集命令。</li>
+</ul>
+
+<pre><code>r.sadd('s1', 'a', 'b', 'c', 'd')
+r.sadd('s2', 'b', 'c', 'd', 'e')
+r.sadd('s3', 'c', 'd', 'e', 'f')
+r.sinterstore('result', 's1', 's2', 's3')
+print r.smembers('result')
+r.delete('s1', 's2', 's3', 'result')
+</code></pre>
+
+<ul>
+  <li>Master/Slave模型
+利用list可以很容易实现分布式中的Master/Slave模型。</li>
+</ul>
+
+<pre><code class="language-python"># RedusQueue.py
+
+import redis
+
+class RedisQueue(object):
+    """Simple Queue with Redis Backend"""
+    def __init__(self, name, namespace='queue', **redis_kwargs):
+        """The default connection parameters are: host='localhost', port=6379, db=0"""
+        self.__db= redis.Redis(**redis_kwargs)
+        self.key = '%s:%s' %(namespace, name)
+
+    def qsize(self):
+        """Return the approximate size of the queue."""
+        return self.__db.llen(self.key)
+
+    def empty(self):
+        """Return True if the queue is empty, False otherwise."""
+        return self.qsize() == 0
+
+    def put(self, item):
+        """Put item into the queue."""
+        self.__db.rpush(self.key, item)
+
+    def get(self, block=True, timeout=None):
+        """Remove and return an item from the queue.
+
+        If optional args block is true and timeout is None (the default), block
+        if necessary until an item is available."""
+        if block:
+            item = self.__db.blpop(self.key, timeout=timeout)
+        else:
+            item = self.__db.lpop(self.key)
+
+        if item:
+            item = item[1]
+        return item
+
+    def get_nowait(self):
+        """Equivalent to get(False)."""
+        return self.get(False)
+</code></pre>
+
+<pre><code># master.py
+
+from RedisQueue import RedisQueue
+
+rq = RedisQueue('test')
+for i in range(30):
+	rq.put(i)
+print rq.qsize()
+</code></pre>
+
+<pre><code># slave.py
+
+import time
+from RedisQueue import RedisQueue
+
+rq = RedisQueue('test')
+while not rq.empty():
+	print rq.get()
+	time.sleep(1)
+</code></pre>
+
+<h2 id="redis事务">redis事务</h2>
+<p>redis事务被MULTI/EXEC/DISCARD/WATCH囊括，实际是串行顺序执行，执行期间redis不会再为客户端提供任何服务，从而保证事务的原子执行。</p>
+
+<p>EXEC/DISCARD类似于关系型数据库中的COMMIT/ROLLBACK语句。若在一次事务中发生错误redis将回滚所有操作。</p>
+
+<p>WATCH可以实现CAS即check-and-set锁。若在WATCH中监控的值发生改变，事务中的后续操作都不会被执行。这一特性可以很好地应用于多用户同时请求一个redis值时防止值得结果不一致。</p>
+
+<h2 id="redis主从复制">redis主从复制</h2>
+<p>redis可以很好地实现Master/Slave模型，此外其还有许多独有特性。</p>
+
+<ol>
+  <li>同一个Master可以为多个Slave服务。</li>
+  <li>Slave和Slave之间也可以实现连接和同步请求。</li>
+  <li>S响应M是非阻塞的，期间M仍可以为客户端提供请求。</li>
+  <li>S之间的同步也是非阻塞的</li>
+  <li>可以设置S来实现只读的用户响应和保存数据的任务，以降低M的负荷。</li>
+</ol>
+
+<p>具体实现：</p>
+<pre><code>$ redis-server --port 6380 &amp;
+$ redis-cli -p 6380
+127.0.0.1:6380&gt; slaveof 127.0.0.1 6379
+</code></pre>
+<p>这样就实现了主从复制，服务关闭后这种关系也消失，若想永久保存需要修改配置文件。</p>
+
+<h2 id="redis持久化">redis持久化</h2>
+<p>redis有三种（实际上是两种）持久化机制，快照（RDB)和追加式文件（AOF）。</p>
+
+<p>RDB会在固定时间将数据集快照写入磁盘，每一次写入都会覆盖之前的文件，因此只存在一个文件。方便归档和备份，但有数据丢失的危险。</p>
+
+<p>AOF则会在每次修改后将命令追加到AOF文件中，而且有redis-check-aof工具来解决命令执行一半宕机的问题。是一种非常可靠的持久化方式，缺点是速度慢，文件多。</p>
+
+<p>若有需求需要修改配置文件，此处不赘述。</p>
+
+
+	<p><h3><a href="/posts/redis.html">阅读全文 &raquo;</a></h3></p>
+<hr>
+
+<h2>
+  <a href="/posts/zhibotong.html">
+    关于直播通
+  </a> 
+  <div class="post-date">
+	<span class="glyphicon glyphicon-time"></span>
+	2017-01-16
+  </div>
+</h2>
+<hr>
+<h2 id="直播通是什么">直播通是什么？</h2>
+<p>直播通是一款实现跨平台主播信息集合的web应用，在这里你可以：</p>
+
+<ul>
+  <li>实现跨平台主播搜索</li>
+  <li>实现不同平台主播的统一关注</li>
+  <li>实现主播的上线提醒通知</li>
+  <li>一键进入ta的直播间</li>
+</ul>
+
+<p>简单来说，就是将多家平台的主播搜索和关注系统集合到了一起。</p>
+
+<p>作为我个人来讲，这款web应用是我学习flask的第一个独立项目，也是我的第一个上线网站。从有想法，到最后部署成功，一共用了差不多一周时间。这其中的苦辣辛酸，波澜起伏想必只有各位开发者心里清楚，于是想写点东西记录下这个自己的处女作。</p>
+
+<h2 id="设想">设想</h2>
+
+<p>当我在琢磨用Python和flask能做什么事的时候，最开始也是陷入了惯性陷阱，就是做一个和书上差不多的个人博客，于是我决定仿个知乎。可我又不甘心于此，想把前端做的漂亮一点，然而这是个大坑，项目进行了几天，发现几乎多半时间都在和前端打交道，可我明明做的是后端啊，遂弃坑，想找个有趣点的东西做。这中间还要感谢老同学的提醒：和后端没关系的东西可以通通去掉。没错！</p>
+
+<p>于是，我从需求出发，考虑能否做一个解决实际问题的东西，于是想到了直播平台。</p>
+
+<p>看直播是一键很有趣的事情，尤其像嫖老师这种（捂脸），然而各大平台的竞争却给我们带来了不少困扰，之前只需要看斗鱼就可以了，喜欢的主播基本都在斗鱼。之后发生的事情大家也都知道，各大平台疯狂砸钱挖人，于是你发现你喜欢的那些主播可能分布于不同平台。这个时候怎么办呢，把每个主播的直播间都加入收藏夹？（我的收藏夹可是要放1024的哪有这么些地方）每天打开各大平台主页看看有没有自己的主播？（现在热门的直播平台已经有6家了，这么搞得累死）关注主播的微博或者QQ群及时掌握上线信息？（我往往看到微博消息的时候都过去几个小时了）</p>
+
+<p>于是我有了计划：我要把几个直播平台集合在一起，让用户在一个页面就能看到自己想看到的全部主播的信息</p>
+
+<p>有了需求之后，就要开始寻求解决方法，于是有了直播通的最初设想：</p>
+
+<ul>
+  <li>爬虫爬取平台主播数据</li>
+  <li>flask做后端</li>
+  <li>bootstrap做前端（真的不想和前端打太多交道）</li>
+</ul>
+
+<p>刚开始做的时候只是希望能做到让用户在一个页面看到主播信息就好了，在项目进行过程中又逐渐加入了主播上线提醒，主播搜索的功能，来源于需求而高于需求啊同志们！</p>
+
+<h2 id="项目进行">项目进行</h2>
+
+<p>设想归设想，实际进行起来还是有不少麻烦。</p>
+
+<p>项目中的用户部分，我直接从《Flask Web开发》这本书中拿出代码，将用户权限等无用部分去掉，进行了一些翻译工作。</p>
+
+<p>爬虫部分，分为了三个部分，getName用来爬取对应平台和房间号的主播名字，LiveChecker用来爬去主播的在线状态，Search用来拿到平台上的搜索结果。本来想把前两个爬虫放到一起做的，后来发现个别平台并不能一次爬到主播的名字和在线状态，之后又考虑到在线状态要放到计划任务中做并集成上线提醒，所以分开。</p>
+
+<p>开始时主播的在线状态时放在视图函数中的，即每次打开主页都会跑一次爬虫，更新主播在线状态。后来发现这一过程响应很慢，网页转圈要转好久，这肯定是不行的。后来考虑解决方法，想到了celery。然而celery任务要和前端互动的话需要一些js知识，在这里我跳过了这个坑，直接用了celery中的计划任务部分，让爬虫每5分钟在后台跑一次更新主播状态，惊奇的发现这个过程中可以加入用户提醒，折腾一晚上后成功。之后主播在线状态完全由这个后台负责，用户再也不用等待服务器响应主播在线状态了。</p>
+
+<p>部署的相关问题可以参照我的另一篇博客 直播通部署路上的坑</p>
+
+<p>其他的一些小问题，大都在网上和别人的项目中找到了解决方案。</p>
+
+<h2 id="后记">后记</h2>
+
+<p>搞这个东西的状态现在回头想想，其实也就是瞎折腾。作为一个初学者，过程中遇到很多问题，也发现还有许多东西需要学习。学习flask的时间不长，其中的一些东西理解还没有很到位，很多地方也只能照葫芦画瓢，代码也可能写的很丑。但就像在一间黑暗的房子里看到了一束光，我期待，很期待，走出房子的那天。</p>
+
+<p>崔同学
+2017.1.16</p>
+
+	<p><h3><a href="/posts/zhibotong.html">阅读全文 &raquo;</a></h3></p>
+<hr>
+
+<h2>
+  <a href="/posts/search.html">
+    flask项目中添加搜索功能
+  </a> 
+  <div class="post-date">
+	<span class="glyphicon glyphicon-time"></span>
+	2017-01-15
+  </div>
+</h2>
+<hr>
+<p>这部分内容的起因是我想在自己的flask项目直播通中加入一个搜索框用来搜索数据库中的主播姓名，于是在网上搜索flask 搜索关键字，当时没注意出来的都是全文搜索的教程，一步步做下来却发现原来根本和自己的需求不符合，可见弄清需求是多么重要啊！虽然走了点弯路，却意外发现了全文搜索的方法。</p>
+
+<h2 id="设置搜索框">设置搜索框</h2>
+<p>考虑到用户体验，这里想做导航栏上的搜索框，也就是全局搜索框，这就要用到flask中的程序上下文g，在处理请求时用作临时存储的对象，每次请求都会重设这个变量。很显然，这里就需要将一个搜索框设置成为程序上下文，具体做法如下。</p>
+
+<ul>
+  <li>创建搜索框
+很简单，在forms中添加
+    <pre><code>class SearchForm(Form):
+  search = StringField(u'', validators=[Required()])
+</code></pre>
+    <p>这里的Required是必须的，否则每次点击搜索按钮都会运行搜索函数，web性能下降。</p>
+  </li>
+  <li>定义全局变量
+在main.view中写入：
+    <pre><code>@main.before_app_request
+def before_request(): #定义全局变量
+  g.search_form = SearchForm()
+</code></pre>
+    <p>就将一个搜索框设置成为了程序上下文变量。</p>
+  </li>
+  <li>创建搜索和搜索结果的视图函数
+    <pre><code>@main.route('/search', methods = ['POST'])
+def search():
+  if not g.search_form.validate_on_submit():
+      return redirect(url_for('.index'))
+  return redirect(url_for('.search_results', query = g.search_form.search.data))
+@main.route('/search-results/&lt;query&gt;')
+def search_results(query):
+  pass
+</code></pre>
+  </li>
+  <li>在模板中添加搜索框</li>
+</ul>
+
+<pre><code>&lt;form class="navbar-form navbar-left" action="" method="post" role="search"&gt;
+	&lt;div class="form-group"&gt;
+		
+		&lt;input type="text" name="search" class="form-control" placeholder="Search"&gt;
+	&lt;/div&gt;
+	&lt;button type="submit" class="btn btn-default"&gt;搜索&lt;/button&gt;
+&lt;/form&gt;
+</code></pre>
+<p>要注意flask_wtf的请求跨站保护和表单的name属性设置。
+这样，一个全局搜索框就创建好啦！</p>
+
+<h2 id="模糊搜索">模糊搜索</h2>
+<p>模糊搜索其实很简单，只要对数据库中进行模糊检索即可，一条语句适用于很多场合：</p>
+<pre><code>User.query.filter(User.name.like('%'+query+'%')).all()
+</code></pre>
+
+<h2 id="全文搜索">全文搜索</h2>
+<p>虽然有的时候模糊搜索很方便，但对于某些任务，比如搜索出现某些关键词的文章的时候就不能用模糊搜索了，因为不管关键词顺序还是空格都会影响模糊搜索的查询结果，这个时候就需要用到全文搜索。</p>
+
+<p>这里有一款实现全文搜索的良好flask扩展：WhooshAlchemy，在项目中应用也只需要简单几步：</p>
+
+<ul>
+  <li>安装： <code>pip install flask_whooshalchemy</code></li>
+  <li>配置： 在配置文件config.py中写入要应用全文搜索的数据库路径：<code>WHOOSH_BASE=</code></li>
+  <li>索引对象：在models.py中需要全文搜索的对象中加入<code>__searchable__=['COLUMN']</code>,COLOMN为需要搜索的列</li>
+  <li>在manage中添加索引：<code>whooshalchemy.whoosh_index(app, Model)</code></li>
+  <li>最后在搜索时加入<code>Model.query.whoosh_search('keyword').all()</code>即可
+注意：使用whooshalchemy进行搜索要现将数据库中的要搜索的对象实例全部删除，这样才能创建索引，否则会报错。</li>
+</ul>
+
+	<p><h3><a href="/posts/search.html">阅读全文 &raquo;</a></h3></p>
+<hr>
+
+<h2>
+  <a href="/posts/gunicorn.html">
+    项目部署路上的坑
+  </a> 
+  <div class="post-date">
+	<span class="glyphicon glyphicon-time"></span>
+	2017-01-15
+  </div>
+</h2>
+<hr>
+<p>直播通项目终于更新上线了，看到自己的第一个Web应用在服务器上正常运作并且各项功能正常，内心一阵暗爽。看了一眼时间，从有想法到最终项目上线，一共用了大概一周左右时间，作为一个简单的flask应用，这点时间不算长也不算短，其中部署只花了一晚上就弄好了，在这里要感谢已经工作的老友提供思路，虽然部署的时候也踩过不少坑，但确实少走了许多弯路。所谓前人栽树后人？哈？</p>
+
+<h2 id="服务器选择">服务器选择</h2>
+<p>这里直接选择了朋友推荐的腾讯云，一路低配，在选择内存时担心1G内存不够选了2G（心疼），最终抛过代金券还是花了90大洋。不过，值！</p>
+
+<h2 id="部署思路">部署思路</h2>
+<p>这里有两种思路可供选择，</p>
+
+<ul>
+  <li>gunicorn + supervisor + nginx, 部署流程简单清晰，但听说性能不好。</li>
+  <li>朋友推荐的gunicorn + pm2方案，但看了一眼pm2，全部时node.js相关的代码，超纲了啊！</li>
+</ul>
+
+<p>我的目的是让自。己的项目尽快跑起来，因此，选择了有较多参考资料和前人经验的第一种思路，第二种的话，以后在说吧。</p>
+
+<h2 id="开始部署">开始部署</h2>
+
+<h3 id="部署准备">部署准备</h3>
+<p>好，登录服务器，输入用户名和密码登录Linux（这里选择和我平时用的一样的Ubuntu 16.04 64位机），先按照网上的教程将python和虚拟环境弄好，之后git clone代码。等等，者一大堆错误是什么，又是用户权限又是链接错误，折腾了许久未果，于是退而求其此，直接将本地代码复制到服务器上：</p>
+<pre><code>$ scp -r easySee ubuntu@www.mydomain.com:/var/www/easySee
+</code></pre>
+<p>刚开始不清楚这行代码的作用，照葫芦画瓢，于是很自然的在easySee目录下又嵌套了一个同名文件，好low。不过既然是自己的服务器，就先这样吧。之后在虚拟环境中安装requirements中的需求模块，部署准备完成。</p>
+
+<h3 id="gunicorn">Gunicorn</h3>
+
+<h4 id="是什么">是什么</h4>
+<p>关于这部分内容，在部署的时候时完全没有考虑的，因为目的就是让项目尽快跑起来嘛。但不求甚解终归不是好的学习方法，还是要了解以下部署的每个部分是什么，能干嘛，于是补了这部分知识。</p>
+
+<p>gunicorn是一个Python WSGI UNIX的HTTP服务器，是一个per-fork worker模型。换句话说，Gunicorn一般用来管理多个进程，有进程挂了Gunicorn就可以把它拉起来，防止服务器长时间停止服务，还可以动态调整worker的数量，请求多的时候增加worker的数量，请求少的时候减少，这就是所谓的per-fork模型，也是Gunicorn的主要优点。其他优点还有能与各种web框架兼容，只需要非常简单的执行，轻量级的资源消耗以及很快的响应速度。</p>
+
+<h4 id="怎么用">怎么用</h4>
+
+<ul>
+  <li>安装
+    <pre><code>(venv) $ pip install gunicorn
+</code></pre>
+  </li>
+  <li>运行(在项目根目录下)</li>
+</ul>
+
+<pre><code>(venv) $ gunicorn -w 4 -b 127.0.0.1:8080 manage:app
+</code></pre>
+
+<p>在本机上输入服务器ip及端口号后，马上看到了自己的应用。Yeah！这其实就是gunicorn的好处吧，根本不需要什么配置文件，一格指令就能将它启动。</p>
+
+<p>tip: 这里网上教程说还需要添加一个wsgi.py的文件替换掉manage.py，并特别注明wsgi.py和manage.py没有半毛钱关系。然而我的试验结果是，这两个完全就是一模一样的嘛-，- ,先这样吧，出了问题再说。</p>
+
+<h3 id="nignx">Nignx</h3>
+
+<h4 id="是什么-1">是什么</h4>
+<p>一个完整的代理请求过程为：客户端首先与代理服务器创建链接，接着根据代理服务器所使用的代理协议，请求对目标服务器创建链接或者获得目标服务器的指定资源。Web代理服务器（proxy）是网络的中间实体，代理位于Web客户端与Web服务器之间，扮演中间人的角色。HTTP的代理服务器即是Web服务器，又是Web客户端。</p>
+
+<p>正向代理时一个介于客户端与原始服务器之间的服务器，为了从原始服务器获得内容，客户端向代理发送一个请求并指定目标，然后代理向原始服务器转交请求并将获得的内容返回给客户端。</p>
+
+<p>反向代理服务器：在服务器端接受客户端的请求，然后把请求分给具体的服务器进行处理，再将服务器的响应结果返回给客户端。</p>
+
+<p>Nginx(“engine x”)是一款高性能的HTTP和反向代理服务器软件，既可以托管网站，进行HTTP服务，也可以作为反向代理服务器使用。</p>
+
+<p>那么在Gunicorn前部署一层Nginx的目的是什么呢？</p>
+
+<ul>
+  <li>负载均衡。</li>
+  <li>静态文件支持</li>
+  <li>伪静态化并缓存，减少动态请求数量</li>
+  <li>依赖于nginx强大的功能和性能，可以做到访问控制，限速，限制链接数等。</li>
+</ul>
+
+<p>也就是说，nginx可以缓冲请求和响应，也能缓存客户端发起的请求，这个过程时nginx擅长处理的，可以有效提高Gunicorn的处理能力。</p>
+
+<h4 id="怎么用-1">怎么用</h4>
+<p>这里同样参照教程，安装完成后，直接进入Nginx的配置文件</p>
+<pre><code>sudo vim /etc/nginx/site-avalidable/default
+</code></pre>
+<p>当然，如果你怕搞错（就像我一样），可以先将配置文件备份</p>
+<pre><code>sudo cp /etc/nginx/site-avalidable/default /etc/nginx/site-avalidable/default.bak
+</code></pre>
+
+<p>之后将default暴力修改成下面的内容：</p>
+<pre><code>server {
+    listen 80;
+    server_name 119.29.3.128; # 这是HOST机器的地址也
+    location / {
+        proxy_pass http://127.0.0.1:8080; # 这里是指向 gunicorn host 的服务地址
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+  }
+</code></pre>
+
+<p>之后保存，重启Nignx服务器</p>
+<pre><code>sudo service nginx restart
+</code></pre>
+
+<h3 id="supervisor">supervisor</h3>
+<h4 id="是什么-2">是什么</h4>
+<p>Supervisor是一个用Python写的进程管理工具，可以很方便的用来启动，重启，关闭进程（不仅仅是Python进程），还可以很方便的管理多个进程，同时启动同时关闭等等。因此将gunicorn用supervisor来包装，很方便的管理进程运行，并且可以防止gunicorn服务器挂掉。而且如果项目中需要多进程运行时，也可以用supervisor来配置。</p>
+
+<h4 id="怎么用-2">怎么用</h4>
+<p>安装后首先将原始配置文件重定向到程序根目录：</p>
+<pre><code>$ echo_supervisor_conf&gt;supervisor.conf
+</code></pre>
+
+<p>其实也可以不用进行这个步骤，但是每次打开supervisor服务时都要输入配置文件目录比较麻烦。
+之后打开<code>supervisor.conf</code>，在最后加上自己的进程信息：</p>
+<pre><code>[program:easySee]
+command=/home/ubuntu/venv/bin/gunicorn -w 4 -b 0.0.0.0:8080 manage:app     ; supervisor启动命令
+directory=/var/www/easySee/easySee                                         ; 项目的文件夹路径
+startsecs=0                                                                ; 启动时间
+stopwaitsecs=0                                                             ; 终止等待时间
+autostart=false                                                            ; 是否自动启动
+autorestart=true                                                           ; 是否自动重启
+stdout_logfile=/.../app/data/log/gunicorn.log                              ; log 日志
+stderr_logfile=/.../app/data/log/gunicorn.err                              ; 错误日志
+[program:XXXXX]                                                            ; 用于多进程
+</code></pre>
+
+<p>之后启动supervisor</p>
+<pre><code>$ supervisord -c supervisor.conf
+</code></pre>
+
+<p>之后的事不多说了，操作命令：</p>
+<pre><code>supervisord -c supervisor.conf                             通过配置文件启动supervisor
+supervisorctl -c supervisor.conf status                    察看supervisor的状态
+supervisorctl -c supervisor.conf reload                    重新载入 配置文件
+supervisorctl -c supervisor.conf start [all]|[appname]     启动指定/所有 supervisor管理的程序进程
+supervisorctl -c supervisor.conf stop [all]|[appname]      关闭指定/所有 supervisor管理的程序进程
+</code></pre>
+
+<p>这里要说下自己部署时出现的问题，在supervisor已经启动的状态下修改了配置文件，又不知道reload这个命令，于是想重新导入supervisor文件启动时出现了错误，提示端口正在被监听，这里给出解决方法：</p>
+<pre><code>$ ps -ef | grep supervisord
+</code></pre>
+
+<p>然后看到</p>
+<pre><code>root   2503  1  0 Nov19 ?  00:03:23 /usr/bin/python /usr/bin/supervisord
+root   21337 2556  0 18:15 pts/8   00:00:00 grep --color=auto supervisord
+</code></pre>
+
+<p>再执行：</p>
+<pre><code>kill -s SIGTERM 2503
+</code></pre>
+<p>即可。</p>
+
+<h3 id="再说一点">再说一点</h3>
+<p>写到这里，把部署期间的所有流程和问题处理基本又复习了一遍，主要用到的部分也大概知道都有什么作用了，再深入了解的话大概就到运维的范畴了，这次真的可以浅尝辄止了。</p>
+
+<p>部署并没有想象中的恐怖，只是折腾的时间要久一点罢了。CS这东西还真就全凭折腾，耐下性子干就是了，之后及时回头看看，收获颇丰呢。</p>
+
+<p>就这样啦。</p>
+
+	<p><h3><a href="/posts/gunicorn.html">阅读全文 &raquo;</a></h3></p>
+<hr>
+
+<h2>
+  <a href="/posts/celery.html">
+    celery初探
+  </a> 
+  <div class="post-date">
+	<span class="glyphicon glyphicon-time"></span>
+	2017-01-11
+  </div>
+</h2>
+<hr>
+<p>捣鼓了两天自己的直播通项目，终于大概有了雏形，在主页的视图函数中集成了爬虫，爬取用户关注主播的在线hangtag。但在运行时发现打开主页时延迟明显，有时候竟然长达数秒，突然想起了之前了解到的celery，试试能不能解决这一问题。</p>
+
+<h2 id="celery是什么">celery是什么</h2>
+<p>关于celery的知识全部在网上了解，星星点点，但还是有所收获。celery是一个典型的异步任务系统，在应用上下文之外执行任务，将消耗资源的东西通通交给celery来做，可以让主机迅速向应客户端的请求。</p>
+
+<p>celery有三个核心组件：</p>
+
+<ul>
+  <li>客户端：在flask系统中和flask一起运行</li>
+  <li>workers：就是传说中的second terminal，用来执行异步任务，可以有多个</li>
+  <li>消息代理：用来进行celery的通信，一般用redis。</li>
+</ul>
+
+<p>为什么用redis？因为其实时性强，一般用作数据频繁插入，更新或者删除的任务中，以减少对数据库的操作</p>
+
+<h2 id="让celery跑起来">让celery跑起来</h2>
+
+<p>这部分还是比较简单的，有几个主要步骤。</p>
+
+<ul>
+  <li>安装之后要在配置文件中写入用作消息代理的redis的服务器，两行搞定。
+    <pre><code>CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+</code></pre>
+  </li>
+  <li>之后创建celery实例，这里是直接抄来的，至于原因还没搞懂。
+    <pre><code>celery = Celery(__name__, broker=Config.CELERY_BROKER_URL)
+celery.conf.update(app.config)
+</code></pre>
+  </li>
+  <li>创建celery任务，使用装饰器，先跑起来再说。
+    <pre><code>@celery.task(name='circle_task')
+def circletask():
+  logging.info('lalala')
+</code></pre>
+  </li>
+</ul>
+
+<p>之后满怀信心，直接打开三个终端开始有样学样，第一个打开redis-server，第二个运行app，第三个打开celery，抄了个命令:</p>
+<pre><code>$ celery -A manage.celery worker --loglevel=info
+</code></pre>
+
+<p>然而打开后发现没有动静，才想起并没有提供任务执行的delay。随即又想到我的目的是进行计划任务，让任务可以固定时间重复进行，直接开始搜celery进行实现的方法，还好google够强大，又找到了下面的配置方法：</p>
+<pre><code>CELERYBEAT_SCHEDULE = {
+        'every-minute': {
+            'task': 'circle_task',
+            #'schedule': crontab(minute='*/1'),
+            # 'args': (1,2),
+            'schedule': timedelta(seconds=60)
+        	},
+    	}
+</code></pre>
+
+<p>运行命令也变成了：</p>
+<pre><code>$ celery -A manage.celery worker --loglevel=info --beat
+$ celery -A proj worker -B -l info
+</code></pre>
+
+<p>至于里面的参数，只知道timedelta和crontab都可以设置间隔时间，其他的没有深入了解。将代码改好后运行celery，问题来了。</p>
+
+<ul>
+  <li>首先是celery说任务方法没有注册：
+    <pre><code>Received unregistered task of type 'circle_task'.
+The message has been ignored and discarded.
+</code></pre>
+  </li>
+</ul>
+
+<p>在stack overflow溜达了一圈，终于找到解决方法，在配置文件中声明这个方法即可，于是：</p>
+<pre><code>CELERY_IMPORTS = ['app.task']
+</code></pre>
+<p>解决成功。这里千万注意加app，天知道我经历了什么。</p>
+
+<ul>
+  <li>之后运行celery，终于不报错了天呐，屏幕上也出现了lalala的logging，这还说什么，改代码！在task中添加了之前在index视图函数中的爬虫部分，运行celery，好，可以运行。等等，这一大片红字是什么！
+    <pre><code>'RuntimeError: application not registered on db 
+         instance and no application bound to current context
+</code></pre>
+    <p>原来是没有程序上下文不能进行sqlalchemy的操作，于是，在程序段前添加</p>
+    <pre><code>with app.app_context():
+</code></pre>
+    <p>成功！</p>
+  </li>
+</ul>
+
+<p><img src="http://i1.piimg.com/567571/88020dc0eeab8185.png" alt="此处输入图片的描述" /></p>
+
+<p>最后终于成功看到了模拟上线提醒的logging字样，激动万分，编程的大起大落真是…哈！</p>
+
+	<p><h3><a href="/posts/celery.html">阅读全文 &raquo;</a></h3></p>
+<hr>
+
+
+<!-- Pager indicator -->
+<ul class="pager">
+   
+  <li class="previous">
+    <a href="/">
+      &larr; 上一页
+    </a>
+  </li>
+    
+</ul>
+
+        </div>
+        <!-- Blog Sidebar Widgets Column -->
+        <div class="col-md-4">
+          <!-- Blog Categories Well -->
+          <div class="well">
+            <h4>
+              栏目分类
+            </h4>
+            <div class="row">
+                            <div class="col-lg-6">
+                <ul class="list-unstyled">
+                  <li>
+                    <a href="/posts/work.html">
+                      工作经验
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/posts/study.html">
+                      学习笔记
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/posts/other.html">
+                      随笔
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/archives.html">
+                      存档
+                    </a>
+                  </li>
+                </ul>
+              </div>
+ 
+ 
+            </div>
+            <!-- /.row -->
+          </div>
+		  <!-- Blog Recent Well -->
+          <div class="well">
+            <h4>
+              最新文章
+            </h4>
+			<div class="row">
+                            <div class="col-lg-12">
+                <ul class="list-unstyled">
+				
+                  <li>
+                    <a href="/posts/log.html">
+                      为Spring Boot添加日志模块
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/mule.html">
+                      通过MULE实现后端服务调用
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/bmpn.html">
+                      BPMN2.0概念
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/socketio.html">
+                      利用flask_socketio实现与前段的socket通信
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/shejimoshi.html">
+                      大话设计模式Python实现
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/iter.html">
+                      Python的迭代器，可迭代对象和生成器
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/git.html">
+                      Pro Git整理
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/sicp.html">
+                      SICP
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/rabbitmq.html">
+                      RabbitMQ泛式
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/redis.html">
+                      再看redis
+                    </a>
+                  </li>
+				  
+                </ul>
+              </div> 
+			</div>
+          </div>		  
+		  <!-- Blog Links Well -->
+          <div class="well">
+            <h4>
+              友情链接
+            </h4>
+                        <ul class="list-unstyled">
+              <li>
+                <a href="http://www.ruanyifeng.com/blog/" target="_blank">
+                  阮一峰的博客
+                </a>
+              </li>	
+              <li>
+                <a href="http://www.yinwang.org/" target="_blank">
+                  王银的博客
+                </a>
+              </li>				  
+            </ul>
+ 
+          </div>
+        </div>
+      </div>
+      <!-- /.row -->
+
+      <!-- Footer -->
+      <footer>
+        <div class="row">
+          <div class="col-lg-12">
+                        <div style="text-align:center;margin-top:15px;">
+				Copyright &copy; cuijintao.github.io, generated by Jekyll
+				<br/>
+            </div>
+ 
+          </div>
+          <!-- /.col-lg-12 -->
+        </div>
+        <!-- /.row -->
+      </footer>
+    </div>
+    <!-- /.container -->
+  </body>
+</html>

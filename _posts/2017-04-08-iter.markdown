@@ -1,0 +1,133 @@
+---
+layout: post
+category: "other"
+title:  "Python的迭代器，可迭代对象和生成器"
+tags: [python]
+---
+
+## 可迭代对象和迭代器对象
+可迭代对象`iterable`可通过内置方法`iter()`生成迭代器对象`iterator`。
+可以使用此方法的对象自身为迭代器或序列，即自身存在`__iter__`或`__getitem__`属性。
+迭代器可使用`next()`方法生成下一个元素，最终抛出`StopIteration`异常。
+
+for循环的实质：
+先调用可迭代对象的`__iter__`方法将其转换为一个迭代器，再对迭代器重复执行`next`方法直到捕获`StopIteration`异常。
+
+适用于一些惰性场合：
+通过构造可迭代对象可以实现在for循环过程中的延时访问, 并将所有函数运行结果封装到一个对象当中。
+
+构造可迭代对象的步骤：
+1.构造迭代器对象。继承`Iterator`对象并重写`next`接口，该接口中的方法为需要延时访问的函数或方法逻辑。
+2.构造可迭代对象。继承`Iterable`对象并重写`__iter__`接口，返回步骤1中构造的迭代器对象实例。
+
+demo：
+非迭代版本
+
+```python
+import time
+
+def func(x):
+	time.sleep(2)
+	print 'run func...'
+	return x
+
+if __name__ == '__main__':
+    # 结果对象为[func(1), func(2), func(3)]
+	for x in [func(1), func(2), func(3)]:
+		print x
+
+########################################
+# OUTPUT:
+# run func...
+# run func...
+# run func...
+# 1
+# 2
+# 3
+########################################
+```
+
+迭代版本：
+
+```python
+from collections import Iterable, Iterator
+import time
+
+class MyIterator(Iterator):
+
+	def __init__(self, num_list):
+		super(MyIterator, self).__init__()
+		self.num_list = num_list
+		self.index = 0
+
+	def next(self):
+		if self.index == len(self.num_list):
+			# tip:	can't return
+			raise StopIteration
+		else:
+			result = self.func(self.num_list[self.index])
+			self.index += 1
+			return result
+
+	def func(self, x):
+		time.sleep(2)
+		print 'run func...'
+		return x
+
+class MyIterable(Iterable):
+
+	def __init__(self, num_list):
+		super(MyIterable, self).__init__()
+		self.num_list = num_list
+
+	def __iter__(self):
+		return MyIterator(self.num_list)
+
+if __name__ == '__main__':
+    # 结果对象为MyIterable([1,2,3])
+	for x in MyIterable([1,2,3]):
+		print x
+
+########################################
+# OUTPUT:
+# run func...
+# 1
+# run func...
+# 2
+# run func...
+# 3
+########################################
+```
+
+## 生成器函数
+函数体中带有`yield`的函数几位生成器函数，调用生成器函数将返回一个生成器对象。
+生成器对象也是一个可迭代对象。(可以调用`__iter__`函数)
+也是一个迭代器对象。（可以调用`next`函数）
+
+因此可以将某个类的`__iter__`方法实现为生成器函数来实现可迭代对象。
+
+素数demo：
+```
+class PrimeNumber:
+
+	def __init__(self, start, stop):
+		self.start = start
+		self.stop = stop
+
+	def is_prime(self, num):
+		if num < 2:
+			return False
+		for i in range(2, num):
+			if num % i == 0:
+				return False
+		return True
+
+	def __iter__(self):
+		for i in range(self.start, self.stop + 1):
+			if self.is_prime(i):
+				yield i
+
+for i in PrimeNumber(0, 100):
+	print i 
+
+```
