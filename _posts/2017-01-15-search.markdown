@@ -1,0 +1,72 @@
+---
+layout: post
+category: "study"
+title:  "flask项目中添加搜索功能"
+tags: [直播通, flask]
+---
+
+这部分内容的起因是我想在自己的flask项目直播通中加入一个搜索框用来搜索数据库中的主播姓名，于是在网上搜索flask 搜索关键字，当时没注意出来的都是全文搜索的教程，一步步做下来却发现原来根本和自己的需求不符合，可见弄清需求是多么重要啊！虽然走了点弯路，却意外发现了全文搜索的方法。
+
+## 设置搜索框
+考虑到用户体验，这里想做导航栏上的搜索框，也就是全局搜索框，这就要用到flask中的程序上下文g，在处理请求时用作临时存储的对象，每次请求都会重设这个变量。很显然，这里就需要将一个搜索框设置成为程序上下文，具体做法如下。
+
+- 创建搜索框
+很简单，在forms中添加
+```
+class SearchForm(Form):
+	search = StringField(u'', validators=[Required()])
+```
+这里的Required是必须的，否则每次点击搜索按钮都会运行搜索函数，web性能下降。
+
+- 定义全局变量
+在main.view中写入：
+```
+@main.before_app_request
+def before_request(): #定义全局变量
+    g.search_form = SearchForm()
+```
+就将一个搜索框设置成为了程序上下文变量。
+
+- 创建搜索和搜索结果的视图函数
+```
+@main.route('/search', methods = ['POST'])
+def search():
+    if not g.search_form.validate_on_submit():
+        return redirect(url_for('.index'))
+    return redirect(url_for('.search_results', query = g.search_form.search.data))
+@main.route('/search-results/<query>')
+def search_results(query):
+	pass
+```
+
+- 在模板中添加搜索框
+
+```
+<form class="navbar-form navbar-left" action="{{ url_for('main.search') }}" method="post" role="search">
+	<div class="form-group">
+		{{ g.search_form.hidden_tag() }}
+		<input type="text" name="search" class="form-control" placeholder="Search">
+	</div>
+	<button type="submit" class="btn btn-default">搜索</button>
+</form>
+```
+要注意flask_wtf的请求跨站保护和表单的name属性设置。
+这样，一个全局搜索框就创建好啦！
+
+## 模糊搜索
+模糊搜索其实很简单，只要对数据库中进行模糊检索即可，一条语句适用于很多场合：
+```
+User.query.filter(User.name.like('%'+query+'%')).all()
+```
+
+## 全文搜索
+虽然有的时候模糊搜索很方便，但对于某些任务，比如搜索出现某些关键词的文章的时候就不能用模糊搜索了，因为不管关键词顺序还是空格都会影响模糊搜索的查询结果，这个时候就需要用到全文搜索。
+
+这里有一款实现全文搜索的良好flask扩展：WhooshAlchemy，在项目中应用也只需要简单几步：
+
+- 安装： `pip install flask_whooshalchemy`
+- 配置： 在配置文件config.py中写入要应用全文搜索的数据库路径：`WHOOSH_BASE=`
+- 索引对象：在models.py中需要全文搜索的对象中加入`__searchable__=['COLUMN']`,COLOMN为需要搜索的列
+- 在manage中添加索引：`whooshalchemy.whoosh_index(app, Model)`
+- 最后在搜索时加入`Model.query.whoosh_search('keyword').all()`即可
+注意：使用whooshalchemy进行搜索要现将数据库中的要搜索的对象实例全部删除，这样才能创建索引，否则会报错。

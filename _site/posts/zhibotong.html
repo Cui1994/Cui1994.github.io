@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="description" content="关于直播通 - 崔金涛个人博客 - 作者:崔金涛"/> 
+	<meta name="keywords" content="直播通"/>
+    <title>关于直播通 - 崔金涛个人博客</title>
+    <!-- Bootstrap Core CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+    <!-- Custom CSS -->
+    <link href="/css/blog.css" rel="stylesheet"/>
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media
+    queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file://
+    -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js">
+      </script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js">
+      </script>
+    <![endif]-->
+        <!-- jQuery Version 1.11.0 -->
+    <script src="/js/jquery-1.11.0.js"> </script>
+    <!-- Bootstrap Core JavaScript -->
+    <script src="/js/bootstrap.min.js"></script>
+  </head>
+  
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+            <span class="sr-only">
+              Toggle navigation
+            </span>
+            <span class="icon-bar">
+            </span>
+            <span class="icon-bar">
+            </span>
+            <span class="icon-bar">
+            </span>
+          </button>
+          <a class="navbar-brand" href="/">
+            首页
+          </a>
+        </div>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          		<ul class="nav navbar-nav">
+			
+				<li>
+				  <a href="/posts/work.html">
+					工作经验
+				  </a>
+				</li>
+			
+				<li>
+				  <a href="/posts/study.html">
+					学习笔记
+				  </a>
+				</li>
+			
+				<li>
+				  <a href="/posts/other.html">
+					随笔
+				  </a>
+				</li>
+			
+		</ul>  
+        </div>
+        <!-- /.navbar-collapse -->
+      </div>
+      <!-- /.container -->
+    </nav>
+    <!-- Page Content -->
+    <div class="container">
+      <div class="row">
+        <!-- Blog Entries Column -->
+        <div class="col-md-8">
+          <!-- Navi -->
+<a href="/">首页</a>&nbsp;>&nbsp;<a href="/posts/other.html">随笔</a>&nbsp;>&nbsp;正文
+<!-- Title -->
+<h2>关于直播通</h2>
+<b>标签：</b><a href="/tags.html#直播通"><i>直播通</i></a>
+<div class="post-date">
+	<span class="glyphicon glyphicon-time"></span>
+	2017-01-16
+</div>
+<br/>
+
+<!-- content -->
+<div style="text-indent:2em;">
+<h2 id="直播通是什么">直播通是什么？</h2>
+<p>直播通是一款实现跨平台主播信息集合的web应用，在这里你可以：</p>
+
+<ul>
+  <li>实现跨平台主播搜索</li>
+  <li>实现不同平台主播的统一关注</li>
+  <li>实现主播的上线提醒通知</li>
+  <li>一键进入ta的直播间</li>
+</ul>
+
+<p>简单来说，就是将多家平台的主播搜索和关注系统集合到了一起。</p>
+
+<p>作为我个人来讲，这款web应用是我学习flask的第一个独立项目，也是我的第一个上线网站。从有想法，到最后部署成功，一共用了差不多一周时间。这其中的苦辣辛酸，波澜起伏想必只有各位开发者心里清楚，于是想写点东西记录下这个自己的处女作。</p>
+
+<h2 id="设想">设想</h2>
+
+<p>当我在琢磨用Python和flask能做什么事的时候，最开始也是陷入了惯性陷阱，就是做一个和书上差不多的个人博客，于是我决定仿个知乎。可我又不甘心于此，想把前端做的漂亮一点，然而这是个大坑，项目进行了几天，发现几乎多半时间都在和前端打交道，可我明明做的是后端啊，遂弃坑，想找个有趣点的东西做。这中间还要感谢老同学的提醒：和后端没关系的东西可以通通去掉。没错！</p>
+
+<p>于是，我从需求出发，考虑能否做一个解决实际问题的东西，于是想到了直播平台。</p>
+
+<p>看直播是一键很有趣的事情，尤其像嫖老师这种（捂脸），然而各大平台的竞争却给我们带来了不少困扰，之前只需要看斗鱼就可以了，喜欢的主播基本都在斗鱼。之后发生的事情大家也都知道，各大平台疯狂砸钱挖人，于是你发现你喜欢的那些主播可能分布于不同平台。这个时候怎么办呢，把每个主播的直播间都加入收藏夹？（我的收藏夹可是要放1024的哪有这么些地方）每天打开各大平台主页看看有没有自己的主播？（现在热门的直播平台已经有6家了，这么搞得累死）关注主播的微博或者QQ群及时掌握上线信息？（我往往看到微博消息的时候都过去几个小时了）</p>
+
+<p>于是我有了计划：我要把几个直播平台集合在一起，让用户在一个页面就能看到自己想看到的全部主播的信息</p>
+
+<p>有了需求之后，就要开始寻求解决方法，于是有了直播通的最初设想：</p>
+
+<ul>
+  <li>爬虫爬取平台主播数据</li>
+  <li>flask做后端</li>
+  <li>bootstrap做前端（真的不想和前端打太多交道）</li>
+</ul>
+
+<p>刚开始做的时候只是希望能做到让用户在一个页面看到主播信息就好了，在项目进行过程中又逐渐加入了主播上线提醒，主播搜索的功能，来源于需求而高于需求啊同志们！</p>
+
+<h2 id="项目进行">项目进行</h2>
+
+<p>设想归设想，实际进行起来还是有不少麻烦。</p>
+
+<p>项目中的用户部分，我直接从《Flask Web开发》这本书中拿出代码，将用户权限等无用部分去掉，进行了一些翻译工作。</p>
+
+<p>爬虫部分，分为了三个部分，getName用来爬取对应平台和房间号的主播名字，LiveChecker用来爬去主播的在线状态，Search用来拿到平台上的搜索结果。本来想把前两个爬虫放到一起做的，后来发现个别平台并不能一次爬到主播的名字和在线状态，之后又考虑到在线状态要放到计划任务中做并集成上线提醒，所以分开。</p>
+
+<p>开始时主播的在线状态时放在视图函数中的，即每次打开主页都会跑一次爬虫，更新主播在线状态。后来发现这一过程响应很慢，网页转圈要转好久，这肯定是不行的。后来考虑解决方法，想到了celery。然而celery任务要和前端互动的话需要一些js知识，在这里我跳过了这个坑，直接用了celery中的计划任务部分，让爬虫每5分钟在后台跑一次更新主播状态，惊奇的发现这个过程中可以加入用户提醒，折腾一晚上后成功。之后主播在线状态完全由这个后台负责，用户再也不用等待服务器响应主播在线状态了。</p>
+
+<p>部署的相关问题可以参照我的另一篇博客 直播通部署路上的坑</p>
+
+<p>其他的一些小问题，大都在网上和别人的项目中找到了解决方案。</p>
+
+<h2 id="后记">后记</h2>
+
+<p>搞这个东西的状态现在回头想想，其实也就是瞎折腾。作为一个初学者，过程中遇到很多问题，也发现还有许多东西需要学习。学习flask的时间不长，其中的一些东西理解还没有很到位，很多地方也只能照葫芦画瓢，代码也可能写的很丑。但就像在一间黑暗的房子里看到了一束光，我期待，很期待，走出房子的那天。</p>
+
+<p>崔同学
+2017.1.16</p>
+
+</div>
+
+<br/>
+<b>原创文章，转载请注明出处！</b>
+<br/>
+<b>本文链接：</b><a href="http://localhost:4000/posts/zhibotong.html" title="">http://localhost:4000/posts/zhibotong.html</a>
+
+<!-- next and previous -->
+<div style="margin-top:15px; margin-bottom:10px">
+  
+  <span class="next">
+    上篇：
+    <a href="/posts/search.html">
+      flask项目中添加搜索功能
+    </a>
+  </span>
+   
+  
+</div>
+<hr>
+<!-- Blog Comments -->
+<div class="media">
+   
+</div>
+        </div>
+        <!-- Blog Sidebar Widgets Column -->
+        <div class="col-md-4">
+          <!-- Blog Categories Well -->
+          <div class="well">
+            <h4>
+              栏目分类
+            </h4>
+            <div class="row">
+                            <div class="col-lg-6">
+                <ul class="list-unstyled">
+                  <li>
+                    <a href="/posts/work.html">
+                      工作经验
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/posts/study.html">
+                      学习笔记
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/posts/other.html">
+                      随笔
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/archives.html">
+                      存档
+                    </a>
+                  </li>
+                </ul>
+              </div>
+ 
+ 
+            </div>
+            <!-- /.row -->
+          </div>
+		  <!-- Blog Recent Well -->
+          <div class="well">
+            <h4>
+              最新文章
+            </h4>
+			<div class="row">
+                            <div class="col-lg-12">
+                <ul class="list-unstyled">
+				
+                  <li>
+                    <a href="/posts/zhibotong.html">
+                      关于直播通
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/search.html">
+                      flask项目中添加搜索功能
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/gunicorn.html">
+                      项目部署路上的坑
+                    </a>
+                  </li>
+				
+                  <li>
+                    <a href="/posts/celery.html">
+                      celery初探
+                    </a>
+                  </li>
+				  
+                </ul>
+              </div> 
+			</div>
+          </div>
+        </div>
+      </div>
+      <!-- /.row -->
+
+      <!-- Footer -->
+      <footer>
+        <div class="row">
+          <div class="col-lg-12">
+                        <div style="text-align:center;margin-top:15px;">
+				Copyright &copy; cuijintao.github.io, generated by Jekyll
+				<br/>
+            </div>
+ 
+          </div>
+          <!-- /.col-lg-12 -->
+        </div>
+        <!-- /.row -->
+      </footer>
+    </div>
+    <!-- /.container -->
+  </body>
+
+</html>
