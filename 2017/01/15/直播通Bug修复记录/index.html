@@ -1,0 +1,715 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="此文章用来记录直播通上线后遇到的各种Bug和解决方案，不定期更新。
+2017/01/15网络搜索模块龙珠搜索结果未显示
+排查：app.Searh中search_longzhu函数出现问题，如果搜索主播未上线就不会出现主播搜索结果。
+
+解决方案：因为抓包网址返回的json数据中如果主播上线总是排在第一位的，因此修改函数直接将所抓数据的第一个默认为主播返回搜索结果，当然这样也有问题，就是不管搜索的是不">
+<meta property="og:type" content="article">
+<meta property="og:title" content="直播通Bug修复记录">
+<meta property="og:url" content="http://yoursite.com/2017/01/15/直播通Bug修复记录/index.html">
+<meta property="og:site_name" content="AwakeBird">
+<meta property="og:description" content="此文章用来记录直播通上线后遇到的各种Bug和解决方案，不定期更新。
+2017/01/15网络搜索模块龙珠搜索结果未显示
+排查：app.Searh中search_longzhu函数出现问题，如果搜索主播未上线就不会出现主播搜索结果。
+
+解决方案：因为抓包网址返回的json数据中如果主播上线总是排在第一位的，因此修改函数直接将所抓数据的第一个默认为主播返回搜索结果，当然这样也有问题，就是不管搜索的是不">
+<meta property="og:updated_time" content="2017-01-17T11:34:47.963Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="直播通Bug修复记录">
+<meta name="twitter:description" content="此文章用来记录直播通上线后遇到的各种Bug和解决方案，不定期更新。
+2017/01/15网络搜索模块龙珠搜索结果未显示
+排查：app.Searh中search_longzhu函数出现问题，如果搜索主播未上线就不会出现主播搜索结果。
+
+解决方案：因为抓包网址返回的json数据中如果主播上线总是排在第一位的，因此修改函数直接将所抓数据的第一个默认为主播返回搜索结果，当然这样也有问题，就是不管搜索的是不">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/01/15/直播通Bug修复记录/"/>
+
+
+
+
+
+  <title> 直播通Bug修复记录 | AwakeBird </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AwakeBird</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Cui1994</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/15/直播通Bug修复记录/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Cui1994">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.gif">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AwakeBird">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AwakeBird" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                直播通Bug修复记录
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-15T19:59:48+08:00">
+                2017-01-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/01/15/直播通Bug修复记录/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/01/15/直播通Bug修复记录/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>此文章用来记录直播通上线后遇到的各种Bug和解决方案，不定期更新。</p>
+<h1 id="2017-01-15"><a href="#2017-01-15" class="headerlink" title="2017/01/15"></a>2017/01/15</h1><h2 id="网络搜索模块龙珠搜索结果未显示"><a href="#网络搜索模块龙珠搜索结果未显示" class="headerlink" title="网络搜索模块龙珠搜索结果未显示"></a>网络搜索模块龙珠搜索结果未显示</h2><ul>
+<li><p>排查：<br><code>app.Searh</code>中<code>search_longzhu</code>函数出现问题，如果搜索主播未上线就不会出现主播搜索结果。</p>
+</li>
+<li><p>解决方案：<br>因为抓包网址返回的json数据中如果主播上线总是排在第一位的，因此修改函数直接将所抓数据的第一个默认为主播返回搜索结果，当然这样也有问题，就是不管搜索的是不是龙珠主播总会出现一个龙珠搜索结果，不过应该不影响使用。</p>
+</li>
+</ul>
+<h2 id="主播状态验证模块熊猫主播的状态出错"><a href="#主播状态验证模块熊猫主播的状态出错" class="headerlink" title="主播状态验证模块熊猫主播的状态出错"></a>主播状态验证模块熊猫主播的状态出错</h2><ul>
+<li><p>排查：<br>查看<code>LiveChecker</code>的日志记录发现访问熊猫网址时出现网络错误<code>max retries exceeded with url</code></p>
+</li>
+<li><p>解决方案：<br>在网上发现了错误原因，是链接数量太多没有关闭。直接借用其解决方案，增加最大重连次数，并设置http connection的keep-alive状态为关闭。在<code>LiveChecker</code>中加入如下代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">requests.adapters.DEFAULT_RETRIES = 5</div><div class="line">s.keep_alive = False</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>目前还未发现问题。</p>
+<h2 id="Hot页面出现同名主播"><a href="#Hot页面出现同名主播" class="headerlink" title="Hot页面出现同名主播"></a>Hot页面出现同名主播</h2><ul>
+<li><p>排查<br>出现同名的原因：如果在网络搜索结果中出现数据库中已有的主播并添加关注时，<code>main.view</code>中的<code>add_new</code>函数会创建一个一模一样的主播，因此出现同名状态。</p>
+</li>
+<li><p>解决方案<br>这个问题比较简单，只要在<code>add_new</code>函数中添加两行判断函数即可，如果数据库中可以搜到<code>name</code>和<code>tv</code>都相同的主播，则不会新建主播对象，而是对数据库中已有的主播对象执行<code>add_user</code>方法即可。</p>
+</li>
+</ul>
+<h1 id="2017-01-16"><a href="#2017-01-16" class="headerlink" title="2017/01/16"></a>2017/01/16</h1><h2 id="龙珠主播状态爬虫再出问题"><a href="#龙珠主播状态爬虫再出问题" class="headerlink" title="龙珠主播状态爬虫再出问题"></a>龙珠主播状态爬虫再出问题</h2><ul>
+<li><p>排查<br>龙珠主播状态爬虫再次挂掉，分析原因可能是因为爬虫每次要访问两次龙珠网站，因而容易挂掉。</p>
+</li>
+<li><p>解决方案<br>重写龙珠这部分代码，用Search中龙珠的api中返回的isLive数据。</p>
+</li>
+</ul>
+<h2 id="遇到了最大的一个Bug：celery的任务重复执行严重"><a href="#遇到了最大的一个Bug：celery的任务重复执行严重" class="headerlink" title="遇到了最大的一个Bug：celery的任务重复执行严重"></a>遇到了最大的一个Bug：celery的任务重复执行严重</h2><ul>
+<li><p>排查<br>我一直以为爬虫老是挂掉是因为爬虫代码问题，直到刚才打开服务器的celery.err记录，我的天呐，惊呆我了。celery的task重复执行程度让人瞠目结舌，本来5分钟一次的爬虫硬生生跑成了10秒钟一次。天知道我当时有多失落，而且到网上搜相关问题根本没有。这是直播通的核心部分，不能修复意味着什么？</p>
+</li>
+<li><p>解决方案<br>一篇文章救了我。翻了很久才翻到，看了之后才知道celery定位是实时的异步队列，因此对这种长时间定时的支持并不是很好。当任务的执行时间超过<code>visibility_timeout</code>的时间时，celery就会认为这个任务没有被worker执行成功，重新分给别的worker执行，然而调整visibility参数也无济于事，还是重复执行。于是根据文章作者给的经验，我在我的task函数中加入了一段判断代码，向redis中写入一个唯一的<code>time</code>key存储当前的时间戳，并判断当前时间是否离该时间戳有5分钟，如果有，再执行循环任务，并重新写入<code>time</code>当前的时间戳，这样，及时celery任务重复执行，但是我们的实际代码依然是5分钟跑一次，大赞！</p>
+</li>
+</ul>
+<h2 id="熊猫及龙珠直播状态出错"><a href="#熊猫及龙珠直播状态出错" class="headerlink" title="熊猫及龙珠直播状态出错"></a>熊猫及龙珠直播状态出错</h2><ul>
+<li><p>排查<br>这里又发生了奇怪的事，logger并没有记录爬虫链接出错，但主播状态明显错误。测试了好久，终于发现是<code>LiveChecker</code>中主播状态只更新True不会更新False，意思就是主播上线后状态就永远不会改变。不只是熊猫龙珠，全民战旗都是如此。天呐，原来在这儿！</p>
+</li>
+<li><p>解决方案<br>在代码中添加了主播状态为False的返回代码，done！</p>
+</li>
+</ul>
+<h2 id="手动添加熊猫错误的房间名会出现乱码主播"><a href="#手动添加熊猫错误的房间名会出现乱码主播" class="headerlink" title="手动添加熊猫错误的房间名会出现乱码主播"></a>手动添加熊猫错误的房间名会出现乱码主播</h2><ul>
+<li><p>排查<br>如果手动添加的主播不存在，熊猫tv网站会自动将请求链接重定向到主页，从而出现乱码问题。</p>
+</li>
+<li><p>解决方案<br>经过对爬虫部分测试，拿出了系统重定向到主页过程中的链接内容，在<code>getName</code>加入判断函数，done！</p>
+</li>
+</ul>
+<h1 id="2017-01-17"><a href="#2017-01-17" class="headerlink" title="2017/01/17"></a>2017/01/17</h1><h2 id="一觉起来发现主播状态不更新了，重启服务后正常运行"><a href="#一觉起来发现主播状态不更新了，重启服务后正常运行" class="headerlink" title="一觉起来发现主播状态不更新了，重启服务后正常运行"></a>一觉起来发现主播状态不更新了，重启服务后正常运行</h2><ul>
+<li><p>排查<br>前一天好好的，过了午夜就出问题。检查日志文件发现第二天的日志没有自动生成，因此没有错误记录。检查<code>celery.err</code>文件也没有发现报错。重启全部服务后，主播状态瞬间变正常，推测不是爬虫问题。</p>
+</li>
+<li><p>解决方案<br>猜想是因为日志文件没有生成，因此每次到logging执行的时候总会出错，尝试放弃使用每天记录日志的方法，而将所有日志放在一个文件中，错误也不多。目前效果未知。</p>
+</li>
+</ul>
+<h2 id="根据贴吧网友反映，hot排序出现随即排序，刷新会改变序列"><a href="#根据贴吧网友反映，hot排序出现随即排序，刷新会改变序列" class="headerlink" title="根据贴吧网友反映，hot排序出现随即排序，刷新会改变序列"></a>根据贴吧网友反映，hot排序出现随即排序，刷新会改变序列</h2><ul>
+<li><p>排查<br>原因很简单，数据库中拿出的anchors排序方式为按<code>users_count</code>，而这个数值并不是唯一的，所以该数值相同的anchor就会被随即排序。主页中的用户关注和搜索列表应该都有这个问题，这里选择修复主页中的关注。</p>
+</li>
+<li><p>解决方案<br>在<code>order_by</code>中再加入一个唯一参数<code>name</code>即可。</p>
+</li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/01/11/celery初探/" rel="next" title="celery初探">
+                <i class="fa fa-chevron-left"></i> celery初探
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/01/15/项目部署路上的坑/" rel="prev" title="项目部署路上的坑">
+                项目部署路上的坑 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2017/01/15/直播通Bug修复记录/"
+           data-title="直播通Bug修复记录" data-url="http://yoursite.com/2017/01/15/直播通Bug修复记录/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Cui1994" />
+          <p class="site-author-name" itemprop="name">Cui1994</p>
+          <p class="site-description motion-element" itemprop="description">初学者</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#2017-01-15"><span class="nav-number">1.</span> <span class="nav-text">2017/01/15</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#网络搜索模块龙珠搜索结果未显示"><span class="nav-number">1.1.</span> <span class="nav-text">网络搜索模块龙珠搜索结果未显示</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#主播状态验证模块熊猫主播的状态出错"><span class="nav-number">1.2.</span> <span class="nav-text">主播状态验证模块熊猫主播的状态出错</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Hot页面出现同名主播"><span class="nav-number">1.3.</span> <span class="nav-text">Hot页面出现同名主播</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2017-01-16"><span class="nav-number">2.</span> <span class="nav-text">2017/01/16</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#龙珠主播状态爬虫再出问题"><span class="nav-number">2.1.</span> <span class="nav-text">龙珠主播状态爬虫再出问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#遇到了最大的一个Bug：celery的任务重复执行严重"><span class="nav-number">2.2.</span> <span class="nav-text">遇到了最大的一个Bug：celery的任务重复执行严重</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#熊猫及龙珠直播状态出错"><span class="nav-number">2.3.</span> <span class="nav-text">熊猫及龙珠直播状态出错</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#手动添加熊猫错误的房间名会出现乱码主播"><span class="nav-number">2.4.</span> <span class="nav-text">手动添加熊猫错误的房间名会出现乱码主播</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2017-01-17"><span class="nav-number">3.</span> <span class="nav-text">2017/01/17</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#一觉起来发现主播状态不更新了，重启服务后正常运行"><span class="nav-number">3.1.</span> <span class="nav-text">一觉起来发现主播状态不更新了，重启服务后正常运行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#根据贴吧网友反映，hot排序出现随即排序，刷新会改变序列"><span class="nav-number">3.2.</span> <span class="nav-text">根据贴吧网友反映，hot排序出现随即排序，刷新会改变序列</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Cui1994</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"Cui1994"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    
+    <script src="/lib/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

@@ -1,0 +1,687 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="捣鼓了两天自己的直播通项目，终于大概有了雏形，在主页的视图函数中集成了爬虫，爬取用户关注主播的在线hangtag。但在运行时发现打开主页时延迟明显，有时候竟然长达数秒，突然想起了之前了解到的celery，试试能不能解决这一问题。
+celery是什么关于celery的知识全部在网上了解，星星点点，但还是有所收获。celery是一个典型的异步任务系统，在应用上下文之外执行任务，将消耗资源的东西通通交给">
+<meta property="og:type" content="article">
+<meta property="og:title" content="celery初探">
+<meta property="og:url" content="http://yoursite.com/2017/01/11/celery初探/index.html">
+<meta property="og:site_name" content="AwakeBird">
+<meta property="og:description" content="捣鼓了两天自己的直播通项目，终于大概有了雏形，在主页的视图函数中集成了爬虫，爬取用户关注主播的在线hangtag。但在运行时发现打开主页时延迟明显，有时候竟然长达数秒，突然想起了之前了解到的celery，试试能不能解决这一问题。
+celery是什么关于celery的知识全部在网上了解，星星点点，但还是有所收获。celery是一个典型的异步任务系统，在应用上下文之外执行任务，将消耗资源的东西通通交给">
+<meta property="og:image" content="http://i1.piimg.com/567571/88020dc0eeab8185.png">
+<meta property="og:updated_time" content="2017-01-12T05:19:37.716Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="celery初探">
+<meta name="twitter:description" content="捣鼓了两天自己的直播通项目，终于大概有了雏形，在主页的视图函数中集成了爬虫，爬取用户关注主播的在线hangtag。但在运行时发现打开主页时延迟明显，有时候竟然长达数秒，突然想起了之前了解到的celery，试试能不能解决这一问题。
+celery是什么关于celery的知识全部在网上了解，星星点点，但还是有所收获。celery是一个典型的异步任务系统，在应用上下文之外执行任务，将消耗资源的东西通通交给">
+<meta name="twitter:image" content="http://i1.piimg.com/567571/88020dc0eeab8185.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/01/11/celery初探/"/>
+
+
+
+
+
+  <title> celery初探 | AwakeBird </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AwakeBird</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Cui1994</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/11/celery初探/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Cui1994">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.gif">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AwakeBird">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AwakeBird" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                celery初探
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-11T20:51:23+08:00">
+                2017-01-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/01/11/celery初探/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/01/11/celery初探/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>捣鼓了两天自己的直播通项目，终于大概有了雏形，在主页的视图函数中集成了爬虫，爬取用户关注主播的在线hangtag。但在运行时发现打开主页时延迟明显，有时候竟然长达数秒，突然想起了之前了解到的celery，试试能不能解决这一问题。</p>
+<h1 id="celery是什么"><a href="#celery是什么" class="headerlink" title="celery是什么"></a>celery是什么</h1><p>关于celery的知识全部在网上了解，星星点点，但还是有所收获。celery是一个典型的异步任务系统，在应用上下文之外执行任务，将消耗资源的东西通通交给celery来做，可以让主机迅速向应客户端的请求。<br>celery有三个核心组件：</p>
+<ul>
+<li>客户端：在flask系统中和flask一起运行</li>
+<li>workers：就是传说中的second terminal，用来执行异步任务，可以有多个</li>
+<li>消息代理：用来进行celery的通信，一般用redis。</li>
+</ul>
+<p>为什么用redis？因为其实时性强，一般用作数据频繁插入，更新或者删除的任务中，以减少对数据库的操作</p>
+<h1 id="让celery跑起来"><a href="#让celery跑起来" class="headerlink" title="让celery跑起来"></a>让celery跑起来</h1><p>这部分还是比较简单的，有几个主要步骤。</p>
+<ul>
+<li><p>安装之后要在配置文件中写入用作消息代理的redis的服务器，两行搞定</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">CELERY_BROKER_URL = &apos;redis://localhost:6379/0&apos;</div><div class="line">CELERY_RESULT_BACKEND = &apos;redis://localhost:6379/0&apos;</div></pre></td></tr></table></figure>
+</li>
+<li><p>之后创建celery实例，这里是直接抄来的，至于原因还没搞懂</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">celery = Celery(__name__, broker=Config.CELERY_BROKER_URL)</div><div class="line">celery.conf.update(app.config)</div></pre></td></tr></table></figure>
+</li>
+<li><p>创建celery任务，使用装饰器，先跑起来再说</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">@celery.task(name=&apos;circle_task&apos;)</div><div class="line">def circletask():</div><div class="line">	logging.info(&apos;lalala&apos;)</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>之后满怀信心，直接打开三个终端开始有样学样，第一个打开redis-server，第二个运行app，第三个打开celery，抄了个命令<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ celery -A manage.celery worker --loglevel=info</div></pre></td></tr></table></figure></p>
+<p>然而打开后发现没有动静，才想起并没有提供任务执行的delay。随即又想到我的目的是进行计划任务，让任务可以固定时间重复进行，直接开始搜celery进行实现的方法，还好google够强大，又找到了下面的配置方法：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">CELERYBEAT_SCHEDULE = &#123;</div><div class="line">        &apos;every-minute&apos;: &#123;</div><div class="line">            &apos;task&apos;: &apos;circle_task&apos;,</div><div class="line">            #&apos;schedule&apos;: crontab(minute=&apos;*/1&apos;),</div><div class="line">            # &apos;args&apos;: (1,2),</div><div class="line">            &apos;schedule&apos;: timedelta(seconds=60)</div><div class="line">        	&#125;,</div><div class="line">    	&#125;</div></pre></td></tr></table></figure></p>
+<p>运行命令也变成了：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ celery -A manage.celery worker --loglevel=info --beat</div><div class="line">$ celery -A proj worker -B -l info</div></pre></td></tr></table></figure></p>
+<p>至于里面的参数，只知道timedelta和crontab都可以设置间隔时间，其他的没有深入了解。将代码改好后运行celery，问题来了。</p>
+<ul>
+<li>首先是celery说任务方法没有注册：<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Received unregistered task of type &apos;circle_task&apos;.</div><div class="line">The message has been ignored and discarded.</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>在stack overflow溜达了一圈，终于找到解决方法，在配置文件中声明这个方法即可，于是：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">CELERY_IMPORTS = [&apos;app.task&apos;]</div></pre></td></tr></table></figure></p>
+<p>解决成功。这里千万注意加app，天知道我经历了什么。</p>
+<ul>
+<li>之后运行celery，终于不报错了天呐，屏幕上也出现了lalala的logging，这还说什么，改代码！在task中添加了之前在index视图函数中的爬虫部分，运行celery，好，可以运行。等等，这一大片红字是什么！<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">&apos;RuntimeError: application not registered on db </div><div class="line">           instance and no application bound to current context</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>原来是没有程序上下文不能进行sqlalchemy的操作，于是，在程序段前添加<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">with app.app_context():</div></pre></td></tr></table></figure></p>
+<p>成功！<br><img src="http://i1.piimg.com/567571/88020dc0eeab8185.png" alt="和发麻麻合影留念"><br>最后终于成功看到了模拟上线提醒的logging字样，激动万分，编程的大起大落真是…哈！</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/01/09/redis/" rel="next" title="redis">
+                <i class="fa fa-chevron-left"></i> redis
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/01/15/直播通Bug修复记录/" rel="prev" title="直播通Bug修复记录">
+                直播通Bug修复记录 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2017/01/11/celery初探/"
+           data-title="celery初探" data-url="http://yoursite.com/2017/01/11/celery初探/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Cui1994" />
+          <p class="site-author-name" itemprop="name">Cui1994</p>
+          <p class="site-description motion-element" itemprop="description">初学者</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#celery是什么"><span class="nav-number">1.</span> <span class="nav-text">celery是什么</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#让celery跑起来"><span class="nav-number">2.</span> <span class="nav-text">让celery跑起来</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Cui1994</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"Cui1994"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    
+    <script src="/lib/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

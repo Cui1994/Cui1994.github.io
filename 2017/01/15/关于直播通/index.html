@@ -1,0 +1,701 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="直播通是什么？直播通是一款实现跨平台主播信息集合的web应用，在这里你可以：
+
+实现跨平台主播搜索
+实现不同平台主播的统一关注
+实现主播的上线提醒通知
+一键进入ta的直播间
+
+简单来说，就是将多家平台的主播搜索和关注系统集合到了一起。
+作为我个人来讲，这款web应用是我学习flask的第一个独立项目，也是我的第一个上线网站。从有想法，到最后部署成功，一共用了差不多一周时间。这其中的苦辣辛酸，波澜起">
+<meta property="og:type" content="article">
+<meta property="og:title" content="关于直播通">
+<meta property="og:url" content="http://yoursite.com/2017/01/15/关于直播通/index.html">
+<meta property="og:site_name" content="AwakeBird">
+<meta property="og:description" content="直播通是什么？直播通是一款实现跨平台主播信息集合的web应用，在这里你可以：
+
+实现跨平台主播搜索
+实现不同平台主播的统一关注
+实现主播的上线提醒通知
+一键进入ta的直播间
+
+简单来说，就是将多家平台的主播搜索和关注系统集合到了一起。
+作为我个人来讲，这款web应用是我学习flask的第一个独立项目，也是我的第一个上线网站。从有想法，到最后部署成功，一共用了差不多一周时间。这其中的苦辣辛酸，波澜起">
+<meta property="og:image" content="http://i1.piimg.com/567571/b548186b12f74d4c.jpg">
+<meta property="og:updated_time" content="2017-01-15T16:13:00.604Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="关于直播通">
+<meta name="twitter:description" content="直播通是什么？直播通是一款实现跨平台主播信息集合的web应用，在这里你可以：
+
+实现跨平台主播搜索
+实现不同平台主播的统一关注
+实现主播的上线提醒通知
+一键进入ta的直播间
+
+简单来说，就是将多家平台的主播搜索和关注系统集合到了一起。
+作为我个人来讲，这款web应用是我学习flask的第一个独立项目，也是我的第一个上线网站。从有想法，到最后部署成功，一共用了差不多一周时间。这其中的苦辣辛酸，波澜起">
+<meta name="twitter:image" content="http://i1.piimg.com/567571/b548186b12f74d4c.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/01/15/关于直播通/"/>
+
+
+
+
+
+  <title> 关于直播通 | AwakeBird </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AwakeBird</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Cui1994</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/15/关于直播通/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Cui1994">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.gif">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AwakeBird">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AwakeBird" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                关于直播通
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-15T23:09:00+08:00">
+                2017-01-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/01/15/关于直播通/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/01/15/关于直播通/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="直播通是什么？"><a href="#直播通是什么？" class="headerlink" title="直播通是什么？"></a>直播通是什么？</h1><p>直播通是一款实现跨平台主播信息集合的web应用，在这里你可以：</p>
+<ul>
+<li>实现跨平台主播搜索</li>
+<li>实现不同平台主播的统一关注</li>
+<li>实现主播的上线提醒通知</li>
+<li>一键进入ta的直播间</li>
+</ul>
+<p>简单来说，就是将多家平台的主播搜索和关注系统集合到了一起。</p>
+<p>作为我个人来讲，这款web应用是我学习flask的第一个独立项目，也是我的第一个上线网站。从有想法，到最后部署成功，一共用了差不多一周时间。这其中的苦辣辛酸，波澜起伏想必只有各位开发者心里清楚，于是想写点东西记录下这个自己的处女作。</p>
+<h1 id="设想？"><a href="#设想？" class="headerlink" title="设想？"></a>设想？</h1><p>当我在琢磨用Python和flask能做什么事的时候，最开始也是陷入了惯性陷阱，就是做一个和书上差不多的个人博客，于是我决定仿个知乎。可我又不甘心于此，想把前端做的漂亮一点，然而这是个大坑，项目进行了几天，发现几乎多半时间都在和前端打交道，可我明明做的是后端啊，遂弃坑，想找个有趣点的东西做。这中间还要感谢老同学的提醒：和后端没关系的东西可以通通去掉。没错！</p>
+<p>于是，我从需求出发，考虑能否做一个解决实际问题的东西，于是想到了直播平台。</p>
+<p>看直播是一键很有趣的事情，尤其像嫖老师这种（捂脸），然而各大平台的竞争却给我们带来了不少困扰，之前只需要看斗鱼就可以了，喜欢的主播基本都在斗鱼。之后发生的事情大家也都知道，各大平台疯狂砸钱挖人，于是你发现你喜欢的那些主播可能分布于不同平台。这个时候怎么办呢，把每个主播的直播间都加入收藏夹？（我的收藏夹可是要放1024的哪有这么些地方）每天打开各大平台主页看看有没有自己的主播？（现在热门的直播平台已经有6家了，这么搞得累死）关注主播的微博或者QQ群及时掌握上线信息？（我往往看到微博消息的时候都过去几个小时了）</p>
+<p>于是我有了计划：<strong>我要把几个直播平台集合在一起，让用户在一个页面就能看到自己想看到的全部主播的信息</strong></p>
+<p>有了需求之后，就要开始寻求解决方法，于是有了直播通的最初设想：</p>
+<ul>
+<li>爬虫爬去平台主播数据</li>
+<li>flask做后端</li>
+<li>bootstrap做前端（真的不想和前端打太多交道）</li>
+</ul>
+<p>刚开始做的时候只是希望能做到让用户在一个页面看到主播信息就好了，在项目进行过程中又逐渐加入了主播上线提醒，主播搜索的功能，来源于需求而高于需求啊同志们！</p>
+<h1 id="项目进行"><a href="#项目进行" class="headerlink" title="项目进行"></a>项目进行</h1><p>设想归设想，实际进行起来还是有不少麻烦。</p>
+<p>项目中的用户部分，我直接从《Flask Web开发》这本书中拿出代码，将用户权限等无用部分去掉，进行了一些翻译工作。</p>
+<p>爬虫部分，分为了三个部分，<code>getName</code>用来爬取对应平台和房间号的主播名字，<code>LiveChecker</code>用来爬去主播的在线状态，<code>Search</code>用来拿到平台上的搜索结果。本来想把前两个爬虫放到一起做的，后来发现个别平台并不能一次爬到主播的名字和在线状态，之后又考虑到在线状态要放到计划任务中做并集成上线提醒，所以分开。</p>
+<p>开始时主播的在线状态时放在视图函数中的，即每次打开主页都会跑一次爬虫，更新主播在线状态。后来发现这一过程响应很慢，网页转圈要转好久，这肯定是不行的。后来考虑解决方法，想到了<code>celery</code>。然而<code>celery</code>任务要和前端互动的话需要一些js知识，在这里我跳过了这个坑，直接用了<code>celery</code>中的计划任务部分，让爬虫每5分钟在后台跑一次更新主播状态，惊奇的发现这个过程中可以加入用户提醒，折腾一晚上后成功。之后主播在线状态完全由这个后台负责，用户再也不用等待服务器响应主播在线状态了。</p>
+<p>部署的相关问题可以参照我的另一篇博客 <a href="https://cui1994.github.io2017/01/15/项目部署路上的坑/" target="_blank" rel="external">直播通部署路上的坑</a></p>
+<p>其他的一些小问题，大都在网上和别人的项目中找到了解决方案。</p>
+<h1 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h1><p>搞这个东西的状态现在回头想想，其实也就是瞎折腾。作为一个初学者，过程中遇到很多问题，也发现还有许多东西需要学习。学习flask的时间不长，其中的一些东西理解还没有很到位，很多地方也只能照葫芦画瓢，代码也可能写的很丑。但就像在一间黑暗的房子里看到了一束光，我期待，很期待，走出房子的那天。</p>
+<p>崔同学<br>2017.1.16</p>
+<p>最后附上一张图作为项目进行的历程留念。<br><img src="http://i1.piimg.com/567571/b548186b12f74d4c.jpg" alt=""></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/01/15/flask项目中添加搜索功能/" rel="next" title="flask项目中添加搜索功能">
+                <i class="fa fa-chevron-left"></i> flask项目中添加搜索功能
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/02/27/Day1-关于环境/" rel="prev" title="Day1 - 关于环境">
+                Day1 - 关于环境 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2017/01/15/关于直播通/"
+           data-title="关于直播通" data-url="http://yoursite.com/2017/01/15/关于直播通/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Cui1994" />
+          <p class="site-author-name" itemprop="name">Cui1994</p>
+          <p class="site-description motion-element" itemprop="description">初学者</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#直播通是什么？"><span class="nav-number">1.</span> <span class="nav-text">直播通是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#设想？"><span class="nav-number">2.</span> <span class="nav-text">设想？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#项目进行"><span class="nav-number">3.</span> <span class="nav-text">项目进行</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#后记"><span class="nav-number">4.</span> <span class="nav-text">后记</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Cui1994</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"Cui1994"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    
+    <script src="/lib/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>
