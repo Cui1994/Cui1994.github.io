@@ -1,0 +1,2538 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  
+    <entry>
+      <title><![CDATA[为Spring Boot添加日志模块]]></title>
+      <url>/work/2017/06/29/log/</url>
+      <content type="html"><![CDATA[<h1 id="概述">概述</h1>
+<p>SLF4J——Simple Logging Facade For Java，它是一个针对于各类Java日志框架的统一Facade抽象。Java日志框架众多——常用的有java.util.logging, log4j, logback，commons-logging, Spring框架使用的是Jakarta Commons Logging API (JCL)。而SLF4J定义了统一的日志抽象接口，而真正的日志实现则是在运行时决定的——它提供了各类日志框架的binding。</p>
+
+<p>Logback是log4j框架的作者开发的新一代日志框架，它效率更高、能够适应诸多的运行环境，同时天然支持SLF4J。</p>
+
+<p>默认情况下，Spring Boot会用Logback来记录日志，并用INFO级别输出到控制台。</p>
+
+<h1 id="配置">配置</h1>
+
+<h2 id="添加依赖">添加依赖</h2>
+
+<p>一般来说需要添加spring-boot-starter-logging：</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-logging&lt;/artifactId&gt;
+&lt;/dependency&gt;
+</code></pre></div></div>
+
+<p>实际开发并不需要直接添加依赖，spring-boot-starter其中包含了 spring-boot-starter-logging，该依赖内容就是 Spring Boot 默认的日志框架 logback。而Thymeleaf依赖包含了spring-boot-starter，最终我只要引入Thymeleaf即可。</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-thymeleaf&lt;/artifactId&gt;
+&lt;/dependency&gt;
+</code></pre></div></div>
+
+<h2 id="自定义日志配置">自定义日志配置</h2>
+
+<p>添加好依赖后原则上讲就可以开始使用日志模块了，但使用的是Spring Boot提供的很多默认配置，在<code class="highlighter-rouge">application.properties</code>中也只能修改部分属性，往往不能满足需求，因此需要自行定制配置文件实现日志配置。</p>
+
+<p>Spring Boot官方推荐优先使用带有-spring的文件名作为你的日志配置（如使用logback-spring.xml，而不是logback.xml），命名为logback-spring.xml的日志配置文件，spring boot可以为它添加一些spring boot特有的配置项。</p>
+
+<p>在<code class="highlighter-rouge">src/main/resources</code>路径下添加<code class="highlighter-rouge">logback-spring.xml</code>作为日志配置文件：</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
+<span class="nt">&lt;configuration</span>  <span class="na">scan=</span><span class="s">"true"</span> <span class="na">scanPeriod=</span><span class="s">"60 seconds"</span> <span class="na">debug=</span><span class="s">"false"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;contextName&gt;</span>logback<span class="nt">&lt;/contextName&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"log.path"</span> <span class="na">value=</span><span class="s">"C:\\Users\\cuijintao\\logback.log"</span> <span class="nt">/&gt;</span>
+    <span class="c">&lt;!--输出到控制台--&gt;</span>
+    <span class="nt">&lt;appender</span> <span class="na">name=</span><span class="s">"console"</span> <span class="na">class=</span><span class="s">"ch.qos.logback.core.ConsoleAppender"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;encoder&gt;</span>
+            <span class="nt">&lt;pattern&gt;</span>%d{HH:mm:ss.SSS} %contextName [%thread] %-5level %logger{36} - %msg%n<span class="nt">&lt;/pattern&gt;</span>
+        <span class="nt">&lt;/encoder&gt;</span>
+    <span class="nt">&lt;/appender&gt;</span>
+
+    <span class="c">&lt;!--输出到文件--&gt;</span>
+    <span class="nt">&lt;appender</span> <span class="na">name=</span><span class="s">"file"</span> <span class="na">class=</span><span class="s">"ch.qos.logback.core.rolling.RollingFileAppender"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;file&gt;</span>${log.path}<span class="nt">&lt;/file&gt;</span>
+        <span class="nt">&lt;rollingPolicy</span> <span class="na">class=</span><span class="s">"ch.qos.logback.core.rolling.TimeBasedRollingPolicy"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;fileNamePattern&gt;</span>C:\\Users\\cuijintao\\logback.%d{yyyy-MM-dd_HH-mm}.log<span class="nt">&lt;/fileNamePattern&gt;</span>
+            <span class="nt">&lt;maxHistory&gt;</span>20<span class="nt">&lt;/maxHistory&gt;</span>
+            <span class="nt">&lt;totalSizeCap&gt;</span>1GB<span class="nt">&lt;/totalSizeCap&gt;</span>
+        <span class="nt">&lt;/rollingPolicy&gt;</span>
+        <span class="nt">&lt;encoder&gt;</span>
+            <span class="nt">&lt;pattern&gt;</span>%d{HH:mm:ss.SSS} %contextName [%thread] %-5level %logger{36} - %msg%n<span class="nt">&lt;/pattern&gt;</span>
+        <span class="nt">&lt;/encoder&gt;</span>
+    <span class="nt">&lt;/appender&gt;</span>
+
+    <span class="nt">&lt;root</span> <span class="na">level=</span><span class="s">"info"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;appender-ref</span> <span class="na">ref=</span><span class="s">"console"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;appender-ref</span> <span class="na">ref=</span><span class="s">"file"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/root&gt;</span>
+
+    <span class="c">&lt;!-- logback为java中的包 --&gt;</span>
+    <span class="nt">&lt;logger</span> <span class="na">name=</span><span class="s">"com.example.demo"</span><span class="nt">/&gt;</span>
+    <span class="c">&lt;!--logback.LogbackDemo：类的全路径 --&gt;</span>
+    <span class="nt">&lt;logger</span> <span class="na">name=</span><span class="s">"com.example.hello"</span> <span class="na">level=</span><span class="s">"WARN"</span> <span class="na">additivity=</span><span class="s">"false"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;appender-ref</span> <span class="na">ref=</span><span class="s">"file"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/logger&gt;</span>
+<span class="nt">&lt;/configuration&gt;</span>
+</code></pre></div></div>
+
+<h3 id="根节点configuration属性">根节点<code class="highlighter-rouge">&lt;configuration&gt;</code>属性</h3>
+
+<ul>
+  <li>scan:当此属性设置为true时，配置文件如果发生改变，将会被重新加载，默认值为true。</li>
+  <li>scanPeriod:设置监测配置文件是否有修改的时间间隔，如果没有给出时间单位，默认单位是毫秒。当scan为true时，此属性生效。默认的时间间隔为1分钟。</li>
+  <li>debug:当此属性设置为true时，将打印出logback内部日志信息，实时查看logback运行状态。默认值为false。</li>
+</ul>
+
+<h4 id="属性1---上下文名称contextname">属性1 - 上下文名称<code class="highlighter-rouge">&lt;contextName&gt;</code>:</h4>
+<p>每个logger都关联到logger上下文，默认上下文名称为“default”。
+之后可以通过%contextName来打印日志上下文名称。</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;contextName&gt;logback&lt;/contextName&gt;
+</code></pre></div></div>
+
+<h4 id="属性2---属性变量property">属性2 - 属性变量<code class="highlighter-rouge">&lt;property&gt;</code></h4>
+<p>定义一个key-value键值对
+通过定义的值会被插入到logger上下文中。定义变量后，可以使“${}”来使用变量。</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code> &lt;property name="log.path" value="C:\\Users\\cuijintao\\logback.log" /&gt;
+</code></pre></div></div>
+
+<h4 id="子节点1---appender">子节点1 - <code class="highlighter-rouge">&lt;appender&gt;</code></h4>
+<p>appender用来格式化日志输出节点，有俩个属性name和class，class用来指定哪种输出策略，常用就是控制台输出策略和文件输出策略。</p>
+
+<p><code class="highlighter-rouge">&lt;encoder&gt;</code>表示对日志进行编码：</p>
+<ul>
+  <li><code class="highlighter-rouge">%d{HH: mm:ss.SSS}</code> : 日志输出时间</li>
+  <li><code class="highlighter-rouge">%thread</code> : 日志输出进程名字</li>
+  <li><code class="highlighter-rouge">%-5level</code>: 日志级别 TRACE &lt; DEBUG &lt; INFO &lt; WARN &lt; ERROR &lt; FATAL</li>
+  <li><code class="highlighter-rouge">%logger{36}</code> : 日志输出者名字</li>
+  <li><code class="highlighter-rouge">%msg</code>: 日志消息</li>
+  <li><code class="highlighter-rouge">%n</code>:　平台换行符</li>
+</ul>
+
+<p>输出到文件时，RollingFileAppender用于切分文件日志：</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    &lt;!--输出到文件--&gt;
+    &lt;appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+        &lt;file&gt;${log.path}&lt;/file&gt;
+        &lt;rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
+            &lt;fileNamePattern&gt;C:\\Users\\cuijintao\\logback.%d{yyyy-MM-dd_HH-mm}.log&lt;/fileNamePattern&gt;
+            &lt;maxHistory&gt;20&lt;/maxHistory&gt;
+            &lt;totalSizeCap&gt;1GB&lt;/totalSizeCap&gt;
+        &lt;/rollingPolicy&gt;
+        &lt;encoder&gt;
+            &lt;pattern&gt;%d{HH:mm:ss.SSS} %contextName [%thread] %-5level %logger{36} - %msg%n&lt;/pattern&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+</code></pre></div></div>
+
+<ul>
+  <li><code class="highlighter-rouge">&lt;fileNamePattern&gt;</code>: 指定日志的切分方式</li>
+  <li><code class="highlighter-rouge">&lt;maxHistory&gt;</code>: 指定保留的切分文件的个数</li>
+  <li><code class="highlighter-rouge">&lt;totalSizeCap&gt;</code>: 指定日志文件的上限大小，超过此值将会被删除</li>
+</ul>
+
+<h4 id="子节点2---root">子节点2 - <code class="highlighter-rouge">&lt;root&gt;</code></h4>
+<p>必选节点，用来指定最基础的日志输出级别，只有一个level属性。
+默认值为DEBUG.</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;root level="debug"&gt;
+  &lt;appender-ref ref="console" /&gt;
+  &lt;appender-ref ref="file" /&gt;
+&lt;/root&gt;
+</code></pre></div></div>
+
+<h4 id="子节点3---loger">子节点3 - <code class="highlighter-rouge">&lt;loger&gt;</code></h4>
+<p><code class="highlighter-rouge">&lt;loger&gt;</code>用来设置某一个包或者具体的某一个类的日志打印级别、以及指定<code class="highlighter-rouge">&lt;appender&gt;</code>。
+仅有一个name属性，一个可选的level和一个可选的addtivity属性。</p>
+
+<ul>
+  <li><code class="highlighter-rouge">name</code>: 用来指定受此loger约束的某一个包或者具体的某一个类。</li>
+  <li><code class="highlighter-rouge">level</code>: 日志级别</li>
+  <li><code class="highlighter-rouge">addtivity</code>: 是否向上级loger传递打印信息。默认是true。</li>
+</ul>
+
+<h4 id="多环境日志输出">多环境日志输出</h4>
+<p>据不同环境（prod:生产环境，test:测试环境，dev:开发环境）来定义不同的日志输出，在 logback-spring.xml中使用 springProfile 节点来定义，方法如下：</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;!-- 测试环境+开发环境. 多个使用逗号隔开. --&gt;
+&lt;springProfile name="test,dev"&gt;
+    &lt;logger name="com.dudu.controller" level="info" /&gt;
+&lt;/springProfile&gt;
+&lt;!-- 生产环境. --&gt;
+&lt;springProfile name="prod"&gt;
+    &lt;logger name="com.dudu.controller" level="ERROR" /&gt;
+&lt;/springProfile&gt;
+</code></pre></div></div>
+
+<p>在启动或打包服务是配置profile参数即可。
+如启动时指定prod的方式为：</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>java -jar xxx.jar --spring.profiles.active=prod
+</code></pre></div></div>
+
+<h1 id="demo">demo</h1>
+<p>这里启动一个hello world的spring-boot模板来测试日志配置。</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span> <span class="n">com</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">demo</span><span class="p">.</span><span class="n">com</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">demo</span><span class="p">.</span><span class="n">hello</span><span class="p">;</span>
+
+<span class="n">import</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">web</span><span class="p">.</span><span class="n">bind</span><span class="p">.</span><span class="n">annotation</span><span class="p">.*;</span>
+<span class="n">import</span> <span class="n">org</span><span class="p">.</span><span class="n">slf4j</span><span class="p">.</span><span class="n">Logger</span><span class="p">;</span>
+<span class="n">import</span> <span class="n">org</span><span class="p">.</span><span class="n">slf4j</span><span class="p">.</span><span class="n">LoggerFactory</span><span class="p">;</span>
+
+<span class="p">@</span><span class="n">RestController</span>
+<span class="k">public</span> <span class="n">class</span> <span class="n">HelloController</span> <span class="p">{</span>
+
+    <span class="n">private</span> <span class="n">Logger</span> <span class="n">logger</span> <span class="p">=</span> <span class="n">LoggerFactory</span><span class="p">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">this</span><span class="p">.</span><span class="nf">getClass</span><span class="p">());</span>
+
+    <span class="p">@</span><span class="n">RequestMapping</span><span class="p">(</span><span class="s2">"/hello"</span><span class="p">)</span>
+    <span class="k">public</span> <span class="k">String</span> <span class="n">index</span><span class="p">()</span> <span class="p">{</span>
+
+        <span class="n">logger</span><span class="p">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"日志测试 info"</span><span class="p">);</span>
+        <span class="n">logger</span><span class="p">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"日志测试 debug"</span><span class="p">);</span>
+
+        <span class="n">return</span> <span class="s2">"Hello World"</span><span class="p">;</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+</code></pre></div></div>
+<p>根据上面的配置，日志文件中只记录了INFO级别的日志，每分钟对日志文件进行了切分。</p>
+
+]]></content>
+      <categories>
+        
+          <category> work </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> spring boot </tag>
+        
+          <tag> java </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[通过MULE实现后端服务调用]]></title>
+      <url>/work/2017/06/28/mule/</url>
+      <content type="html"><![CDATA[<h1 id="概述">概述</h1>
+
+<h2 id="1简介">1.简介</h2>
+<p>Mule ESB是一个基于Java的轻量级企业服务总线和集成平台，允许开发人员快速便利地连接多个应用，并支持应用间的数据交换。Mule ESB支持集成现有系统而无论其底层采用何种技术，如JMS、Web Services、JDBC、HTTP以及其他技术。</p>
+
+<h2 id="2整体结构">2.整体结构</h2>
+<p><img src="http://my.oschina.net/uploads/space/2010/1206/131219_BfeJ_49921.jpg" alt="此处输入图片的描述" />
+Mule通过Transports/Connectors与外围的异构系统连接，提供Routing（路由）、Transaction Management（事务管理）、Transformation（转换）、Message Broker（消息代理）、Transportation Management（传输管理）、Security（安全）等核心模块。Mule可以单独使用，也可以架设在常用的应用服务器上。</p>
+
+<p><img src="http://my.oschina.net/uploads/space/2010/1206/104036_uBGk_49921.jpg" alt="此处输入图片的描述" />
+外围系统的服务请求通过Mule ESB的Transport接入，Mule通过Transformer进行数据的格式转换，然后经过Inbound Router进行消息过滤（内部通过配置filter实现）后交给Mule的Component进行业务逻辑处理，处理后的结果通过Outbound Router确定传递给哪个接收方，然后通过Transformer进行数据格式转换，通过Transport连接至接收方，传递信息。</p>
+
+<p>此图描述的是Mule中的一个典型场景的处理过程，涵盖了Mule中的各个关键组件。其中某些处理步骤不是必须的，如Inbound Router、Transformer。</p>
+
+<h2 id="3功能">3.功能</h2>
+<h3 id="服务中介">服务中介</h3>
+
+<p>将业务逻辑和消息发送分离
+屏蔽服务的消息格式和协议
+提供任意位置的服务调用
+提供协议桥接</p>
+
+<h3 id="数据转换">数据转换</h3>
+
+<p>在应用间交换不同格式的信息 
+操作消息的负载内容，包括加密、压缩和编码转换
+在异构的传输协议的数据类型间格式化消息</p>
+
+<h3 id="消息路由">消息路由</h3>
+
+<p>基于消息内容和复杂规则路由消息
+消息的过滤、聚合以及重新排列序号</p>
+
+<h3 id="服务创建和托管">服务创建和托管</h3>
+
+<p>暴露端点、EJB、Spring Bean以及POJO作为服务
+作为轻量级的服务容器进行服务托管</p>
+
+<h1 id="mule的基本元素">Mule的基本元素</h1>
+<h2 id="1flow">1.Flow</h2>
+<p>使用<code class="highlighter-rouge">&lt;flow&gt;</code>元素在mule中配置Flow，Flow有一个name，消息源(一般由flow中定义的特定元素生成)和异常属性。</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;flow name=""&gt;
+    - 0..1 MessageSource
+    - 1..n MessageProcessor(s)
+    - 0..1 ExceptionStrategy
+&lt;/flow&gt;
+</code></pre></div></div>
+<p>消息源接收或生成消息时，一个Flow将被启动，并根据Flow中所配置好的元素顺序进行执行。
+特别的，当Flow为Request-Response模型时，Flow中最后一个消息处理器的处理结果作为相应返回，也可以在Flow中定义Response元素来处理相应。</p>
+
+<h2 id="2message">2.Message</h2>
+<p>Message负责在Mule中的数据传递，在Mule中主要存在三种Message形式。</p>
+
+<h3 id="property">Property</h3>
+<p>属性，键值对形式，分为入站和出站属性。</p>
+
+<ul>
+  <li>入站属性(Inbound properties)不可变，由消息源直接生成。
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#[message.inboundProperties]
+</code></pre></div>    </div>
+  </li>
+  <li>出站属性(Outbound properties)可变，并可在流程中修改。
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#[message.outboundProperties]
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<h3 id="variables">Variables</h3>
+<p>变量，完全由用户在流程内定义。</p>
+
+<ul>
+  <li>流变量(Flow variables) 只在其所在的Flow中可以使用。
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#[flowVars]
+</code></pre></div>    </div>
+  </li>
+  <li>会话变量(Session variables) 适用于程序内所有的Flow。
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#[sessionVars]
+</code></pre></div>    </div>
+  </li>
+  <li>记录变量(Record variables) 仅适用于批量处理。</li>
+</ul>
+
+<h3 id="payload">Payload</h3>
+<p>参数传递，在Flow中流转的待处理参数，可以被修改和更改格式。</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#[payload]
+</code></pre></div></div>
+
+<p>Message可以引入特定Component进行设置。</p>
+
+<h2 id="3connector">3.Connector</h2>
+<p>连接器将Mule应用程序与第三方API和标准集成协议集成，从而提供访问Web服务和资源的方法。
+使用Mule流中的连接器通过协议或使用API，发送和接收数据。</p>
+
+<p>目前业务中涉及的连接器主要有HTTP连接器和AMQP连接器，其余连接器若有需要再行补充。</p>
+
+<p>连接器的具体配置方法在下面业务场景中列出，配置好的连接器被储存在全局元素中，在任意的Flow中都可以引用并获得这个元素的实例。</p>
+
+<h3 id="http-listener-connector">HTTP-Listener-Connector</h3>
+<p>HTTP侦听器连接器提供了最实际的方式来监听HTTP请求。</p>
+
+<p>连接器可以被配置为接受任何请求，或只接受寻址到特定URI的请求。可以选择连接器接受的方法：GET，POST等</p>
+
+<p>请求body被传递到Flow作为的下一个元素的Payload放入Message，而Header，Query参数，URI参数和HTTP请求的其它元件被传递作为入站属性。这些属性可以从Message中访问。</p>
+
+<p>此连接器还可以使用HTTPS协议，并通过TLS对通信进行加密。</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;http:listener-config name="HTTP_Listener_Configuration" host="localhost" port="8081" doc:name="HTTP Listener Configuration"/&gt;
+</code></pre></div></div>
+
+<h3 id="http-request-connector">HTTP-Request-Connector</h3>
+<p>HTTP请求连接器提供了消费外部HTTP服务的最实际的方法。发送HTTP请求时，您可以选择使用哪种方法（GET，POST等），并可能包含一个header，body，查询参数，表单参数和URI参数。然后响应由连接器接收，并传递给流中的下一个元素。</p>
+
+<p>该连接器还可以实现HTTPS协议，并通过TLS对通信进行加密，还可以通过基本身份验证，OAuth，NTLM或摘要来实现身份验证。</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    &lt;http:request-config name="HTTP_Request_Configuration" host="127.0.0.1" port="5000" doc:name="HTTP Request Configuration" basePath="/"/&gt;
+</code></pre></div></div>
+
+<h3 id="amqp-connector">AMQP-Connector</h3>
+<p>高级消息队列协议（AMQP）是一种开放标准，用于定义在应用程序或组织之间传递业务消息的协议。
+AMQP连接器是先前引入的AMQP结构之上的一种抽象：连接，通道，交换，队列和消息。</p>
+
+<p>连接器隐藏了低级概念，例如处理通道，但是对其封装的所有结构进行了大量的控制，从而允许您访问AMQP的丰富性，而无需对其API进行编码。</p>
+
+<p>主要部件：</p>
+
+<ul>
+  <li>Connector： 建立与AMQP broker的联系，如rabbitmq，管理由使用此连接器的所有消费者或发布商共享的一组公共属性</li>
+  <li>inbound-endpoint： 消耗来自AMQP队列的消息，将消息存入Mule的Message中</li>
+  <li>outbound-endpoint： 从Mule Flow向AMQP交换机发布消息</li>
+</ul>
+
+<h1 id="mule的几种适用场景">Mule的几种适用场景</h1>
+
+<h2 id="1一个经典的http转发模型">1.一个经典的HTTP转发模型</h2>
+
+<h3 id="基本部件">基本部件</h3>
+<p>核心由三个部分组成：HTTP-Liten-Connector, HTTP-Request-Connector, Set-Payload-Component，也可在之中即加入Echo-Component用于在Console中输出消息。</p>
+
+<h3 id="配置">配置</h3>
+
+<ul>
+  <li>
+    <p>HTTP-Listen配置：
+General-&gt;General Setting-&gt;Connector Configuration-&gt;edit 指定HOST, PORT和BASE PATH
+General-&gt;Basic Setting-&gt;Path 指定路由，*可以为任意路由，(此处可以应用到rest转发)
+General-&gt;Response 中指定返回值(如配置Header实现跨域请求)</p>
+  </li>
+  <li>
+    <p>Set-Payload配置:
+General-&gt;Setting-&gt;value 指定请求body的值(原值传递<code class="highlighter-rouge">#[payload]</code>)
+General-&gt;MIME Type Setting 指定请求body类型</p>
+  </li>
+  <li>
+    <p>HTTP-Request配置(大部分和Listen相似，只需增加请求类型):
+General-&gt;URL Settings-&gt;Method</p>
+  </li>
+</ul>
+
+<h3 id="demo">demo</h3>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    &lt;http:listener-config name="HTTP_Listener_Configuration" host="localhost" port="8081" doc:name="HTTP Listener Configuration"/&gt;
+    &lt;http:request-config name="HTTP_Request_Configuration" host="127.0.0.1" port="5000" doc:name="HTTP Request Configuration" basePath="/"/&gt;
+    &lt;flow name="helloworldFlow"&gt;
+        &lt;http:listener config-ref="HTTP_Listener_Configuration" path="test" responseStreamingMode="ALWAYS" doc:name="HTTP-Listen"&gt;
+            &lt;http:response-builder&gt;
+                &lt;http:header headerName="Access-Control-Allow-Origin" value="#[message.inboundProperties.'Access-Control-Allow-Origin']"/&gt;
+            &lt;/http:response-builder&gt;
+        &lt;/http:listener&gt;
+        &lt;echo-component doc:name="Echo"/&gt;
+        &lt;set-payload value="#[payload]" encoding="UTF-8" mimeType="application/json" doc:name="Set Payload"/&gt;
+        &lt;http:request config-ref="HTTP_Request_Configuration" path="test" method="POST" doc:name="HTTP-Request"&gt;
+            &lt;http:request-builder&gt;
+                &lt;http:header headerName="Access-Control-Allow-Mthods" value="#[message.inboundProperties.'Access-Control-Allow-Mthods']"/&gt;
+                &lt;http:header headerName="Cookie" value="#[message.inboundProperties.'Cookie']"/&gt;
+            &lt;/http:request-builder&gt;
+        &lt;/http:request&gt;
+    &lt;/flow&gt;
+</code></pre></div></div>
+
+<h2 id="2一个经典的rabbitmq消息转发">2.一个经典的Rabbitmq消息转发</h2>
+
+<h3 id="基本部件-1">基本部件</h3>
+<p>Http-Listen-Connector, AMQP-Connector。其中AMQP相关连接器需要自行安装引入，我这里采用第三方软件包形式安装，还可通过官方软件包和Maven进行引入。</p>
+
+<h3 id="配置-1">配置</h3>
+<p>以HTTP-Listen和AMQP-EndPoint组成，其中HTTP-Listen和上面配置相同。</p>
+
+<ul>
+  <li>AMQP配置
+Reference-&gt;Global Reference-&gt;Connector Reference-&gt;add 添加AMQP-Connector，Protoal全部采用默认值。
+General-&gt;Address Attribute 配置Exchange和Queue</li>
+</ul>
+
+<h3 id="demo-1">demo</h3>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    &lt;amqp:connector name="AMQP_0_9_Connector" validateConnections="true" doc:name="AMQP-0-9 Connector"/&gt;
+    &lt;http:listener-config name="HTTP_Listener_Configuration" host="localhost" port="8081" doc:name="HTTP Listener Configuration"/&gt;
+    &lt;amqp:endpoint exchangeName="Kong" queueName="hello" name="AMQP_0_91" responseTimeout="10000" doc:name="AMQP-0-9"/&gt;
+    &lt;flow name="test4Flow"&gt;
+        &lt;http:listener config-ref="HTTP_Listener_Configuration" path="/" doc:name="HTTP"/&gt;
+        &lt;amqp:outbound-endpoint connector-ref="AMQP_0_9_Connector" exchangeName="Kong" doc:name="AMQP-0-9" queueName="hello" responseTimeout="10000"/&gt;
+    &lt;/flow&gt;
+</code></pre></div></div>
+
+<h2 id="3rest格式请求">3.REST格式请求</h2>
+
+<p>大致与http格式相似，需要用到MULE表达式将HTTP-Listener中的path传递给HTTP-Request</p>
+
+<h3 id="demo-2">demo</h3>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    &lt;http:listener-config name="HTTP_Listener_Configuration" host="localhost" port="8081" doc:name="HTTP Listener Configuration"/&gt;
+    &lt;http:request-config name="HTTP_Request_Configuration" host="localhost" port="5000" doc:name="HTTP Request Configuration"/&gt;
+    &lt;flow name="test5Flow"&gt;
+        &lt;http:listener config-ref="HTTP_Listener_Configuration" path="/*" doc:name="HTTP"/&gt;
+        &lt;http:request config-ref="HTTP_Request_Configuration" path="#[message.inboundProperties.'http.request.path']" method="GET" doc:name="HTTP"&gt;
+            &lt;http:request-builder&gt;
+                &lt;http:query-params expression="#[message.inboundProperties.'http.query.params']"/&gt;
+            &lt;/http:request-builder&gt;
+        &lt;/http:request&gt;
+    &lt;/flow&gt;
+</code></pre></div></div>
+
+]]></content>
+      <categories>
+        
+          <category> work </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> mule </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[BPMN2.0概念]]></title>
+      <url>/work/2017/06/13/bmpn/</url>
+      <content type="html"><![CDATA[<h2 id="1简介">1.简介</h2>
+
+<p>BPMN（Business Process Model And Notation）- 业务流程模型和符号 是有BPMI（Business Process Management Initiative）开发的一套变准的业务流程建模符号。2004年5月发布了BPMN1.0规范.BPMI于2005年9月并入OMG（The Object Management Group)组织。OMG于2011年1月发布BPMI2.0的最终版本
+![此处输入图片的描述][4]</p>
+
+<h2 id="2规范">2.规范</h2>
+
+<h3 id="21-bpmn2-conformance-一致性">2.1 BPMN2-Conformance 一致性</h3>
+
+<ul>
+  <li>
+    <p>Process Modeling Conformance 流程模型一致性</p>
+  </li>
+  <li>
+    <p>Process Execution conformance 流程执行一致性</p>
+  </li>
+  <li>
+    <p>BPEL Process Execution Conformance BPEL 流程执行一致性</p>
+  </li>
+  <li>
+    <p>Choreography Modeling Conformance 编排模型一致性</p>
+  </li>
+</ul>
+
+<h3 id="22-bpmn2-element-元素">2.2 BPMN2-Element 元素</h3>
+<p>![此处输入图片的描述][5]</p>
+<h4 id="221-flow-objects-流对象">2.2.1 Flow Objects 流对象</h4>
+
+<ul>
+  <li>
+    <p>Events 事件
+![此处输入图片的描述][6]
+Event 用一个圆圈表示，它是流程中运行过程中发生的事情。事件的发生会影响到流程的流转.事件包含Start\Intermediate\End三种类型.启动、结束、边界条件以及每个活动的创建、开始、流转等都是流程事件，利用事件机制，可以通过事件控制器为系统增加辅助功能，如其它业务系统集成、活动预警等.</p>
+  </li>
+  <li>
+    <p>Activities 活动
+![此处输入图片的描述][7]
+活动用圆角矩形表示，一个活动多个活动组成，活动的类型分为Task和Sub-Process.     <br />
+Task能描述业务过程中所有能发生工时的行为，是流程在流转过程中的一个原子活动，它被用于流程中的工作不能被拆开到更细级别时的场景.
+Sub-Process事件子过程可以出现在过程或子过程中，其开始事件触发它活动，它可以中断上一层过程，也可以与上一层过程中的活动平行执行，这一切取决于它开始事件的行为。</p>
+  </li>
+  <li>
+    <p>Gateways 网关
+![此处输入图片的描述][8]
+网关用菱形表示,用于控制流程的分支和聚合.决定流程流转指向.用来对流程中的决策进行建模。
+(1)排他网关
+(2)并行网关</p>
+  </li>
+</ul>
+
+<h4 id="222-data-数据">2.2.2 Data 数据</h4>
+<p>![此处输入图片的描述][9]
+数据对象向读者显示在活动中需要或产生哪些数据.</p>
+
+<ul>
+  <li>
+    <p>Data Objects 数据对象
+代表过程中流动的信息，例如：业务文件、E-mail、信件。</p>
+  </li>
+  <li>
+    <p>Data Inputs 数据输入
+整个过程中可以被活动读取的外部数据.</p>
+  </li>
+  <li>
+    <p>Data OutPuts 数据输出
+作为整个过程的输出数据量.</p>
+  </li>
+  <li>
+    <p>Data Stores 数据存储
+存放过程数据的地方，例如数据库或文件。其生命周期超过了过程实例的生命周期，即过程实例结束了，但数据依然存在。</p>
+  </li>
+  <li>
+    <p>Message 消息
+消息用来表示两个参与者之间通讯的内容。</p>
+  </li>
+</ul>
+
+<h4 id="223-connecting-objects-连接对象">2.2.3 Connecting Objects 连接对象</h4>
+<p>![此处输入图片的描述][10]</p>
+
+<ul>
+  <li>
+    <p>Sequence Flows 序列流
+Sequence Flows 用实线实心箭头表示，代表流程中将被执行的活动的执行顺序.
+是两个流程元素间的连接器.一个元素在流程执行期间被访问后，流程会沿着该元素输出的方向继续执行.</p>
+  </li>
+  <li>
+    <p>Message Flows 消息流
+Message Flows 用虚线空心箭头表示，第阿宝2个分开的流程参与者直接发送或者接收到的消息流.
+消息流可以与泳池、活动或消息事件连在一起.</p>
+  </li>
+  <li>
+    <p>Associations 结合关系
+Associations 用点状虚线表示，用于显示活动的输入输出.</p>
+  </li>
+  <li>
+    <p>Data Associations 数据结合关系</p>
+  </li>
+</ul>
+
+<h4 id="224-swimlanes-泳道">2.2.4 Swimlanes 泳道</h4>
+<p>![此处输入图片的描述][11]
+泳池和泳道都表示活动的参与者，即表示过程中活动的执行者，它可以是一个组织、角色或系统。泳池可以划分成多个泳道，泳道具有分层结构.
+是从视觉上对活动加以组织或分类的机制。它基于交叉功能流程图基础，在BPMN中有两种类型.</p>
+
+<ul>
+  <li>
+    <p>Pools 池
+表示流程中的主要参与者，典型地，用来分开不同的组织。一个池可容纳一个或多个道（像真实的泳池一样）。当池为展开的（显示出内部细节），绘做大的矩形；若为收起的（隐藏起内部细节），绘做沿着图的长或宽伸展的空的矩形。</p>
+  </li>
+  <li>
+    <p>Lanes 道
+在池中，用于活动按职能或角色归类。绘做按池的长或宽展开的矩形。道包含流对象、连接对象和人造物。</p>
+  </li>
+</ul>
+
+<h4 id="225-artifacts-工件">2.2.5 Artifacts 工件</h4>
+<p>![此处输入图片的描述][12]</p>
+
+<ul>
+  <li>
+    <p>Group 组</p>
+  </li>
+  <li>
+    <p>Text Annotation 文本注释</p>
+  </li>
+</ul>
+
+<h3 id="23-流程">2.3 流程</h3>
+
+<h4 id="231-流程图">2.3.1 流程图</h4>
+<ul>
+  <li>私有流程
+指某一组织内部的流程，也叫工作流.在Web Service领域指服务的编制.</li>
+  <li>共有流程
+表现为一个私有流程和其他流程或参与者之间的交互.</li>
+</ul>
+
+<h4 id="232-协作图">2.3.2 协作图</h4>
+<p>![此处输入图片的描述][13]
+描绘两个或多个业务实体之间的交互.</p>
+
+<h4 id="233-编排图">2.3.3 编排图</h4>
+<p>![此处输入图片的描述][14]
+表现多个参与者之间的交互，由编排活动直接表现多个参与者之间的消息交互，为协作模型提供了一种基于流程图的模型.</p>
+
+<h4 id="234-会话图">2.3.4 会话图</h4>
+<p>![此处输入图片的描述][15]
+协作模型的另一种表现形式.</p>
+]]></content>
+      <categories>
+        
+          <category> work </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> bpmn </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[利用flask_socketio实现与前段的socket通信]]></title>
+      <url>/work/2017/05/16/socketio/</url>
+      <content type="html"><![CDATA[<h2 id="demo">Demo</h2>
+<p><code class="highlighter-rouge">flask_socketio</code>将<code class="highlighter-rouge">flask</code>应用用socketio包装了一层，可以与web端实现websocket连接。</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from flask import Flask, render_template
+from flask_socketio import SocketIO, emit
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret'
+socketio = SocketIO(app)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+    
+@socketio.on('connect')
+def client_msg():
+    print 'connect!'
+    
+@socketio.on('connect with token')
+def connect_with_token(message):
+    token = message['token']
+    emit('notification', {'msg': 'done!'})
+    
+    
+if __name__ == '__main__':
+    socketio.run(app, debug=True, host='0.0.0.0', port=5300)
+</code></pre></div></div>
+<p><code class="highlighter-rouge">index.html</code>代码：</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;script src="/static/node_modules/socket.io-client/dist/socket.io.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+    function localConnectSocket(){
+    var socket = io.connect('http://localhost:5300');
+    socket.emit("connect with token", {'token': 'xxxx'});
+    socket.on("notification", function (data) {
+        alert(data.msg)
+    });
+    }
+&lt;/script&gt;
+
+&lt;body&gt;
+    &lt;button type="button" onclick="localConnectSocket()"&gt;localConnectSocket&lt;/button&gt;
+    &lt;br /&gt;
+&lt;/body&gt;
+</code></pre></div></div>
+
+<h2 id="发送消息到特定连接">发送消息到特定连接</h2>
+<p>每个连接有一个<code class="highlighter-rouge">sid</code>，存在<code class="highlighter-rouge">request.sid</code>中。
+每个链接socketio会将其分配至一个以其<code class="highlighter-rouge">sid</code>为名的<code class="highlighter-rouge">room</code>中，据此可发送消息至每一个特定连接.</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Object that represents a socket connection
+class Socket:
+    def __init__(self, sid):
+        self.sid = sid
+        self.connected = True
+
+    # Emits data to a socket's unique room
+    def emit(self, event, data):
+        emit(event, data, room=self.sid)
+
+@socketio.on('connect')
+def foo():
+    sockets[request.sid] = Socket(request.sid)
+</code></pre></div></div>
+
+]]></content>
+      <categories>
+        
+          <category> work </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> socketio </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[大话设计模式Python实现]]></title>
+      <url>/study/2017/04/13/shejimoshi/</url>
+      <content type="html"><![CDATA[<p>学习自大话设计模式，将其C#语言实现翻译为Python，同时参照此系列博客：<a href="http://www.jianshu.com/p/84ae207ccaf7">Python设计模式</a> 加深理解。</p>
+
+<h2 id="1简单工厂模式">1.简单工厂模式</h2>
+
+<p>面向对象目标：</p>
+
+<ul>
+  <li>可维护：只需要改动需求制定功能的类或模块</li>
+  <li>可复用：可以用在不同的环境下</li>
+  <li>可扩展：增加功能只需要增加相应的模块</li>
+  <li>灵活性好：可以任意组合功能</li>
+</ul>
+
+<p>耦合性：更改一个功能不需要接触其他功能（即使功能都是相似的），考虑通过封装、继承和多态将耦合性降低。</p>
+
+<p>根据需求实例化要实例的对象（这些对象可能均继承自同一基类）。</p>
+
+<p>缺点：违反了高内聚职责分配原则 <a href="http://www.cnblogs.com/sevenyuan/archive/2010/03/05/1678730.html">职责分配原则</a></p>
+
+<p>计算器实例：</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># -*- coding:utf-8 -*-</span>
+<span class="kn">import</span> <span class="nn">re</span><span class="o">=</span>
+
+<span class="k">class</span> <span class="nc">Operation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span>
+
+	<span class="k">def</span> <span class="nf">calculate_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">result</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="k">return</span> <span class="n">result</span>
+
+<span class="k">class</span> <span class="nc">AddOperation</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">calculate_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+		<span class="k">return</span> <span class="n">result</span>
+
+<span class="k">class</span> <span class="nc">SubtractOperation</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">calculate_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+		<span class="k">return</span> <span class="n">result</span>
+
+<span class="k">class</span> <span class="nc">MultiplicationOperation</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">calculate_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+		<span class="k">return</span> <span class="n">result</span>
+
+<span class="k">class</span> <span class="nc">DivisionOperation</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">calculate_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+		<span class="k">return</span> <span class="n">result</span>
+
+<span class="k">class</span> <span class="nc">OperationFactory</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">create_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+		<span class="k">if</span> <span class="n">operation</span> <span class="o">==</span> <span class="s">'+'</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">AddOperation</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="n">operation</span> <span class="o">==</span> <span class="s">'-'</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">SubtractOperation</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="n">operation</span> <span class="o">==</span> <span class="s">'*'</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">MultiplicationOperation</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="n">operation</span> <span class="o">==</span> <span class="s">'/'</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">DivisionOperation</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="nb">ValueError</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">'__main__'</span><span class="p">:</span>
+	<span class="n">input_string</span> <span class="o">=</span> <span class="nb">raw_input</span><span class="p">(</span><span class="s">'Enter your operation such as </span><span class="se">\'</span><span class="s">10+11=</span><span class="se">\'</span><span class="s">:'</span><span class="p">)</span>
+	<span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">r'(\d+)(\+|\-|\*|\/)(\d+)'</span><span class="p">)</span>
+	<span class="n">items</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">input_string</span><span class="p">)</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">a</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+		<span class="n">operation</span> <span class="o">=</span> <span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+		<span class="n">b</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span>
+		<span class="k">print</span> <span class="n">OperationFactory</span><span class="p">()</span><span class="o">.</span><span class="n">create_operation</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">calculate_result</span><span class="p">()</span>
+	<span class="k">except</span><span class="p">:</span>
+		<span class="k">print</span> <span class="s">'Wrong Input.'</span>
+</code></pre></div></div>
+
+<h2 id="2策略模式">2.策略模式</h2>
+
+<p>将一系列算法家族封装，算法家族完成的是同一类功能的不同实现（都是用来解决同一个问题的，只是不同情况需要应用不同的算法），降低了客户端和算法类之间的耦合。</p>
+
+<p>缺点：增加策略时仍然需要到<code class="highlighter-rouge">Context</code>类中增加一个新的判断分支。</p>
+
+<p>超市活动实例：</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># -*- coding:utf-8 -*-</span>
+
+<span class="k">class</span> <span class="nc">Strategy</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="c"># 抽象算法类</span>
+	<span class="k">def</span> <span class="nf">algorithm_interface</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="nb">NotImplementedError</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">NormalStrategy</span><span class="p">(</span><span class="n">Strategy</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">algorithm_interface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">money</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">money</span>
+
+<span class="k">class</span> <span class="nc">RebateStrategy</span><span class="p">(</span><span class="n">Strategy</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rebate</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">rebate</span> <span class="o">=</span> <span class="n">rebate</span>
+
+	<span class="k">def</span> <span class="nf">algorithm_interface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">money</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">money</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">rebate</span>
+
+<span class="k">class</span> <span class="nc">ReturnStrategy</span><span class="p">(</span><span class="n">Strategy</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">each_money</span><span class="p">,</span> <span class="n">return_money</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">each_money</span> <span class="o">=</span> <span class="n">each_money</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">return_money</span> <span class="o">=</span> <span class="n">return_money</span>
+
+	<span class="k">def</span> <span class="nf">algorithm_interface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">money</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">money</span><span class="o">-</span><span class="p">(</span><span class="n">money</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">each_money</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">return_money</span>
+
+<span class="k">class</span> <span class="nc">Context</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="c"># 上下文，封装策略的实现细节</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">strategy_type</span><span class="p">):</span>
+		<span class="k">if</span> <span class="n">strategy_type</span> <span class="o">==</span> <span class="s">'normal'</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">strategy</span> <span class="o">=</span> <span class="n">NormalStrategy</span><span class="p">()</span>
+		<span class="k">elif</span> <span class="n">strategy_type</span> <span class="o">==</span> <span class="s">'0.8 rebate'</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">strategy</span> <span class="o">=</span> <span class="n">RebateStrategy</span><span class="p">(</span><span class="mf">0.8</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="n">strategy_type</span> <span class="o">==</span> <span class="s">'300 return 100'</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">strategy</span> <span class="o">=</span> <span class="n">ReturnStrategy</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">context_interface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">money</span><span class="p">):</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="o">.</span><span class="n">algorithm_interface</span><span class="p">(</span><span class="n">money</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">'__main__'</span><span class="p">:</span>
+	<span class="n">money</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">raw_input</span><span class="p">(</span><span class="s">'Enter money:'</span><span class="p">))</span>
+	<span class="n">strategy_type</span> <span class="o">=</span> <span class="nb">raw_input</span><span class="p">(</span><span class="s">'Enter strategy type:'</span><span class="p">)</span>
+	<span class="k">print</span> <span class="n">Context</span><span class="p">(</span><span class="n">strategy_type</span><span class="p">)</span><span class="o">.</span><span class="n">context_interface</span><span class="p">(</span><span class="n">money</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="3单一职责原则">3.单一职责原则</h2>
+
+<p>类的功能要尽量单一——利于解耦</p>
+
+<h2 id="4开放封闭原则">4.开放封闭原则</h2>
+
+<p>最扩展开放，最修改封闭。（写好的类尽量不要去改动他）
+面对需求，对程序的改动是通过增加新代码进行的，而不是更改现有的代码。
+在最开始写代码时，假定变化不会发生，当变化发生之后，就要创建抽象来隔离变化。</p>
+
+<h2 id="5依赖倒转原则">5.依赖倒转原则</h2>
+
+<p>抽象不应该依赖于细节，细节应该依赖于抽象。
+要对接口编程，而不要对实现编程。
+里氏代换原则：子类必须能够替换掉他们的父类型。</p>
+
+<h2 id="6装饰模式">6.装饰模式</h2>
+
+<p>把每个需要装饰的功能放在单独的类中，需要使用新功能时只需要用装饰的类去包装原有的核心类，将类的核心职责和装饰功能分开，避免增加核心类的复杂度。</p>
+
+<p>python自带的装饰器也是一种装饰模式的实现。</p>
+
+<p>穿衣服实例</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># -*- coding:utf-8 -*-</span>
+<span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">''</span>
+
+	<span class="k">def</span> <span class="nf">set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+	<span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">u'装扮的{0}'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Finery</span><span class="p">(</span><span class="n">Person</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">set_decorate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">component</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">component</span> <span class="o">=</span> <span class="n">component</span>
+
+	<span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">component</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">component</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">TShirts</span><span class="p">(</span><span class="n">Finery</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">u'T-shirt.'</span>
+		<span class="nb">super</span><span class="p">(</span><span class="n">TShirts</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">BigTrouser</span><span class="p">(</span><span class="n">Finery</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">u'Big-Trouser.'</span>
+		<span class="nb">super</span><span class="p">(</span><span class="n">BigTrouser</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">'__main__'</span><span class="p">:</span>
+	<span class="n">xiao_ming</span> <span class="o">=</span> <span class="n">Person</span><span class="p">()</span>
+	<span class="n">xiao_ming</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="s">'xiaoMing'</span><span class="p">)</span>
+
+	<span class="k">print</span> <span class="s">u'第一种装扮：'</span>
+	<span class="n">t_shirt</span> <span class="o">=</span> <span class="n">TShirts</span><span class="p">()</span>
+	<span class="n">big</span> <span class="o">=</span> <span class="n">BigTrouser</span><span class="p">()</span>
+
+	<span class="n">t_shirt</span><span class="o">.</span><span class="n">set_decorate</span><span class="p">(</span><span class="n">xiao_ming</span><span class="p">)</span>
+	<span class="n">big</span><span class="o">.</span><span class="n">set_decorate</span><span class="p">(</span><span class="n">t_shirt</span><span class="p">)</span>
+
+	<span class="n">big</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h2 id="7代理模式">7.代理模式</h2>
+
+<p>用代理对象去调用真是对象的接口，可以完成一些额外的事。</p>
+
+<p>代理和真是对象公用一个接口（继承自同一基类）。代理此接口的真正目的是调用真实对象的接口。</p>
+
+<p>代码实例：</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># -*- coding:utf-8 -*-</span>
+
+<span class="k">class</span> <span class="nc">Subject</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="nb">NotImplementedError</span>
+
+<span class="k">class</span> <span class="nc">RealSubject</span><span class="p">(</span><span class="n">Subject</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">'Real Request.'</span>
+
+<span class="k">class</span> <span class="nc">ProxySubject</span><span class="p">(</span><span class="n">Subject</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">real</span> <span class="o">=</span> <span class="n">RealSubject</span><span class="p">()</span>
+
+	<span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">request</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">'__main__'</span><span class="p">:</span>
+	<span class="n">proxy</span> <span class="o">=</span> <span class="n">ProxySubject</span><span class="p">()</span>
+	<span class="n">proxy</span><span class="o">.</span><span class="n">request</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h2 id="8工厂方法模式">8.工厂方法模式</h2>
+
+<p>将简单工厂模式实例化类的时机延后到工厂子类进行，克服了简单工厂模式违背封闭原则的缺点。</p>
+
+<p>但其仍有缺点：判断分支从工厂中转移到了客户端中进行。相当于绕了一圈又绕回来了。</p>
+
+<p>计算器实例：</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># -*- coding:utf-8 -*-</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="k">class</span> <span class="nc">Operation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span>
+
+	<span class="k">def</span> <span class="nf">calculate_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">result</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="k">return</span> <span class="n">result</span>
+
+<span class="k">class</span> <span class="nc">AddOperation</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">calculate_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+		<span class="k">return</span> <span class="n">result</span>
+
+<span class="k">class</span> <span class="nc">SubtractOperation</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">calculate_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+		<span class="k">return</span> <span class="n">result</span>
+
+<span class="k">class</span> <span class="nc">MultiplicationOperation</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">calculate_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+		<span class="k">return</span> <span class="n">result</span>
+
+<span class="k">class</span> <span class="nc">DivisionOperation</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">calculate_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+		<span class="k">return</span> <span class="n">result</span>
+
+<span class="k">class</span> <span class="nc">IFactory</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">create_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="nb">NotImplementedError</span>
+
+<span class="k">class</span> <span class="nc">AddFactory</span><span class="p">(</span><span class="n">IFactory</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">create_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">AddOperation</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">SubFactory</span><span class="p">(</span><span class="n">IFactory</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">create_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">SubtractOperation</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">MulFactory</span><span class="p">(</span><span class="n">IFactory</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">create_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">MultiplicationOperation</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">DivFactory</span><span class="p">(</span><span class="n">IFactory</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">create_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">DivisionOperation</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">'__main__'</span><span class="p">:</span>
+	<span class="n">input_string</span> <span class="o">=</span> <span class="nb">raw_input</span><span class="p">(</span><span class="s">'Enter your operation such as </span><span class="se">\'</span><span class="s">10+11=</span><span class="se">\'</span><span class="s">:'</span><span class="p">)</span>
+	<span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">r'(\d+)(\+|\-|\*|\/)(\d+)'</span><span class="p">)</span>
+	<span class="n">items</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">input_string</span><span class="p">)</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">a</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+		<span class="n">operation</span> <span class="o">=</span> <span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+		<span class="n">b</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span>
+		<span class="k">if</span> <span class="n">operation</span> <span class="o">==</span> <span class="s">'+'</span><span class="p">:</span>
+			<span class="n">oper</span> <span class="o">=</span> <span class="n">AddFactory</span><span class="p">()</span><span class="o">.</span><span class="n">create_operation</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="n">operation</span> <span class="o">==</span> <span class="s">'-'</span><span class="p">:</span>
+			<span class="n">oper</span> <span class="o">=</span> <span class="n">SubFactory</span><span class="p">()</span><span class="o">.</span><span class="n">create_operation</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="n">operation</span> <span class="o">==</span> <span class="s">'*'</span><span class="p">:</span>
+			<span class="n">oper</span> <span class="o">=</span> <span class="n">MulFactory</span><span class="p">()</span><span class="o">.</span><span class="n">create_operation</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="n">operation</span> <span class="o">==</span> <span class="s">'/'</span><span class="p">:</span>
+			<span class="n">oper</span> <span class="o">=</span> <span class="n">DivFactory</span><span class="p">()</span><span class="o">.</span><span class="n">create_operation</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+		<span class="k">print</span> <span class="n">oper</span><span class="o">.</span><span class="n">calculate_result</span><span class="p">()</span>
+	<span class="k">except</span><span class="p">:</span>
+		<span class="k">print</span> <span class="s">'Wrong Input.'</span>
+</code></pre></div></div>
+
+<h2 id="9原型模式">9.原型模式</h2>
+
+<p>从一个对象再创建一个可定制的对象，而且不需要知道任何创建的细节。（不需要再手动实例化一个新实例）
+tip：这里涉及了深浅拷贝的概念。</p>
+
+<p>优点：隐藏创建细节，提高性能。（不需要每次都调用构造函数）</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="k">class</span> <span class="nc">Book</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">authors</span><span class="p">,</span> <span class="n">price</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">authors</span> <span class="o">=</span> <span class="n">authors</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">price</span> <span class="o">=</span> <span class="n">price</span>
+
+	<span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="n">book_copy</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+		<span class="n">book_copy</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">book_copy</span>
+
+<span class="n">book1</span> <span class="o">=</span> <span class="n">Book</span><span class="p">(</span><span class="s">'Python'</span><span class="p">,</span> <span class="p">[</span><span class="s">'Tom'</span><span class="p">,</span> <span class="s">'Jack'</span><span class="p">],</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">book2</span> <span class="o">=</span> <span class="n">book1</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">price</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="k">print</span> <span class="n">book2</span><span class="o">.</span><span class="n">__dict__</span>
+<span class="c"># {'price': 20, 'name': 'Python', 'authors': ['Tom', 'Jack']}</span>
+</code></pre></div></div>
+
+<h2 id="10-模板方法模式">10. 模板方法模式</h2>
+
+<p>比较常见的设计模式，制定一种工作流或算法的特定骨架而将具体实现放到子类中。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">FatherClass</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">tempmethod</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span> <span class="s">"first step: red"</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">childmethod</span><span class="p">()</span>
+        <span class="k">print</span> <span class="s">"third step: blue"</span>
+        
+    <span class="k">def</span> <span class="nf">childmethod</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="nb">NotImplementedError</span>
+    
+<span class="k">class</span> <span class="nc">ChildClass1</span><span class="p">(</span><span class="n">FatherClass</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">childmethod</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span> <span class="s">"second step: green"</span>
+        
+<span class="k">class</span> <span class="nc">ChildClass2</span><span class="p">(</span><span class="n">FatherClass</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">childmethod</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span> <span class="s">"second step: yellow"</span>
+
+</code></pre></div></div>
+
+<h2 id="11迪米特法则">11.迪米特法则</h2>
+
+<p>如果两个类不必彼此直接通信，那么这两个类就不应当发生直接的相互作用。如果一个类要调用另一个类的某一个方法，可以通过第三者转发这个调用。</p>
+
+<p>强调类之间的松耦合。耦合度越低，越利于复用。</p>
+
+<h2 id="12外观模式">12.外观模式</h2>
+
+<p>给一组系统方法一个统一的接口，提供了一个更高层的接口方法。</p>
+
+<p>有点类似代理模式。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">ModuleOne</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">Create</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span> <span class="s">'create module one instance'</span>
+
+    <span class="k">def</span> <span class="nf">Delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span> <span class="s">'delete module one instance'</span>
+
+<span class="k">class</span> <span class="nc">ModuleTwo</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">Create</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span> <span class="s">'create module two instance'</span>
+
+    <span class="k">def</span> <span class="nf">Delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span> <span class="s">'delete module two instance'</span>
+
+<span class="k">class</span> <span class="nc">Facade</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module_one</span> <span class="o">=</span> <span class="n">ModuleOne</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module_two</span> <span class="o">=</span> <span class="n">ModuleTwo</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">create_module_one</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module_one</span><span class="o">.</span><span class="n">Create</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">create_module_two</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module_two</span><span class="o">.</span><span class="n">Create</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">create_both</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module_one</span><span class="o">.</span><span class="n">Create</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module_two</span><span class="o">.</span><span class="n">Create</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">delete_module_one</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module_one</span><span class="o">.</span><span class="n">Delete</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">delete_module_two</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module_two</span><span class="o">.</span><span class="n">Delete</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">delete_both</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module_one</span><span class="o">.</span><span class="n">Delete</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module_two</span><span class="o">.</span><span class="n">Delete</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h2 id="13建造者模式">13.建造者模式</h2>
+
+<p>讲一个复杂对象的构建和他的表示分离，这样可以用同样的构建方式创建不同的表示。</p>
+
+<p>优点：对象内部的构建顺序是稳定的，建造者隐藏了产品如何组装。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># -*- coding:utf-8 -*-</span>
+
+<span class="k">class</span> <span class="nc">Builder</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="c"># 抽象建造者类，也可以说是产品类</span>
+	<span class="k">def</span> <span class="nf">part1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="nb">NotImplementedError</span>
+
+	<span class="k">def</span> <span class="nf">part2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="nb">NotImplementedError</span>
+
+<span class="k">class</span> <span class="nc">Builder1</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">part1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">'builder1 part1'</span>
+
+	<span class="k">def</span> <span class="nf">part2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">'builder1 part2'</span>
+
+<span class="k">class</span> <span class="nc">Builder2</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">part1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">'builder2 part1'</span>
+
+	<span class="k">def</span> <span class="nf">part2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">'builder2 part2'</span>
+
+<span class="k">class</span> <span class="nc">Director</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">builder</span><span class="p">):</span>
+		<span class="n">builder</span><span class="o">.</span><span class="n">part1</span><span class="p">()</span>
+		<span class="n">builder</span><span class="o">.</span><span class="n">part2</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">'__main__'</span><span class="p">:</span>
+	<span class="n">builder</span> <span class="o">=</span> <span class="n">Builder1</span><span class="p">()</span>
+	<span class="n">director</span> <span class="o">=</span> <span class="n">Director</span><span class="p">()</span>
+
+	<span class="n">director</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">builder</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>也可以将<code class="highlighter-rouge">Director</code>的代码已到<code class="highlighter-rouge">Builder</code>类中，实现模板方法模式。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Builder</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="c"># ···</span>
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">part1</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">part2</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h2 id="14观察者模式">14.观察者模式</h2>
+
+<p>又称作Pub/Sub模式
+定义了一种一对多的依赖关系，让众多观察者可以同时关注某一主题，当主题发生变化时每个观察者都会更新自己的状态。
+许多MQ都是通过这一模式实现的。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Topic</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">obs</span> <span class="o">=</span> <span class="p">[]</span>
+
+	<span class="k">def</span> <span class="nf">attach</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observer</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">observer</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">detach</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observer</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">observer</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">notify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+		<span class="k">for</span> <span class="n">observer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs</span><span class="p">:</span>
+			<span class="n">observer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Observer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="nb">NotImplementedError</span>
+
+<span class="k">class</span> <span class="nc">ConcreteObserver</span><span class="p">(</span><span class="n">Observer</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+		<span class="k">print</span> <span class="n">message</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">'__main__'</span><span class="p">:</span>
+	<span class="n">topic</span> <span class="o">=</span> <span class="n">Topic</span><span class="p">()</span>
+	<span class="n">ob1</span> <span class="o">=</span> <span class="n">ConcreteObserver</span><span class="p">()</span>
+	<span class="n">ob2</span> <span class="o">=</span> <span class="n">ConcreteObserver</span><span class="p">()</span>
+	<span class="n">topic</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">ob1</span><span class="p">)</span>
+	<span class="n">topic</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">ob2</span><span class="p">)</span>
+	<span class="n">topic</span><span class="o">.</span><span class="n">notify</span><span class="p">(</span><span class="s">"hello"</span><span class="p">)</span>
+
+</code></pre></div></div>
+
+<h2 id="15抽象工厂模式">15.抽象工厂模式</h2>
+
+<p>创建具有一定功能的产品实现时，需要先创建具体的工厂类，再由工厂类创建具有特定实现的产品对象。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># -*- coding:utf-8 -*-</span>
+
+<span class="k">class</span> <span class="nc">IUser</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">insert_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="nb">NotImplementedError</span>
+
+	<span class="k">def</span> <span class="nf">get_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">userid</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="nb">NotImplementedError</span>
+
+<span class="k">class</span> <span class="nc">IRole</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">insert_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">role</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="nb">NotImplementedError</span>
+
+	<span class="k">def</span> <span class="nf">get_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roleid</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="nb">NotImplementedError</span>
+
+<span class="k">class</span> <span class="nc">SqlServerUser</span><span class="p">(</span><span class="n">IUser</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">insert_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">u"在SQL Server中给User表增加一条记录."</span>
+
+	<span class="k">def</span> <span class="nf">get_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">userid</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">u"在SQL Server中拿到一条uer信息。"</span>
+
+<span class="k">class</span> <span class="nc">SqlServerRole</span><span class="p">(</span><span class="n">IRole</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">insert_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">role</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">u"在SQL Server中给Role表增加一条记录"</span>
+
+	<span class="k">def</span> <span class="nf">get_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roleid</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">u"在SQL Server中拿到一条role记录"</span>
+
+<span class="c"># 产品类        </span>
+<span class="k">class</span> <span class="nc">AccessUser</span><span class="p">(</span><span class="n">IUser</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">insert_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">u"在Access中给User表增加一条记录."</span>
+
+	<span class="k">def</span> <span class="nf">get_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">userid</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">u"在Access中拿到一条uer信息。"</span>
+
+<span class="k">class</span> <span class="nc">AccessRole</span><span class="p">(</span><span class="n">IUser</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">insert_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">role</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">u"在Access中给Role表增加一条记录"</span>
+
+	<span class="k">def</span> <span class="nf">get_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roleid</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">u"在Access中拿到一条role记录"</span>
+
+<span class="c"># 抽象工厂类</span>
+<span class="k">class</span> <span class="nc">IFactory</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">create_user</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="nb">NotImplementedError</span>
+
+	<span class="k">def</span> <span class="nf">create_role</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="nb">NotImplementedError</span>
+
+<span class="c"># 具体工厂类</span>
+<span class="k">class</span> <span class="nc">SqlServerFactory</span><span class="p">(</span><span class="n">IFactory</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">create_user</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">SqlServerUser</span><span class="p">()</span>
+
+	<span class="k">def</span> <span class="nf">create_role</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">SqlServerRole</span><span class="p">()</span>
+
+<span class="c"># 具体工厂类</span>
+<span class="k">class</span> <span class="nc">AccessFactory</span><span class="p">(</span><span class="n">IFactory</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">create_user</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">AccessUser</span><span class="p">()</span>
+
+	<span class="k">def</span> <span class="nf">create_role</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">AccessRole</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="nb">id</span> <span class="o">=</span> <span class="nb">id</span>
+
+<span class="k">class</span> <span class="nc">Role</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">__init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="nb">id</span> <span class="o">=</span> <span class="nb">id</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">'__main__'</span><span class="p">:</span>
+
+	<span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+	<span class="n">factory</span> <span class="o">=</span> <span class="n">SqlServerFactory</span><span class="p">()</span>
+	<span class="n">iu</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">create_user</span><span class="p">()</span>
+
+	<span class="n">iu</span><span class="o">.</span><span class="n">insert_user</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+	<span class="n">iu</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>也可以考虑用引入简单工厂加反射进行优化。</p>
+
+<h2 id="16状态模式">16.状态模式</h2>
+
+<p>对象的行为取决于它的状态，并且他需要在运行时刻根据状态改变它的行为。</p>
+
+<p>此时会产生大量判断语句，使用状态模式可以消除这些判断语句，降低耦合性。</p>
+
+<p>工作实例：</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># -*- coding:utf-8 -*-</span>
+
+<span class="k">class</span> <span class="nc">State</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">write_program</span><span class="p">(</span><span class="n">work</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="nb">NotImplementedError</span>
+
+<span class="k">class</span> <span class="nc">ForenoonState</span><span class="p">(</span><span class="n">State</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">write_program</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wrok</span><span class="p">):</span>
+		<span class="k">if</span> <span class="n">work</span><span class="o">.</span><span class="n">hour</span> <span class="o">&lt;</span> <span class="mi">12</span><span class="p">:</span>
+			<span class="k">print</span> <span class="s">u"当前时间: {}点， 上午工作，精神百倍"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">work</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">wrok</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">NoonState</span><span class="p">())</span>
+			<span class="n">work</span><span class="o">.</span><span class="n">write_program</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">NoonState</span><span class="p">(</span><span class="n">State</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">write_program</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">work</span><span class="p">):</span>
+		<span class="k">if</span> <span class="n">work</span><span class="o">.</span><span class="n">hour</span> <span class="o">&lt;</span> <span class="mi">13</span><span class="p">:</span>
+			<span class="k">print</span> <span class="s">u"当前时间：{}点， 饿了，午饭； 困了，午休"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">work</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">work</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">AfternoonState</span><span class="p">())</span>
+			<span class="n">work</span><span class="o">.</span><span class="n">write_program</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">AfternoonState</span><span class="p">(</span><span class="n">State</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">write_program</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">work</span><span class="p">):</span>
+		<span class="k">if</span> <span class="n">work</span><span class="o">.</span><span class="n">task_finished</span><span class="p">:</span>
+			<span class="n">work</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">RestState</span><span class="p">())</span>
+		<span class="k">if</span> <span class="n">work</span><span class="o">.</span><span class="n">hour</span> <span class="o">&lt;</span> <span class="mi">17</span><span class="p">:</span>
+			<span class="k">print</span> <span class="s">u"当前时间：{}点， 下午状态不错，继续努力"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">work</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">work</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">EveningState</span><span class="p">())</span>
+			<span class="n">work</span><span class="o">.</span><span class="n">write_program</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">EveningState</span><span class="p">(</span><span class="n">State</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">write_program</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">work</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">u"当前时间： {}点， 又要加班了！"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">work</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">RestState</span><span class="p">(</span><span class="n">State</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">write_program</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">work</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">u"当前时间： {}点， 下班回家啦"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">work</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Work</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">current</span> <span class="o">=</span> <span class="n">ForenoonState</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">hour</span> <span class="o">=</span> <span class="mi">9</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">task_finished</span> <span class="o">=</span> <span class="bp">False</span>
+
+	<span class="k">def</span> <span class="nf">set_hour</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hour</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">hour</span> <span class="o">=</span> <span class="n">hour</span>
+
+	<span class="k">def</span> <span class="nf">set_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">finished</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">set_finished</span> <span class="o">=</span> <span class="n">finished</span>
+
+	<span class="k">def</span> <span class="nf">set_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">current</span> <span class="o">=</span> <span class="n">state</span>
+
+	<span class="k">def</span> <span class="nf">write_program</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">write_program</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">"__main__"</span><span class="p">:</span>
+	<span class="n">work</span> <span class="o">=</span> <span class="n">Work</span><span class="p">()</span>
+	<span class="n">work</span><span class="o">.</span><span class="n">set_hour</span><span class="p">(</span><span class="mi">9</span><span class="p">)</span>
+	<span class="n">work</span><span class="o">.</span><span class="n">write_program</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h2 id="17适配器模式">17.适配器模式</h2>
+
+<p>当一个类的功能和数据相同而接口不同时，需要适配器模式充当翻译角色。</p>
+
+<p>缺点：亡羊补牢</p>
+
+<p>NBA翻译实例：</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># -*- coding:utf-8 -*-</span>
+
+<span class="k">class</span> <span class="nc">Player</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+	<span class="k">def</span> <span class="nf">attack</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">u"{} 进攻"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">defense</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">u"{} 防守"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">ForeignPlayer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+	<span class="k">def</span> <span class="nf">jingong</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">u"{} 进攻"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">fangshou</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">print</span> <span class="s">u"{} 防守"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Translator</span><span class="p">(</span><span class="n">Player</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+		<span class="nb">super</span><span class="p">(</span><span class="n">Translator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fp</span> <span class="o">=</span> <span class="n">ForeignPlayer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">attack</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="o">.</span><span class="n">jingong</span><span class="p">()</span>
+
+	<span class="k">def</span> <span class="nf">defense</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="o">.</span><span class="n">fangshou</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">'__main__'</span><span class="p">:</span>
+	<span class="n">b</span> <span class="o">=</span> <span class="n">Player</span><span class="p">(</span><span class="s">"Bdier"</span><span class="p">)</span>
+	<span class="n">b</span><span class="o">.</span><span class="n">attack</span><span class="p">()</span>
+
+	<span class="n">m</span> <span class="o">=</span> <span class="n">Player</span><span class="p">(</span><span class="s">"Mical"</span><span class="p">)</span>
+	<span class="n">m</span><span class="o">.</span><span class="n">attack</span><span class="p">()</span>
+
+	<span class="n">ym</span> <span class="o">=</span> <span class="n">Translator</span><span class="p">(</span><span class="s">"YaoMing"</span><span class="p">)</span>
+	<span class="n">ym</span><span class="o">.</span><span class="n">attack</span><span class="p">()</span>
+	<span class="n">ym</span><span class="o">.</span><span class="n">defense</span><span class="p">()</span>
+</code></pre></div></div>
+
+]]></content>
+      <categories>
+        
+          <category> study </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> 设计模式 </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[Python的迭代器，可迭代对象和生成器]]></title>
+      <url>/other/2017/04/08/iter/</url>
+      <content type="html"><![CDATA[<h2 id="可迭代对象和迭代器对象">可迭代对象和迭代器对象</h2>
+<p>可迭代对象<code class="highlighter-rouge">iterable</code>可通过内置方法<code class="highlighter-rouge">iter()</code>生成迭代器对象<code class="highlighter-rouge">iterator</code>。
+可以使用此方法的对象自身为迭代器或序列，即自身存在<code class="highlighter-rouge">__iter__</code>或<code class="highlighter-rouge">__getitem__</code>属性。
+迭代器可使用<code class="highlighter-rouge">next()</code>方法生成下一个元素，最终抛出<code class="highlighter-rouge">StopIteration</code>异常。</p>
+
+<p>for循环的实质：
+先调用可迭代对象的<code class="highlighter-rouge">__iter__</code>方法将其转换为一个迭代器，再对迭代器重复执行<code class="highlighter-rouge">next</code>方法直到捕获<code class="highlighter-rouge">StopIteration</code>异常。</p>
+
+<p>适用于一些惰性场合：
+通过构造可迭代对象可以实现在for循环过程中的延时访问, 并将所有函数运行结果封装到一个对象当中。</p>
+
+<p>构造可迭代对象的步骤：
+1.构造迭代器对象。继承<code class="highlighter-rouge">Iterator</code>对象并重写<code class="highlighter-rouge">next</code>接口，该接口中的方法为需要延时访问的函数或方法逻辑。
+2.构造可迭代对象。继承<code class="highlighter-rouge">Iterable</code>对象并重写<code class="highlighter-rouge">__iter__</code>接口，返回步骤1中构造的迭代器对象实例。</p>
+
+<p>demo：
+非迭代版本</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">time</span>
+
+<span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+	<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+	<span class="k">print</span> <span class="s">'run func...'</span>
+	<span class="k">return</span> <span class="n">x</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">'__main__'</span><span class="p">:</span>
+    <span class="c"># 结果对象为[func(1), func(2), func(3)]</span>
+	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="n">func</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">func</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">func</span><span class="p">(</span><span class="mi">3</span><span class="p">)]:</span>
+		<span class="k">print</span> <span class="n">x</span>
+
+<span class="c">########################################</span>
+<span class="c"># OUTPUT:</span>
+<span class="c"># run func...</span>
+<span class="c"># run func...</span>
+<span class="c"># run func...</span>
+<span class="c"># 1</span>
+<span class="c"># 2</span>
+<span class="c"># 3</span>
+<span class="c">########################################</span>
+</code></pre></div></div>
+
+<p>迭代版本：</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="k">class</span> <span class="nc">MyIterator</span><span class="p">(</span><span class="n">Iterator</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_list</span><span class="p">):</span>
+		<span class="nb">super</span><span class="p">(</span><span class="n">MyIterator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">num_list</span> <span class="o">=</span> <span class="n">num_list</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
+
+	<span class="k">def</span> <span class="nf">next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_list</span><span class="p">):</span>
+			<span class="c"># tip:	can't return</span>
+			<span class="k">raise</span> <span class="nb">StopIteration</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_list</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">])</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
+			<span class="k">return</span> <span class="n">result</span>
+
+	<span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+		<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+		<span class="k">print</span> <span class="s">'run func...'</span>
+		<span class="k">return</span> <span class="n">x</span>
+
+<span class="k">class</span> <span class="nc">MyIterable</span><span class="p">(</span><span class="n">Iterable</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_list</span><span class="p">):</span>
+		<span class="nb">super</span><span class="p">(</span><span class="n">MyIterable</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">num_list</span> <span class="o">=</span> <span class="n">num_list</span>
+
+	<span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">MyIterator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_list</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">'__main__'</span><span class="p">:</span>
+    <span class="c"># 结果对象为MyIterable([1,2,3])</span>
+	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">MyIterable</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]):</span>
+		<span class="k">print</span> <span class="n">x</span>
+
+<span class="c">########################################</span>
+<span class="c"># OUTPUT:</span>
+<span class="c"># run func...</span>
+<span class="c"># 1</span>
+<span class="c"># run func...</span>
+<span class="c"># 2</span>
+<span class="c"># run func...</span>
+<span class="c"># 3</span>
+<span class="c">########################################</span>
+</code></pre></div></div>
+
+<h2 id="生成器函数">生成器函数</h2>
+<p>函数体中带有<code class="highlighter-rouge">yield</code>的函数几位生成器函数，调用生成器函数将返回一个生成器对象。
+生成器对象也是一个可迭代对象。(可以调用<code class="highlighter-rouge">__iter__</code>函数)
+也是一个迭代器对象。（可以调用<code class="highlighter-rouge">next</code>函数）</p>
+
+<p>因此可以将某个类的<code class="highlighter-rouge">__iter__</code>方法实现为生成器函数来实现可迭代对象。</p>
+
+<p>素数demo：</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class PrimeNumber:
+
+	def __init__(self, start, stop):
+		self.start = start
+		self.stop = stop
+
+	def is_prime(self, num):
+		if num &lt; 2:
+			return False
+		for i in range(2, num):
+			if num % i == 0:
+				return False
+		return True
+
+	def __iter__(self):
+		for i in range(self.start, self.stop + 1):
+			if self.is_prime(i):
+				yield i
+
+for i in PrimeNumber(0, 100):
+	print i 
+
+</code></pre></div></div>
+]]></content>
+      <categories>
+        
+          <category> other </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> python </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[Pro Git整理]]></title>
+      <url>/study/2017/04/03/git/</url>
+      <content type="html"><![CDATA[<p>学习自Pro Git文档，在此处进行梳理。</p>
+
+<h2 id="一些未知概念">一些未知概念</h2>
+
+<ul>
+  <li>Git 对待数据更像是一个 快照流。</li>
+  <li>你执行的 Git 操作，几乎只往 Git 数据库中增加数据。</li>
+</ul>
+
+<h2 id="配置">配置</h2>
+
+<p>git存在三个层级的配置级别，后一级别的配置项会覆盖前一层级的配置项。</p>
+<ul>
+  <li><code class="highlighter-rouge">git config --system</code> 系统级别，读写<code class="highlighter-rouge">/etc/gitconfig</code>文件。</li>
+  <li><code class="highlighter-rouge">git config --global</code> 当前用户级别，读写<code class="highlighter-rouge">~/.gitconfig</code>或<code class="highlighter-rouge">~/.config/git/config</code>文件。</li>
+  <li><code class="highlighter-rouge">git config</code> 当前仓库级别，读写<code class="highlighter-rouge">.git/config</code>文件。</li>
+</ul>
+
+<h3 id="用户配置">用户配置</h3>
+<p>只可填写一次，之后的任何一次commit都会使用该信息，不可修改。</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git config --global user.name "John Doe"
+$ git config --global user.email johndoe@example.com
+</code></pre></div></div>
+
+<h3 id="文本编辑器">文本编辑器</h3>
+<p>默认为vim。</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git config --global core.editor emacs
+</code></pre></div></div>
+
+<h3 id="检查配置信息">检查配置信息</h3>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git config --list
+</code></pre></div></div>
+
+<h2 id="命令">命令</h2>
+
+<h3 id="状态概览">状态概览</h3>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git status -s
+</code></pre></div></div>
+<p>新添加的未跟踪文件前面有 ?? 标记。
+新添加到暂存区中的文件前面有 A 标记。
+修改过的文件前面有 M 标记。 
+出现在右边的 M 表示该文件被修改了但是还没放入暂存区。
+出现在靠左边的 M 表示该文件被修改了并放入了暂存区。</p>
+
+<h3 id="忽略文件">忽略文件</h3>
+<p>通过创建<code class="highlighter-rouge">.gitignore</code>文件来选择无需纳入git中的文件。</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># no .a files
+*.a
+
+# but do track lib.a, even though you're ignoring .a files above
+!lib.a
+
+# only ignore the TODO file in the current directory, not subdir/TODO
+/TODO
+
+# ignore all files in the build/ directory
+build/
+
+# ignore doc/notes.txt, but not doc/server/arch.txt
+doc/*.txt
+
+# ignore all .pdf files in the doc/ directory
+doc/**/*.pdf
+</code></pre></div></div>
+
+<h3 id="查看修改">查看修改</h3>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git diff 
+</code></pre></div></div>
+<p>工作区 vs 暂存区</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git diff --cached
+</code></pre></div></div>
+<p>暂存区 vs 仓库</p>
+
+<h3 id="跳过暂存区">跳过暂存区</h3>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git commit -a -m "message"
+</code></pre></div></div>
+<p>可以将所有被跟踪的文件都提交到仓库中</p>
+
+<h3 id="重命名文件">重命名文件</h3>
+<p>在git中体现的操作为先删除再新建</p>
+
+<h3 id="提交历史">提交历史</h3>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git log -p -2
+$ git log --stat
+</code></pre></div></div>
+<p><code class="highlighter-rouge">-p</code>用来显示每次变动，<code class="highlighter-rouge">-2</code>显示近两次提交。
+<code class="highlighter-rouge">--stat</code>用来显示所有被修改过文件的修改情况。
+<code class="highlighter-rouge">--graph</code>用来显示分支合并情况。
+<code class="highlighter-rouge">--pretty</code>指定显示格式。
+<code class="highlighter-rouge">--graph</code>指定分支合并情况。</p>
+
+<h3 id="撤销操作">撤销操作</h3>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git commit --amend
+</code></pre></div></div>
+<p>将暂存区里与上次提交历史合并并提交覆盖上次提交历史。</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git reset HEAD
+</code></pre></div></div>
+<p>将暂存区内容恢复到与仓库一致</p>
+
+<h2 id="远程仓库">远程仓库</h2>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git remote -v
+</code></pre></div></div>
+<p>列出所有远程仓库列表</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git remote add &lt;shortname&gt; &lt;url&gt;
+</code></pre></div></div>
+<p>添加</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git fetch origin
+</code></pre></div></div>
+<p>拉取远程仓库的分支引用，可以随时合并或查看。</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git remote show origin 
+</code></pre></div></div>
+<p>查看远程分支信息</p>
+
+<h2 id="git分支">GIT分支</h2>
+<p>提交对象除了有指向快照的指针和作者邮箱等信息外，还具有指向父级提交对象的指针。
+分支实际上为指向上一次提交对象的指针（可变指针）。
+<code class="highlighter-rouge">HEAD</code>是一个特殊指针，指向当前所在的本地分支。
+<code class="highlighter-rouge">git log --decorate</code>可查看各个分支指向的对象。
+<code class="highlighter-rouge">git log --oneline --decorate --graph --all</code>查看分支分叉情况。</p>
+
+<h3 id="解决bug模式本地">解决bug模式(本地)</h3>
+<p>切换到线上分支-&gt;新建分支-&gt;修改bug-&gt;切换回线上分支-&gt;合并分支-&gt;返回工作分支</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git checkout -b issbug
+$ git commit -a -m "fix bug"
+$ git checkout master
+$ git merge issbug  # git会自动选用合适的方式来合并分支，fast-forward或strage
+$ git branch -d issbug
+</code></pre></div></div>
+
+<h3 id="分支管理">分支管理</h3>
+<p><code class="highlighter-rouge">git branch --merged</code>已合并到当前分支的所有分支。
+<code class="highlighter-rouge">git branch -D test</code>强制删除分支（不推荐）</p>
+
+<h3 id="远程分支">远程分支</h3>
+<p><code class="highlighter-rouge">origin/master</code>远程分支是不能移动的本地指针，指向对远程分支状态的引用。只要不与远程仓库连接，该指针就不会移动。
+<code class="highlighter-rouge">git fetch origin</code>更新远程分支的引用，可以与本地分支分叉。
+<code class="highlighter-rouge">git merge origin/master</code>将远程分支合并到当前分支。</p>
+
+<ul>
+  <li>跟踪分支：跟踪分支后在输入<code class="highlighter-rouge">git pull</code>后git可以知道到哪拉取并合并数据。
+<code class="highlighter-rouge">git checkout -b serverfix origin/serverfix</code>建立本地分支并跟踪远程分支。
+<code class="highlighter-rouge">git checkout --track origin/serverfix</code>等同。</li>
+</ul>
+
+<p><code class="highlighter-rouge">git branch -vv</code>获取分支和跟踪信息。</p>
+
+<ul>
+  <li>拉取
+<code class="highlighter-rouge">git pull</code>相当于<code class="highlighter-rouge">git fetch</code>和<code class="highlighter-rouge">git merge</code>操作。</li>
+</ul>
+]]></content>
+      <categories>
+        
+          <category> study </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> git </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[SICP]]></title>
+      <url>/study/2017/03/26/sicp/</url>
+      <content type="html"><![CDATA[<h3 id="过程和数据">过程和数据</h3>
+
+<h3 id="替换">替换</h3>
+
+<h3 id="正则序和应用序">正则序和应用序</h3>
+<p>习题1.5
+相当于函数参数的求值顺序</p>
+
+<ul>
+  <li>应用序：先求值再带入函数过程，可以防止多次运算的情况出现。lisp是应用序。</li>
+  <li>正则序：先将函数过程展开再将参数替换进函数过程之中。</li>
+</ul>
+
+<h3 id="特殊函数">特殊函数</h3>
+<p>习题1.6
+编程语言中的<code class="highlighter-rouge">if</code>函数经过特殊处理，在<code class="highlighter-rouge">if</code>表达式计算结果为<code class="highlighter-rouge">true</code>后不会再继续计算之后的表达式和值。
+自行构造的<code class="highlighter-rouge">new-if</code>函数不管内部如何，lisp总会计算所有表达式的值，之后将值替换到参数中（正则序也会无限展开），因此会进入无限递归中。</p>
+
+<h3 id="递归计算过程和迭代计算过程">递归计算过程和迭代计算过程</h3>
+<p>递归计算过程由一个推迟执行的运算链条刻画。
+迭代计算过程则是通过状态变量描述的计算过程。</p>
+
+<p>在树形递归算法中，递归计算过程的复杂度要远远高于迭代计算过程。</p>
+]]></content>
+      <categories>
+        
+          <category> study </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> sicp </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[RabbitMQ泛式]]></title>
+      <url>/study/2017/03/24/rabbitmq/</url>
+      <content type="html"><![CDATA[<p>掌握了一种rabbitmq设计的初步泛式，原理部分以后补充。</p>
+
+<h2 id="概念">概念</h2>
+
+<p>由4部分构成，消息生产者(P)，交换机(X)，队列(Q)，消息消费者(C)。
+X：direct，topic，headers，fanout</p>
+
+<h3 id="pub泛式">pub泛式</h3>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from librabbitmq import Connection
+
+def connection_rabbit():
+    global connection
+    global channel
+    connection = Connection(host=config["host"], virtual_host=config["vhost"],
+                            userid=config["userid"], password=config["password"])
+    channel = connection.channel()
+    channel.exchange_declare(exchange="name", type="direct")
+    print "rabbitmq connect done"
+    
+def send_message(routing, body):
+    global channel
+    channel.basic_publish(exchange="name", 
+                        routing_key=routing,
+                        body=body,
+                        deliver_mode=2) # 消息持久化
+    print "[*] send message {0}: {1}: {2}".format(routing, body, "timestamp")
+    
+if __name__ == '__main__':
+    send_message(routing, params)
+    # routing从参数中对应字典取出
+
+</code></pre></div></div>
+
+<h3 id="sub泛式">sub泛式</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">ast</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">librabbitmq</span> <span class="kn">import</span> <span class="n">connection</span>
+
+<span class="k">def</span> <span class="nf">consume</span><span class="p">(</span><span class="n">queue_name</span><span class="p">,</span> <span class="n">callback</span><span class="p">):</span>
+    <span class="n">connection</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s">"host"</span><span class="p">],</span> <span class="n">virtual_host</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s">"vhost"</span><span class="p">],</span>
+                            <span class="n">userid</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s">"userid"</span><span class="p">],</span> <span class="n">password</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s">"password"</span><span class="p">])</span>
+    <span class="n">channel</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">channel</span><span class="p">()</span>
+    <span class="n">channel</span><span class="o">.</span><span class="n">exchange_declare</span><span class="p">(</span><span class="n">exchange</span><span class="o">=</span><span class="s">"name"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s">"direct"</span><span class="p">)</span>
+    <span class="n">channel</span><span class="o">.</span><span class="n">queue_declare</span><span class="p">(</span><span class="n">queue</span><span class="o">=</span><span class="n">queue_name</span><span class="p">,</span> <span class="n">durable</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="c">#队列持久化</span>
+    <span class="n">channel</span><span class="o">.</span><span class="n">queue_bind</span><span class="p">(</span><span class="n">exchange</span><span class="o">=</span><span class="s">"direct"</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="n">queue_name</span><span class="p">,</span>                     
+                    <span class="n">routing_key</span><span class="o">=</span><span class="n">queue_name</span><span class="p">)</span>
+    <span class="n">channel</span><span class="o">.</span><span class="n">basic_qos</span><span class="p">(</span><span class="n">prefetch_count</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="c">#每个worker在接受到一条消息后不会再被分配消息</span>
+    <span class="n">channel</span><span class="o">.</span><span class="n">basic_consume</span><span class="p">(</span><span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="n">queue_name</span><span class="p">)</span>
+    
+    <span class="k">print</span> <span class="s">"[*] Waiting for tasks. To exit press CTRL+C"</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">connection</span><span class="o">.</span><span class="n">drain_events</span><span class="p">()</span>
+        
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+    <span class="c"># callback会将body作为参数传入</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">ast</span><span class="p">,</span><span class="n">literal_eval</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">body</span><span class="p">))</span>
+    <span class="k">print</span> <span class="s">"[*] Receive message {}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="k">global</span> <span class="n">routing</span>
+    <span class="k">if</span> <span class="n">routing</span> <span class="o">==</span> <span class="s">"1"</span><span class="p">:</span>
+        <span class="n">class1</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="o">.</span><span class="n">func1</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="o">...</span>
+    <span class="o">...</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="n">message</span><span class="o">.</span><span class="n">ack</span><span class="p">()</span>
+    
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">"__main__"</span><span class="p">:</span>
+    <span class="k">global</span> <span class="n">routing</span>
+    <span class="n">routing</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">consume</span><span class="p">(</span><span class="n">routing</span><span class="p">,</span> <span class="n">callback</span><span class="p">)</span>
+</code></pre></div></div>
+]]></content>
+      <categories>
+        
+          <category> study </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> rabbitmq </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[再看redis]]></title>
+      <url>/study/2017/03/01/redis/</url>
+      <content type="html"><![CDATA[<p>之前只是将redis当做celery通信的中间件，并没有特别关注其独有特性。再回看redis，其许多特性可以应用到不同的场景中，且效率比一般关系型数据库要高。</p>
+
+<h2 id="几种数据类型的优势">几种数据类型的优势</h2>
+<p>redis作为一种NoSQL数据库，自然可以适应高并发和海量数据的存储，同样以key作为检索的唯一索引，不能对复杂的逻辑关系提供很好的支持。但其被广泛认作key-value型存储结构的数据库，其实有失偏颇。redis除了string是典型的key-value结构外，其余数据结构都有其独特应用。</p>
+
+<h3 id="list">list</h3>
+<p>redis的list链表结构，由于其有序性，在链表的两头插入和删除元素都十分高效，时间复杂度为O(1)。但在链表中间插入和删除数据效率会下降，时间复杂度为O(N)。</p>
+
+<h3 id="hash">hash</h3>
+<p>hash结构是具有string类型的field-value的映射表，适合存储对象信息，hash中的字段较少时占用内存也比较低。</p>
+
+<h3 id="set">set</h3>
+<p>set集合中的元素没有顺序，不允许重复，增查更新的时间复杂度均为O(1)，可以再服务器端进行求并集差集运算，效率很高。</p>
+
+<h3 id="ordered-set">ordered set</h3>
+<p>同set集合一样，只不过对每个元素都结合了一个score关联进行排序，实现增删改的操作非常迅速，时间复杂度为O(logN)，这在其他关系型数据库中是比较难实现的。</p>
+
+<h3 id="应用场景">应用场景</h3>
+<p>这里模拟了一些可以用redis解决的场景。</p>
+
+<ul>
+  <li>典型Pub-Sub场景</li>
+</ul>
+
+<p>这是redis可以实现的最为典型的场景</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># pub.py</span>
+
+<span class="kn">import</span> <span class="nn">redis</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">redis</span><span class="o">.</span><span class="n">Redis</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s">'localhost'</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">6379</span><span class="p">)</span>
+<span class="n">r</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="s">'en'</span><span class="p">,</span> <span class="s">'hello, world'</span><span class="p">)</span>
+</code></pre></div></div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># sub.py
+
+import redis
+r = redis.Redis(host='localhost', port=6379)
+pubsub = r.pubsub()
+pubsub.subscribe('en')
+for item in pubsub.listen():
+    print item
+</code></pre></div></div>
+
+<ul>
+  <li>最近登录列表</li>
+</ul>
+
+<p>模拟队列并保持队列内元素数目为定值。</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>uid = randint(0, 9)
+ret = r.lpush('login:last_login_times', uid)
+ret = r.ltrim('login:last_login_times', 0, 4)
+last_login_list = r.lrange('login:last_login_times', 0, 4)
+print last_login_list
+</code></pre></div></div>
+
+<ul>
+  <li>生产者消费者模型</li>
+</ul>
+
+<p>生产者推送消息，消费者执行，生成备份消息队列防止消息丢失。</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>if r.llen('message') &lt; 2:
+	r.lpush('message', 1,2,3)
+msg = randint(0, 9)
+r.lpush('message', msg)
+r.rpoplpush('message', 'message_backup')
+print r.lrange('message', 0, -1)
+print r.lrange('message_backup', 0, 5)
+</code></pre></div></div>
+
+<ul>
+  <li>积分排行榜</li>
+</ul>
+
+<p>玩家分数变化时用zadd更新玩家分数，再用zrange获取积分top信息。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">zcard</span><span class="p">(</span><span class="s">'new_login_times'</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+	<span class="n">r</span><span class="o">.</span><span class="n">zadd</span><span class="p">(</span><span class="s">'new_login_times'</span><span class="p">,</span> <span class="s">'Bob'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+	<span class="n">r</span><span class="o">.</span><span class="n">zadd</span><span class="p">(</span><span class="s">'new_login_times'</span><span class="p">,</span> <span class="s">'Jack'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+	<span class="n">r</span><span class="o">.</span><span class="n">zadd</span><span class="p">(</span><span class="s">'new_login_times'</span><span class="p">,</span> <span class="s">'Crool'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="n">uid</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">name</span> <span class="o">=</span> <span class="p">[</span><span class="s">'Bob'</span><span class="p">,</span> <span class="s">'Jack'</span><span class="p">,</span> <span class="s">'Crool'</span><span class="p">][</span><span class="n">uid</span><span class="p">]</span>
+<span class="k">print</span> <span class="n">name</span>
+<span class="n">ret</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">zincrby</span><span class="p">(</span><span class="s">'new_login_times'</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="c">#login_times_list = r.zrevrange('new_login_times', 1, 3)</span>
+<span class="k">print</span> <span class="n">r</span><span class="o">.</span><span class="n">zrevrange</span><span class="p">(</span><span class="s">'new_login_times'</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">withscores</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</code></pre></div></div>
+
+<ul>
+  <li>共同关注
+利用set的高效intersections命令，类似的还有suninostore求并集命令。</li>
+</ul>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>r.sadd('s1', 'a', 'b', 'c', 'd')
+r.sadd('s2', 'b', 'c', 'd', 'e')
+r.sadd('s3', 'c', 'd', 'e', 'f')
+r.sinterstore('result', 's1', 's2', 's3')
+print r.smembers('result')
+r.delete('s1', 's2', 's3', 'result')
+</code></pre></div></div>
+
+<ul>
+  <li>Master/Slave模型
+利用list可以很容易实现分布式中的Master/Slave模型。</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># RedusQueue.py</span>
+
+<span class="kn">import</span> <span class="nn">redis</span>
+
+<span class="k">class</span> <span class="nc">RedisQueue</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="s">"""Simple Queue with Redis Backend"""</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">namespace</span><span class="o">=</span><span class="s">'queue'</span><span class="p">,</span> <span class="o">**</span><span class="n">redis_kwargs</span><span class="p">):</span>
+        <span class="s">"""The default connection parameters are: host='localhost', port=6379, db=0"""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__db</span><span class="o">=</span> <span class="n">redis</span><span class="o">.</span><span class="n">Redis</span><span class="p">(</span><span class="o">**</span><span class="n">redis_kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="s">'</span><span class="si">%</span><span class="s">s:</span><span class="si">%</span><span class="s">s'</span> <span class="o">%</span><span class="p">(</span><span class="n">namespace</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">qsize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s">"""Return the approximate size of the queue."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__db</span><span class="o">.</span><span class="n">llen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s">"""Return True if the queue is empty, False otherwise."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">qsize</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="s">"""Put item into the queue."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__db</span><span class="o">.</span><span class="n">rpush</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="s">"""Remove and return an item from the queue.
+
+        If optional args block is true and timeout is None (the default), block
+        if necessary until an item is available."""</span>
+        <span class="k">if</span> <span class="n">block</span><span class="p">:</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__db</span><span class="o">.</span><span class="n">blpop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__db</span><span class="o">.</span><span class="n">lpop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">item</span><span class="p">:</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">item</span>
+
+    <span class="k">def</span> <span class="nf">get_nowait</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s">"""Equivalent to get(False)."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># master.py
+
+from RedisQueue import RedisQueue
+
+rq = RedisQueue('test')
+for i in range(30):
+	rq.put(i)
+print rq.qsize()
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># slave.py
+
+import time
+from RedisQueue import RedisQueue
+
+rq = RedisQueue('test')
+while not rq.empty():
+	print rq.get()
+	time.sleep(1)
+</code></pre></div></div>
+
+<h2 id="redis事务">redis事务</h2>
+<p>redis事务被MULTI/EXEC/DISCARD/WATCH囊括，实际是串行顺序执行，执行期间redis不会再为客户端提供任何服务，从而保证事务的原子执行。</p>
+
+<p>EXEC/DISCARD类似于关系型数据库中的COMMIT/ROLLBACK语句。若在一次事务中发生错误redis将回滚所有操作。</p>
+
+<p>WATCH可以实现CAS即check-and-set锁。若在WATCH中监控的值发生改变，事务中的后续操作都不会被执行。这一特性可以很好地应用于多用户同时请求一个redis值时防止值得结果不一致。</p>
+
+<h2 id="redis主从复制">redis主从复制</h2>
+<p>redis可以很好地实现Master/Slave模型，此外其还有许多独有特性。</p>
+
+<ol>
+  <li>同一个Master可以为多个Slave服务。</li>
+  <li>Slave和Slave之间也可以实现连接和同步请求。</li>
+  <li>S响应M是非阻塞的，期间M仍可以为客户端提供请求。</li>
+  <li>S之间的同步也是非阻塞的</li>
+  <li>可以设置S来实现只读的用户响应和保存数据的任务，以降低M的负荷。</li>
+</ol>
+
+<p>具体实现：</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ redis-server --port 6380 &amp;
+$ redis-cli -p 6380
+127.0.0.1:6380&gt; slaveof 127.0.0.1 6379
+</code></pre></div></div>
+<p>这样就实现了主从复制，服务关闭后这种关系也消失，若想永久保存需要修改配置文件。</p>
+
+<h2 id="redis持久化">redis持久化</h2>
+<p>redis有三种（实际上是两种）持久化机制，快照（RDB)和追加式文件（AOF）。</p>
+
+<p>RDB会在固定时间将数据集快照写入磁盘，每一次写入都会覆盖之前的文件，因此只存在一个文件。方便归档和备份，但有数据丢失的危险。</p>
+
+<p>AOF则会在每次修改后将命令追加到AOF文件中，而且有redis-check-aof工具来解决命令执行一半宕机的问题。是一种非常可靠的持久化方式，缺点是速度慢，文件多。</p>
+
+<p>若有需求需要修改配置文件，此处不赘述。</p>
+
+]]></content>
+      <categories>
+        
+          <category> study </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> redis </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[关于直播通]]></title>
+      <url>/other/2017/01/16/zhibotong/</url>
+      <content type="html"><![CDATA[<h2 id="直播通是什么">直播通是什么？</h2>
+<p>直播通是一款实现跨平台主播信息集合的web应用，在这里你可以：</p>
+
+<ul>
+  <li>实现跨平台主播搜索</li>
+  <li>实现不同平台主播的统一关注</li>
+  <li>实现主播的上线提醒通知</li>
+  <li>一键进入ta的直播间</li>
+</ul>
+
+<p>简单来说，就是将多家平台的主播搜索和关注系统集合到了一起。</p>
+
+<p>作为我个人来讲，这款web应用是我学习flask的第一个独立项目，也是我的第一个上线网站。从有想法，到最后部署成功，一共用了差不多一周时间。这其中的苦辣辛酸，波澜起伏想必只有各位开发者心里清楚，于是想写点东西记录下这个自己的处女作。</p>
+
+<h2 id="设想">设想</h2>
+
+<p>当我在琢磨用Python和flask能做什么事的时候，最开始也是陷入了惯性陷阱，就是做一个和书上差不多的个人博客，于是我决定仿个知乎。可我又不甘心于此，想把前端做的漂亮一点，然而这是个大坑，项目进行了几天，发现几乎多半时间都在和前端打交道，可我明明做的是后端啊，遂弃坑，想找个有趣点的东西做。这中间还要感谢老同学的提醒：和后端没关系的东西可以通通去掉。没错！</p>
+
+<p>于是，我从需求出发，考虑能否做一个解决实际问题的东西，于是想到了直播平台。</p>
+
+<p>看直播是一键很有趣的事情，尤其像嫖老师这种（捂脸），然而各大平台的竞争却给我们带来了不少困扰，之前只需要看斗鱼就可以了，喜欢的主播基本都在斗鱼。之后发生的事情大家也都知道，各大平台疯狂砸钱挖人，于是你发现你喜欢的那些主播可能分布于不同平台。这个时候怎么办呢，把每个主播的直播间都加入收藏夹？（我的收藏夹可是要放1024的哪有这么些地方）每天打开各大平台主页看看有没有自己的主播？（现在热门的直播平台已经有6家了，这么搞得累死）关注主播的微博或者QQ群及时掌握上线信息？（我往往看到微博消息的时候都过去几个小时了）</p>
+
+<p>于是我有了计划：我要把几个直播平台集合在一起，让用户在一个页面就能看到自己想看到的全部主播的信息</p>
+
+<p>有了需求之后，就要开始寻求解决方法，于是有了直播通的最初设想：</p>
+
+<ul>
+  <li>爬虫爬取平台主播数据</li>
+  <li>flask做后端</li>
+  <li>bootstrap做前端（真的不想和前端打太多交道）</li>
+</ul>
+
+<p>刚开始做的时候只是希望能做到让用户在一个页面看到主播信息就好了，在项目进行过程中又逐渐加入了主播上线提醒，主播搜索的功能，来源于需求而高于需求啊同志们！</p>
+
+<h2 id="项目进行">项目进行</h2>
+
+<p>设想归设想，实际进行起来还是有不少麻烦。</p>
+
+<p>项目中的用户部分，我直接从《Flask Web开发》这本书中拿出代码，将用户权限等无用部分去掉，进行了一些翻译工作。</p>
+
+<p>爬虫部分，分为了三个部分，getName用来爬取对应平台和房间号的主播名字，LiveChecker用来爬去主播的在线状态，Search用来拿到平台上的搜索结果。本来想把前两个爬虫放到一起做的，后来发现个别平台并不能一次爬到主播的名字和在线状态，之后又考虑到在线状态要放到计划任务中做并集成上线提醒，所以分开。</p>
+
+<p>开始时主播的在线状态时放在视图函数中的，即每次打开主页都会跑一次爬虫，更新主播在线状态。后来发现这一过程响应很慢，网页转圈要转好久，这肯定是不行的。后来考虑解决方法，想到了celery。然而celery任务要和前端互动的话需要一些js知识，在这里我跳过了这个坑，直接用了celery中的计划任务部分，让爬虫每5分钟在后台跑一次更新主播状态，惊奇的发现这个过程中可以加入用户提醒，折腾一晚上后成功。之后主播在线状态完全由这个后台负责，用户再也不用等待服务器响应主播在线状态了。</p>
+
+<p>部署的相关问题可以参照我的另一篇博客 直播通部署路上的坑</p>
+
+<p>其他的一些小问题，大都在网上和别人的项目中找到了解决方案。</p>
+
+<h2 id="后记">后记</h2>
+
+<p>搞这个东西的状态现在回头想想，其实也就是瞎折腾。作为一个初学者，过程中遇到很多问题，也发现还有许多东西需要学习。学习flask的时间不长，其中的一些东西理解还没有很到位，很多地方也只能照葫芦画瓢，代码也可能写的很丑。但就像在一间黑暗的房子里看到了一束光，我期待，很期待，走出房子的那天。</p>
+
+<p>崔同学
+2017.1.16</p>
+]]></content>
+      <categories>
+        
+          <category> other </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> 直播通 </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[flask项目中添加搜索功能]]></title>
+      <url>/study/2017/01/15/search/</url>
+      <content type="html"><![CDATA[<p>这部分内容的起因是我想在自己的flask项目直播通中加入一个搜索框用来搜索数据库中的主播姓名，于是在网上搜索flask 搜索关键字，当时没注意出来的都是全文搜索的教程，一步步做下来却发现原来根本和自己的需求不符合，可见弄清需求是多么重要啊！虽然走了点弯路，却意外发现了全文搜索的方法。</p>
+
+<h2 id="设置搜索框">设置搜索框</h2>
+<p>考虑到用户体验，这里想做导航栏上的搜索框，也就是全局搜索框，这就要用到flask中的程序上下文g，在处理请求时用作临时存储的对象，每次请求都会重设这个变量。很显然，这里就需要将一个搜索框设置成为程序上下文，具体做法如下。</p>
+
+<ul>
+  <li>创建搜索框
+很简单，在forms中添加
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class SearchForm(Form):
+  search = StringField(u'', validators=[Required()])
+</code></pre></div>    </div>
+    <p>这里的Required是必须的，否则每次点击搜索按钮都会运行搜索函数，web性能下降。</p>
+  </li>
+  <li>定义全局变量
+在main.view中写入：
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>@main.before_app_request
+def before_request(): #定义全局变量
+  g.search_form = SearchForm()
+</code></pre></div>    </div>
+    <p>就将一个搜索框设置成为了程序上下文变量。</p>
+  </li>
+  <li>创建搜索和搜索结果的视图函数
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>@main.route('/search', methods = ['POST'])
+def search():
+  if not g.search_form.validate_on_submit():
+      return redirect(url_for('.index'))
+  return redirect(url_for('.search_results', query = g.search_form.search.data))
+@main.route('/search-results/&lt;query&gt;')
+def search_results(query):
+  pass
+</code></pre></div>    </div>
+  </li>
+  <li>在模板中添加搜索框</li>
+</ul>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;form class="navbar-form navbar-left" action="" method="post" role="search"&gt;
+	&lt;div class="form-group"&gt;
+		
+		&lt;input type="text" name="search" class="form-control" placeholder="Search"&gt;
+	&lt;/div&gt;
+	&lt;button type="submit" class="btn btn-default"&gt;搜索&lt;/button&gt;
+&lt;/form&gt;
+</code></pre></div></div>
+<p>要注意flask_wtf的请求跨站保护和表单的name属性设置。
+这样，一个全局搜索框就创建好啦！</p>
+
+<h2 id="模糊搜索">模糊搜索</h2>
+<p>模糊搜索其实很简单，只要对数据库中进行模糊检索即可，一条语句适用于很多场合：</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>User.query.filter(User.name.like('%'+query+'%')).all()
+</code></pre></div></div>
+
+<h2 id="全文搜索">全文搜索</h2>
+<p>虽然有的时候模糊搜索很方便，但对于某些任务，比如搜索出现某些关键词的文章的时候就不能用模糊搜索了，因为不管关键词顺序还是空格都会影响模糊搜索的查询结果，这个时候就需要用到全文搜索。</p>
+
+<p>这里有一款实现全文搜索的良好flask扩展：WhooshAlchemy，在项目中应用也只需要简单几步：</p>
+
+<ul>
+  <li>安装： <code class="highlighter-rouge">pip install flask_whooshalchemy</code></li>
+  <li>配置： 在配置文件config.py中写入要应用全文搜索的数据库路径：<code class="highlighter-rouge">WHOOSH_BASE=</code></li>
+  <li>索引对象：在models.py中需要全文搜索的对象中加入<code class="highlighter-rouge">__searchable__=['COLUMN']</code>,COLOMN为需要搜索的列</li>
+  <li>在manage中添加索引：<code class="highlighter-rouge">whooshalchemy.whoosh_index(app, Model)</code></li>
+  <li>最后在搜索时加入<code class="highlighter-rouge">Model.query.whoosh_search('keyword').all()</code>即可
+注意：使用whooshalchemy进行搜索要现将数据库中的要搜索的对象实例全部删除，这样才能创建索引，否则会报错。</li>
+</ul>
+]]></content>
+      <categories>
+        
+          <category> study </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> 直播通 </tag>
+        
+          <tag> flask </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[项目部署路上的坑]]></title>
+      <url>/study/2017/01/15/gunicorn/</url>
+      <content type="html"><![CDATA[<p>直播通项目终于更新上线了，看到自己的第一个Web应用在服务器上正常运作并且各项功能正常，内心一阵暗爽。看了一眼时间，从有想法到最终项目上线，一共用了大概一周左右时间，作为一个简单的flask应用，这点时间不算长也不算短，其中部署只花了一晚上就弄好了，在这里要感谢已经工作的老友提供思路，虽然部署的时候也踩过不少坑，但确实少走了许多弯路。所谓前人栽树后人？哈？</p>
+
+<h2 id="服务器选择">服务器选择</h2>
+<p>这里直接选择了朋友推荐的腾讯云，一路低配，在选择内存时担心1G内存不够选了2G（心疼），最终抛过代金券还是花了90大洋。不过，值！</p>
+
+<h2 id="部署思路">部署思路</h2>
+<p>这里有两种思路可供选择，</p>
+
+<ul>
+  <li>gunicorn + supervisor + nginx, 部署流程简单清晰，但听说性能不好。</li>
+  <li>朋友推荐的gunicorn + pm2方案，但看了一眼pm2，全部时node.js相关的代码，超纲了啊！</li>
+</ul>
+
+<p>我的目的是让自。己的项目尽快跑起来，因此，选择了有较多参考资料和前人经验的第一种思路，第二种的话，以后在说吧。</p>
+
+<h2 id="开始部署">开始部署</h2>
+
+<h3 id="部署准备">部署准备</h3>
+<p>好，登录服务器，输入用户名和密码登录Linux（这里选择和我平时用的一样的Ubuntu 16.04 64位机），先按照网上的教程将python和虚拟环境弄好，之后git clone代码。等等，者一大堆错误是什么，又是用户权限又是链接错误，折腾了许久未果，于是退而求其此，直接将本地代码复制到服务器上：</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ scp -r easySee ubuntu@www.mydomain.com:/var/www/easySee
+</code></pre></div></div>
+<p>刚开始不清楚这行代码的作用，照葫芦画瓢，于是很自然的在easySee目录下又嵌套了一个同名文件，好low。不过既然是自己的服务器，就先这样吧。之后在虚拟环境中安装requirements中的需求模块，部署准备完成。</p>
+
+<h3 id="gunicorn">Gunicorn</h3>
+
+<h4 id="是什么">是什么</h4>
+<p>关于这部分内容，在部署的时候时完全没有考虑的，因为目的就是让项目尽快跑起来嘛。但不求甚解终归不是好的学习方法，还是要了解以下部署的每个部分是什么，能干嘛，于是补了这部分知识。</p>
+
+<p>gunicorn是一个Python WSGI UNIX的HTTP服务器，是一个per-fork worker模型。换句话说，Gunicorn一般用来管理多个进程，有进程挂了Gunicorn就可以把它拉起来，防止服务器长时间停止服务，还可以动态调整worker的数量，请求多的时候增加worker的数量，请求少的时候减少，这就是所谓的per-fork模型，也是Gunicorn的主要优点。其他优点还有能与各种web框架兼容，只需要非常简单的执行，轻量级的资源消耗以及很快的响应速度。</p>
+
+<h4 id="怎么用">怎么用</h4>
+
+<ul>
+  <li>安装
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(venv) $ pip install gunicorn
+</code></pre></div>    </div>
+  </li>
+  <li>运行(在项目根目录下)</li>
+</ul>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(venv) $ gunicorn -w 4 -b 127.0.0.1:8080 manage:app
+</code></pre></div></div>
+
+<p>在本机上输入服务器ip及端口号后，马上看到了自己的应用。Yeah！这其实就是gunicorn的好处吧，根本不需要什么配置文件，一格指令就能将它启动。</p>
+
+<p>tip: 这里网上教程说还需要添加一个wsgi.py的文件替换掉manage.py，并特别注明wsgi.py和manage.py没有半毛钱关系。然而我的试验结果是，这两个完全就是一模一样的嘛-，- ,先这样吧，出了问题再说。</p>
+
+<h3 id="nignx">Nignx</h3>
+
+<h4 id="是什么-1">是什么</h4>
+<p>一个完整的代理请求过程为：客户端首先与代理服务器创建链接，接着根据代理服务器所使用的代理协议，请求对目标服务器创建链接或者获得目标服务器的指定资源。Web代理服务器（proxy）是网络的中间实体，代理位于Web客户端与Web服务器之间，扮演中间人的角色。HTTP的代理服务器即是Web服务器，又是Web客户端。</p>
+
+<p>正向代理时一个介于客户端与原始服务器之间的服务器，为了从原始服务器获得内容，客户端向代理发送一个请求并指定目标，然后代理向原始服务器转交请求并将获得的内容返回给客户端。</p>
+
+<p>反向代理服务器：在服务器端接受客户端的请求，然后把请求分给具体的服务器进行处理，再将服务器的响应结果返回给客户端。</p>
+
+<p>Nginx(“engine x”)是一款高性能的HTTP和反向代理服务器软件，既可以托管网站，进行HTTP服务，也可以作为反向代理服务器使用。</p>
+
+<p>那么在Gunicorn前部署一层Nginx的目的是什么呢？</p>
+
+<ul>
+  <li>负载均衡。</li>
+  <li>静态文件支持</li>
+  <li>伪静态化并缓存，减少动态请求数量</li>
+  <li>依赖于nginx强大的功能和性能，可以做到访问控制，限速，限制链接数等。</li>
+</ul>
+
+<p>也就是说，nginx可以缓冲请求和响应，也能缓存客户端发起的请求，这个过程时nginx擅长处理的，可以有效提高Gunicorn的处理能力。</p>
+
+<h4 id="怎么用-1">怎么用</h4>
+<p>这里同样参照教程，安装完成后，直接进入Nginx的配置文件</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo vim /etc/nginx/site-avalidable/default
+</code></pre></div></div>
+<p>当然，如果你怕搞错（就像我一样），可以先将配置文件备份</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo cp /etc/nginx/site-avalidable/default /etc/nginx/site-avalidable/default.bak
+</code></pre></div></div>
+
+<p>之后将default暴力修改成下面的内容：</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>server {
+    listen 80;
+    server_name 119.29.3.128; # 这是HOST机器的地址也
+    location / {
+        proxy_pass http://127.0.0.1:8080; # 这里是指向 gunicorn host 的服务地址
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+  }
+</code></pre></div></div>
+
+<p>之后保存，重启Nignx服务器</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo service nginx restart
+</code></pre></div></div>
+
+<h3 id="supervisor">supervisor</h3>
+<h4 id="是什么-2">是什么</h4>
+<p>Supervisor是一个用Python写的进程管理工具，可以很方便的用来启动，重启，关闭进程（不仅仅是Python进程），还可以很方便的管理多个进程，同时启动同时关闭等等。因此将gunicorn用supervisor来包装，很方便的管理进程运行，并且可以防止gunicorn服务器挂掉。而且如果项目中需要多进程运行时，也可以用supervisor来配置。</p>
+
+<h4 id="怎么用-2">怎么用</h4>
+<p>安装后首先将原始配置文件重定向到程序根目录：</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ echo_supervisor_conf&gt;supervisor.conf
+</code></pre></div></div>
+
+<p>其实也可以不用进行这个步骤，但是每次打开supervisor服务时都要输入配置文件目录比较麻烦。
+之后打开<code class="highlighter-rouge">supervisor.conf</code>，在最后加上自己的进程信息：</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[program:easySee]
+command=/home/ubuntu/venv/bin/gunicorn -w 4 -b 0.0.0.0:8080 manage:app     ; supervisor启动命令
+directory=/var/www/easySee/easySee                                         ; 项目的文件夹路径
+startsecs=0                                                                ; 启动时间
+stopwaitsecs=0                                                             ; 终止等待时间
+autostart=false                                                            ; 是否自动启动
+autorestart=true                                                           ; 是否自动重启
+stdout_logfile=/.../app/data/log/gunicorn.log                              ; log 日志
+stderr_logfile=/.../app/data/log/gunicorn.err                              ; 错误日志
+[program:XXXXX]                                                            ; 用于多进程
+</code></pre></div></div>
+
+<p>之后启动supervisor</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ supervisord -c supervisor.conf
+</code></pre></div></div>
+
+<p>之后的事不多说了，操作命令：</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>supervisord -c supervisor.conf                             通过配置文件启动supervisor
+supervisorctl -c supervisor.conf status                    察看supervisor的状态
+supervisorctl -c supervisor.conf reload                    重新载入 配置文件
+supervisorctl -c supervisor.conf start [all]|[appname]     启动指定/所有 supervisor管理的程序进程
+supervisorctl -c supervisor.conf stop [all]|[appname]      关闭指定/所有 supervisor管理的程序进程
+</code></pre></div></div>
+
+<p>这里要说下自己部署时出现的问题，在supervisor已经启动的状态下修改了配置文件，又不知道reload这个命令，于是想重新导入supervisor文件启动时出现了错误，提示端口正在被监听，这里给出解决方法：</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ps -ef | grep supervisord
+</code></pre></div></div>
+
+<p>然后看到</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root   2503  1  0 Nov19 ?  00:03:23 /usr/bin/python /usr/bin/supervisord
+root   21337 2556  0 18:15 pts/8   00:00:00 grep --color=auto supervisord
+</code></pre></div></div>
+
+<p>再执行：</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kill -s SIGTERM 2503
+</code></pre></div></div>
+<p>即可。</p>
+
+<h3 id="再说一点">再说一点</h3>
+<p>写到这里，把部署期间的所有流程和问题处理基本又复习了一遍，主要用到的部分也大概知道都有什么作用了，再深入了解的话大概就到运维的范畴了，这次真的可以浅尝辄止了。</p>
+
+<p>部署并没有想象中的恐怖，只是折腾的时间要久一点罢了。CS这东西还真就全凭折腾，耐下性子干就是了，之后及时回头看看，收获颇丰呢。</p>
+
+<p>就这样啦。</p>
+]]></content>
+      <categories>
+        
+          <category> study </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> 直播通 </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[celery初探]]></title>
+      <url>/study/2017/01/11/celery/</url>
+      <content type="html"><![CDATA[<p>捣鼓了两天自己的直播通项目，终于大概有了雏形，在主页的视图函数中集成了爬虫，爬取用户关注主播的在线hangtag。但在运行时发现打开主页时延迟明显，有时候竟然长达数秒，突然想起了之前了解到的celery，试试能不能解决这一问题。</p>
+
+<h2 id="celery是什么">celery是什么</h2>
+<p>关于celery的知识全部在网上了解，星星点点，但还是有所收获。celery是一个典型的异步任务系统，在应用上下文之外执行任务，将消耗资源的东西通通交给celery来做，可以让主机迅速向应客户端的请求。</p>
+
+<p>celery有三个核心组件：</p>
+
+<ul>
+  <li>客户端：在flask系统中和flask一起运行</li>
+  <li>workers：就是传说中的second terminal，用来执行异步任务，可以有多个</li>
+  <li>消息代理：用来进行celery的通信，一般用redis。</li>
+</ul>
+
+<p>为什么用redis？因为其实时性强，一般用作数据频繁插入，更新或者删除的任务中，以减少对数据库的操作</p>
+
+<h2 id="让celery跑起来">让celery跑起来</h2>
+
+<p>这部分还是比较简单的，有几个主要步骤。</p>
+
+<ul>
+  <li>安装之后要在配置文件中写入用作消息代理的redis的服务器，两行搞定。
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+</code></pre></div>    </div>
+  </li>
+  <li>之后创建celery实例，这里是直接抄来的，至于原因还没搞懂。
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>celery = Celery(__name__, broker=Config.CELERY_BROKER_URL)
+celery.conf.update(app.config)
+</code></pre></div>    </div>
+  </li>
+  <li>创建celery任务，使用装饰器，先跑起来再说。
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>@celery.task(name='circle_task')
+def circletask():
+  logging.info('lalala')
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<p>之后满怀信心，直接打开三个终端开始有样学样，第一个打开redis-server，第二个运行app，第三个打开celery，抄了个命令:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ celery -A manage.celery worker --loglevel=info
+</code></pre></div></div>
+
+<p>然而打开后发现没有动静，才想起并没有提供任务执行的delay。随即又想到我的目的是进行计划任务，让任务可以固定时间重复进行，直接开始搜celery进行实现的方法，还好google够强大，又找到了下面的配置方法：</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CELERYBEAT_SCHEDULE = {
+        'every-minute': {
+            'task': 'circle_task',
+            #'schedule': crontab(minute='*/1'),
+            # 'args': (1,2),
+            'schedule': timedelta(seconds=60)
+        	},
+    	}
+</code></pre></div></div>
+
+<p>运行命令也变成了：</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ celery -A manage.celery worker --loglevel=info --beat
+$ celery -A proj worker -B -l info
+</code></pre></div></div>
+
+<p>至于里面的参数，只知道timedelta和crontab都可以设置间隔时间，其他的没有深入了解。将代码改好后运行celery，问题来了。</p>
+
+<ul>
+  <li>首先是celery说任务方法没有注册：
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Received unregistered task of type 'circle_task'.
+The message has been ignored and discarded.
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<p>在stack overflow溜达了一圈，终于找到解决方法，在配置文件中声明这个方法即可，于是：</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CELERY_IMPORTS = ['app.task']
+</code></pre></div></div>
+<p>解决成功。这里千万注意加app，天知道我经历了什么。</p>
+
+<ul>
+  <li>之后运行celery，终于不报错了天呐，屏幕上也出现了lalala的logging，这还说什么，改代码！在task中添加了之前在index视图函数中的爬虫部分，运行celery，好，可以运行。等等，这一大片红字是什么！
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>'RuntimeError: application not registered on db 
+         instance and no application bound to current context
+</code></pre></div>    </div>
+    <p>原来是没有程序上下文不能进行sqlalchemy的操作，于是，在程序段前添加</p>
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>with app.app_context():
+</code></pre></div>    </div>
+    <p>成功！</p>
+  </li>
+</ul>
+
+<p><img src="http://i1.piimg.com/567571/88020dc0eeab8185.png" alt="此处输入图片的描述" /></p>
+
+<p>最后终于成功看到了模拟上线提醒的logging字样，激动万分，编程的大起大落真是…哈！</p>
+]]></content>
+      <categories>
+        
+          <category> study </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> 直播通 </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+</search>
