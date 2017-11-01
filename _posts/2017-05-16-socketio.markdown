@@ -1,6 +1,6 @@
 ---
 layout: post
-category: "work"
+category: "工作"
 title:  "利用flask_socketio实现与前段的socket通信"
 tags: [socketio]
 ---

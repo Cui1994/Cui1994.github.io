@@ -1,6 +1,6 @@
 ---
 layout: post
-category: "study"
+category: "学习"
 title:  "RabbitMQ泛式"
 tags: [rabbitmq]
 ---

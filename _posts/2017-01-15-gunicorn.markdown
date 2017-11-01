@@ -1,6 +1,6 @@
 ---
 layout: post
-category: "study"
+category: "直播通"
 title:  "项目部署路上的坑"
 tags: [直播通]
 ---

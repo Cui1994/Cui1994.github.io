@@ -1,6 +1,6 @@
 ---
 layout: post
-category: "work"
+category: "工作"
 title:  "为Spring Boot添加日志模块"
 tags: [spring boot, java]
 ---

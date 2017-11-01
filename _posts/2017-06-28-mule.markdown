@@ -1,6 +1,6 @@
 ---
 layout: post
-category: "work"
+category: "工作"
 title:  "通过MULE实现后端服务调用"
 tags: [mule]
 ---

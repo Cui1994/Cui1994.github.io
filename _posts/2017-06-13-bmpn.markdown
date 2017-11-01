@@ -1,6 +1,6 @@
 ---
 layout: post
-category: "work"
+category: "工作"
 title:  "BPMN2.0概念"
 tags: [bpmn]
 ---

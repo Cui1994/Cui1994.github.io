@@ -1,6 +1,6 @@
 ---
 layout: post
-category: "study"
+category: "学习"
 title:  "celery初探"
 tags: [直播通]
 ---

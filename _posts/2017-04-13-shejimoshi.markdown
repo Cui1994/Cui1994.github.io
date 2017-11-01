@@ -1,6 +1,6 @@
 ---
 layout: post
-category: "study"
+category: "学习"
 title:  "大话设计模式Python实现"
 tags: [设计模式]
 ---

@@ -1,6 +1,6 @@
 ---
 layout: post
-category: "other"
+category: "学习"
 title:  "Python的迭代器，可迭代对象和生成器"
 tags: [python]
 ---

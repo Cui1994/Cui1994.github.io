@@ -1,6 +1,6 @@
 ---
 layout: post
-category: "other"
+category: "直播通"
 title:  "关于直播通"
 tags: [直播通]
 ---

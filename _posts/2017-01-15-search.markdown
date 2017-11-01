@@ -1,6 +1,6 @@
 ---
 layout: post
-category: "study"
+category: "学习"
 title:  "flask项目中添加搜索功能"
 tags: [直播通, flask]
 ---
