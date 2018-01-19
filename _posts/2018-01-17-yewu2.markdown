@@ -1,0 +1,48 @@
+---
+layout: post
+category: "工作"
+title:  "python在一般互联网业务中的应用（二） 操作数据库"
+tags: [python]
+---
+
+# 前言
+
+从这篇文章开始，将对上文中所提起及的各抽象层进行进一步阐述，涉及互联网业务代码中的各项基本操作。本文以MySQL为例操作关系型数据库。
+
+注: 此系列文章依托Flask框架介绍，但涉及框架内容较少，具有一定普适性。
+
+# 操作数据库
+
+SQLAlchemy是目前被广泛接纳的ORM框架，但不推荐使用SQLAlchemy中的数据库迁移功能。建库、建表、索引的增删应直接在数据库上进行操作，而不应以代码形式出现在项目中，但在多人项目中，仍然需要告知他人当前的数据库结构和索引，因此，你的项目中应该有一份数据库脚本，每次在对数据库进行更改时，应首先更改这个sql文件。
+
+```
+// scheme.sql
+
+CREATE TABLE `student` (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+    school_id INT(11) NOT NULL DEFAULT 0 COMMENT '学校id',
+    grade INT(11) NOT NULL DEFAULT 0 COMMENT '年级',
+    class INT(11) NOT NULL DEFAULT 0 COMMENT '班级',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    is_deleted tinyint(4) NOT NULL DEFAULT '0' COMMENT '该记录是否还存在',
+    primary key(id),
+    KEY `ix_school_id` (school_id),
+    KEY `ix_created_at` (`created_at`) USING BTREE,
+    KEY `ix_updated_at` (`updated_at`) USING BTREE
+)ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT '学生记录表';
+
+...
+
+```
+
+每张表中除了自增主键外，还应有以下三列分别用于数据库归档和软删除等操作:
+
+- created_at
+- updated_at
+- is_deleted
+
+## 构建DB层
+
+
+
