@@ -216,7 +216,7 @@ font:
 # Value is the target link (E.g. GitHub: https://github.com/iissnan)
 social:
   Github: https://github.com/Cui1994
-  E-mail: 269584357@qq.com
+  E-mail: mailto:269584357@qq.com
   #LinkLabel: Link
 
 
