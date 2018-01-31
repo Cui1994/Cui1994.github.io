@@ -1,7 +1,7 @@
 ---
 layout: post
 category: "影评"
-title:  "《马戏之王》————另一种形式的爽片"
+title:  "《马戏之王》—— 另一种形式的爽片"
 tags: [马戏之王]
 ---
 
