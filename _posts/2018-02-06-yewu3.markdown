@@ -1,0 +1,254 @@
+---
+layout: post
+category: "工作"
+title:  "python在一般互联网业务中的应用（三） 异常＆工具类
+tags: [python]
+---
+
+
+在实际业务中，经常会碰到大量需要重复使用的函数，一般会选择将其抽象成为工具函数放在`util`目录下。值得一提的是，抛错函数也属于大量重复使用的函数这一范畴，但与工具类函数不同的是，抛错在工具类函数中也会被用到，因此这部分内容应放在项目根目录下。
+
+# 异常
+
+首先，这部分并不是错误处理，而是异常抛出。
+
+为什么需要抛错函数呢？如果项目是涉及RPC调用的微服务架构，抛错函数自然是必须的，各个服务需要统一自己的错误类型并在适当时候抛出。如果项目是单纯的HTTP模型，也需要根据系统中不同的错误类型返回给前端不同的错误信息，如果没有公共的抛错函数和错误类型，处理错误将成为一场灾难。
+
+这部分内容实现起来是很容易的，只需要构造异常类型，引入不同的错误码和异常信息即可。需要注意是这边要和错误处理的part对应。
+
+一般情况下需要抛出三种异常：
+
+- `UserException`: 需要展示给用户的异常
+- `SystemException`: 错误信息需要向用户隐藏的异常
+- `UnknownException`: 未知错误
+
+同样在错误处理部分也需要对三种类型的异常进行区分。
+
+```
+# exc.py
+
+class ProjectErrorCode(object):
+    UNKNOWN_ERROR = 0
+    DATABASE_ERROR = 1
+    TIMEOUT_ERROR = 2
+
+    PARAM_IS_EMPTY = 100
+
+    @classmethod
+    def _value_to_name(cls, err_code):
+        return dict((getattr(cls, name),name) for name in dir(cls) if not name.startswith('_'))[err_code]
+
+
+TRANSLATIONS = {
+    ProjectErrorCode.UNKNOWN_ERROR: u'系统异常，请稍后再试',
+    ProjectErrorCode.DATABASE_ERROR: u'数据库错误',
+    ProjectErrorCode.TIMEOUT_ERROR: u'连接超时',
+
+    ProjectErrorCode.PARAM_IS_EMPTY: u'参数不可为空',
+}
+
+
+class ProjectException(Exception):
+
+    def __init__(self, code, name, message):
+        self.code = code
+        self.name = name
+        self.message = message
+
+
+class ProjectUserException(ProjectException):
+    pass
+
+
+def raise_user_exc(err_code, err_msg=None):
+    translation = err_msg or TRANSLATIONS[err_code]
+    raise ProjectUserException(
+        err_code,
+        ProjectErrorCode._value_to_name(err_code),
+        translation
+    )
+
+# ... 
+```
+
+# 工具类
+
+我最开始做这件事的时候往往会烦恼抽象的粒度问题，即尽管都是重复使用，哪种函数应该抽象成公用的工具类，哪种函数应该成为逻辑层聚合根的类方法。在经历了几个项目的磨练后，发现只需要遵循一个简单的原则：与业务无关的公用代码都可抽象成为工具函数。而这种工具函数的形式风格都是非常灵活的，可以简单写成一个个单独的函数，也可以聚合成类，也可以是装饰器，但需要注意工具函数尽量统一成一个出口，以封装参数的形式提供功能。由于这部分比较简单，本文列举几个常用的工具c抽象以供参考。
+
+## request
+
+封装需要发起HTTP请求第三方服务的函数, 负责检查相应状态码、处理异常、记录日志并抛错。
+
+```
+# util/request.py
+
+import requests
+import json
+import logging
+
+from project.exc import (
+    ProjectErrorCode,
+    raise_user_exc
+)
+
+logger = logging.getLogger(__name__)
+
+def request(method, url, params=None, data=None, headers=None,
+            connect_timeout=1, read_timeout=3,
+            is_form_data=True, ssl_verify=False, return_json=True):
+    """
+    GET:params为参数
+    POST:data为post参数,params为URL中参数,connect_time为连接超时时间,read_timeout为读超时时间
+    """
+    response = None
+    try:
+        if method == 'GET':
+            response = requests.get(url,
+                                    params=params,
+                                    headers=headers,
+                                    timeout=(connect_timeout, read_timeout),
+                                    verify=ssl_verify)
+        elif method == 'POST':
+            if is_form_data:
+                data = json.dumps(data)
+            response = requests.post(url,
+                                     params=params,
+                                     data=data,
+                                     headers=headers,
+                                     timeout=(connect_timeout, read_timeout),
+                                     verify=ssl_verify)
+        elif method == 'DELETE':
+            response = requests.delete(url,
+                                       params=params,
+                                       headers=headers,
+                                       timeout=(connect_timeout, read_timeout),
+                                       verify=ssl_verify)
+        result = response.json() if return_json else response.text
+        logger.info(u'http请求返回,URL[{}],耗时[{}],返回值[{}]'.format(
+            url, response.elapsed.microseconds, result))
+    except requests.exceptions.ConnectTimeout:
+        logger.error('[CONNECT_TIMEOUT]URL[{}],PARAMS[{}],DATA[{}]'.format(
+            url, params, data))
+        raise_user_exc(ProjectErrorCode.CONNECT_TIMEOUT_ERROR)
+    except requests.exceptions.ReadTimeout:
+        logger.error('[READ_TIMEOUT]URL[{}],PARAMS[{}],DATA[{}]'.format(
+            url, params, data))
+        raise_user_exc(ProjectErrorCode.READ_TIMEOUT_ERROR)
+    except Exception as ex:
+        logger.error(
+            '[HTTP_RESPONSE_ERROR]URL[{}],PARAMS[{}],DATA[{}],ERROR[{}]'.format(   # noqa
+                url, params, data, str(ex)))
+        raise_user_exc(ProjectErrorCode.HTTP_RESPONSE_ERROR, str(ex))
+
+    if int(response.status_code) >= 500:
+        logger.error(
+            '[HTTP_5XX_ERROR]URL[{}],PARAMS[{}],DATA[{}]'.format(
+                url, params, data))
+        raise_user_exc(ProjectErrorCode.HTTP_5XX_ERROR)
+    elif int(response.status_code) >= 400:
+        logger.error(
+            '[HTTP_4XX_ERROR]URL[{}],PARAMS[{}],DATA[{}]'.format(
+                url, params, data))
+        raise_user_exc(ProjectErrorCode.HTTP_4XX_ERROR, result)
+    return result
+
+```
+
+## validate
+
+一些正则判别式，负责校验参数等。
+
+```
+# util/validate.py
+
+import re
+
+
+def check_user_name_format(name_str):
+    regex_str = r'^[\u4E00-\u9FA5A-Za-z0-9_]+$'
+    pattern = re.compile(regex_str)
+    return pattern.match(name_str)
+
+```
+
+## trans
+
+一些变换类函数，负责处理数据结构的转换。例如将ORM对象转换为字典，将参数中的key转换为自己需要的key等。
+
+```
+# util/trans.py
+
+def convert_student_info_to_dict(student_info):
+    d = dict()
+    d['name'] = student_info.name
+    d['school_id'] = student_info.school_id
+    d['grade'] = student_info.grade
+    d['class_no'] = student_info.class_no
+    return d
+```
+
+## contants
+
+与`trans`作用类似，不过负责处理的是信息表示的转换。例如将外界的状态码表示转换为中文等。
+
+```
+# util/contants.py
+
+STATUS_TO_ZH = {
+    0: u'失败',
+    1: u'成功',
+    2: u'处理中',
+    3: u'已过期'
+}
+```
+
+## response
+
+构造返回给客户端的响应方法，统一相应格式，并统一记录状态码。
+
+```
+# util/response.py
+
+import json
+from flask import Response, jsonify
+
+
+class ResponseCode(object):
+    SUCCEED = 200
+    API_CLOSED = 101
+    FAILED = 400
+    INVALID_PARAM = 501
+
+
+ResponseCodeExplain = {
+    ResponseCode.SUCCEED: u'请求成功',
+    ResponseCode.FAILED: u'请求失败',
+    ResponseCode.API_CLOSED: u'功能未开放',
+    ResponseCode.INVALID_PARAM: u'参数不合法'
+}
+
+
+def jsonify_(data):
+    js = json.dumps(data, ensure_ascii=False, separators=[',', ':'])
+    return Response(js, mimetype=u'application/json',
+                    content_type=u'application/json; charset=utf-8')
+
+
+def response(code=ResponseCode.SUCCEED, message=None, data=None):
+    if message:
+        result = {u'code': code, u'msg': message}
+    else:
+        result = {u'code': code, u'msg': ResponseCodeExplain[code]}
+
+    if code != ResponseCode.SUCCEED:
+        return jsonify_(result)
+    if data is not None:
+        result['data'] = data
+    return jsonify_(result)
+```
+
+
+这里列举的只是通常会用到的几个工具类，具体项目中这部分内容还可以更宽泛，比如处理不同格式的文件、各种数据分析之类的函数等等。
+本篇较简单，大部分拆箱即用，所以不再啰嗦了。
+
+(End)
