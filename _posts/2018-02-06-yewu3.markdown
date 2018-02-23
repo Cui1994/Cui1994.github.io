@@ -1,7 +1,7 @@
 ---
 layout: post
 category: "工作"
-title:  "python在一般互联网业务中的应用（三） 异常＆工具类
+title:  "python在一般互联网业务中的应用（三） 异常＆工具类"
 tags: [python]
 ---
 
