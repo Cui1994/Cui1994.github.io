@@ -210,7 +210,7 @@ STATUS_TO_ZH = {
 # util/response.py
 
 import json
-from flask import Response, jsonify
+from flask import Response
 
 
 class ResponseCode(object):
