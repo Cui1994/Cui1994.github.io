@@ -55,7 +55,7 @@ CREATE TABLE `student` (
 应当在包的`__init__.py`文件中完成一些初始化操作。
 
 ```
-# __init__.py
+# models/__init__.py
 
 import functools
 
@@ -74,7 +74,7 @@ DeclarativeBase = declarative_base()
 
 当然，你也可以做适当封装，例如抽象出`auto_commit`装饰器以适应不同逻辑：
 ```
-# __init__.py
+# models/__init__.py
 
 class RoutingSession(Session):
 
@@ -122,7 +122,7 @@ auto_commit = gen_commit_deco(DBSession)
 
 
 ```
-# student.py
+# models/student.py
 
 class StudentModel(DeclarativeBase):
 
@@ -145,10 +145,10 @@ class StudentModel(DeclarativeBase):
 
     @classmethod
     def insert(cls, student):
-        param = cls.convert_param_dict(student)
-        DBSession().add(cls(**param))
+        instance = cls(**cls.convert_param_dict(student))
+        DBSession().add(instance)
         DBSession().flush()
-        return param
+        return instance.id
 
     @classmethod
     def update(cls, student):
@@ -166,10 +166,9 @@ class StudentModel(DeclarativeBase):
             update({'is_deleted': 1})
 
     @classmethod
-    def mget_student_with_grade_and_class_no(cls, grade, class_no):
+    def mget_student_with_id(cls, student_id):
         return DBSession().query(cls).\
-            filter(cls.grade == grade,
-                   cls.class_no == class_no,
+            filter(cls.id == student_id,
                    cls.is_deleted == 0).\
             all()
 ```
