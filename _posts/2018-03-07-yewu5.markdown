@@ -17,7 +17,7 @@ api层的代码应简单清晰，甚至你的每个路由对应的函数都“�
 
 `Flask`较为简单，一般来说，要实现基本功能，只需在`api`目录下生成蓝图和视图函数，在`app.py`中注册蓝图，并添加404和500的处理即可。
 
-```
+```Python
 from my_project.api.student import student_api
 
 logger = logging.getLogger(__name__)
