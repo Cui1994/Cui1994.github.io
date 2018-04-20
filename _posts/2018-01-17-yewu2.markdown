@@ -118,7 +118,7 @@ auto_commit = gen_commit_deco(DBSession)
 在这里构建你的Model对象，完成基本的增查改删操作。需要注意的地方有两点：
 
 1. 构造`convert_param_dict`方法以过滤Model类不含有的字段，用于`insert`和`update`方法中。
-2. 如果无特殊说明，当你的查询方法返回的是`Model`对象，也就是ORM实例时，在方法名称前加`m`。
+2. 如果无特殊说明，在方法名称前加`m`表示批量查询。
 
 
 ```
@@ -166,7 +166,7 @@ class StudentModel(DeclarativeBase):
             update({'is_deleted': 1})
 
     @classmethod
-    def mget_student_with_id(cls, student_id):
+    def get_student_with_id(cls, student_id):
         return DBSession().query(cls).\
             filter(cls.id == student_id,
                    cls.is_deleted == 0).\

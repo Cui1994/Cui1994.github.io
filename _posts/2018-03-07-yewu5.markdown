@@ -9,8 +9,9 @@ tags: [python]
 - 管理路由
 - 获取并检查参数
 - 将请求分发给相应的逻辑层 (简单的函数调用，略)
-- 包装返回数据 (由工具类中的trans方法完成)
+- 包装返回数据 
 - 处理错误
+
 api层的代码应简单清晰，甚至你的每个路由对应的函数都“长得”差不多，这部分代码不应掺杂任何逻辑处理，他要做的仅仅是将请求指向相应的逻辑类去处理。
 
 # 管理路由
@@ -112,6 +113,51 @@ def get_params(request):
 
 获取列表数据也可以构建相应方法，或在代码中直接获取，这里不再赘述。
 有一点需要注意，`get_data`方法获取参数时从`stream`中读取数据，而`request`对象中很多方法在调用之后会清空`stream`，导致无法通过`get_data`拿到数据，尽量将其作为兜底逻辑而不是首选。
+
+# 组合并包装响应
+
+这部分只需要构造相应的工具类中的`response`和`trans`函数即可，需要注意的是关键路径上的查询接口。
+
+## 降级策略
+
+一般而言，服务器需要将查询接口的结果完整地返回给前端，但服务器也有开小差的情况，为了防止比较重要的查询接口因为一些小的或者非关键路径上的服务的错误而全部挂掉，或者在高并发场景下需要牺牲一部分内容或者功能的显示来换取负载上的优化，需要对这类接口建立降级策略。
+
+降级根据介入方式可以分为主动降级和自动降级。
+
+主动降级简而言之就是可以通过手动开关来限制对某个接口或服务的调用，从而实现功能降级，实现方式也是通过在接口前设置降级开关来实现。
+
+而自动降级则与服务熔断的某些特征相似，当某个接口或服务异常被捕获或异常量超过阈值，则自动触发降级逻辑。
+
+降级是微服务框架兴起后经常被提起的名词，目前有许多相对成熟的开源轮子如Hystrix完整地实现了服务降级配置功能，有兴趣可以自行查阅。这里通过一段简单代码说明降级的策略和作用（当然市面上的各种微服务框架的降级策略要复杂的多）
+
+```
+# api/student.py
+
+@student_api.route('/info/update', methods=['GET'])
+def update_student_info():
+
+    rtn = dict()
+
+    def _get_grade(student_id):
+        student_info = StudentQuery().get_student_info_with_student_id(student_id)
+        rtn[student_id]['grade'] = student_info.grade
+
+    def _get_default_grade(student_id):
+        rtn[student_id]['student_info'] = None
+
+    tags = request.args.getlist("tags")
+    params = get_params(request)
+    student_id = params.get('student_id')
+
+    if "grade" in tags:
+        try:
+            _get_grade(student_id)
+        except Exception as e:
+            logger.error("get student grade error: {}".format(e))
+            _get_default_grade(student_id)
+            
+    return response(ResponseCode.SUCCEED, data=rtn)
+```
 
 # 处理错误
 
