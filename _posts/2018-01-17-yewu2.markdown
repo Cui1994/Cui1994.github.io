@@ -187,6 +187,66 @@ DB层中会有大量的查询方法，这时候需要留心，有的查询会随
 
 如果你在数据库方面没有很多的经验，最好的方式是每次新增或者改动DB层查询方法时，先在数据库explain一下你的查询语句，观察扫描了多少行，是否命中索引等等，防患于未然。
 
+
+### Tips
+
+#### 在`group_by`之前执行`order_by`方法
+
+应用场景为在聚合数据中获取某一列值最大的一条记录，需要在`group_by`前先排序，可以应用`from_self`方法重新生成子查询，如下：
+
+```
+DBSession().query(model).order_by(model.created_at.desc()).from_self().group_by(model.id).all()
+```
+
+`from_self`可以根据查询结果生成一个子查询，不但可以改变sql执行的固有顺序，还可以在`limit`或`offset`之后继续进行查询语句。
+
+#### 在列中储存数组
+
+应尽量避免在mysql的一列中存储大字段类型的数据，但如果有需要使用的场景，也应注意在将文本型数据转换为相应数组或字典时，避免使用eval方法。这里以数组为例列出一种储存数组型数据的方式。
+
+```
+# model/student_group.py
+
+class StudentGroupModel(DeclarativeBase):
+
+    __tablename__ = 'student_group'
+
+    id = Column(BigInteger, primary_key=True)
+    student_ids_str = Column(Text, default="")
+
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    is_deleted = Column(SmallInteger, default=0)
+
+    @property
+    def student_ids(self):
+        return map(int, self.student_ids_str.split(',')) if self.student_ids_str else []
+
+    @student_ids.setter
+    def student_ids(self, student_ids):
+        self.student_ids_str = ",".join((str(x) for x in student_ids))
+
+    @classmethod
+    def insert(cls, student_list):
+        result = cls(student_list = ",".join([str(_) for _ in student_list]))
+        DBSession().add(result)
+        return result
+```
+
+#### 批量插入
+
+```
+    @classmethod
+    def multi_insert(cls, student_list):
+        param = [cls.convert_param_dict(student) for student in student_list]
+        return DBSession().execute(cls.__table__.insert(), param)
+```
+
+依托`sqlalchemy`的批量插入有许多方法，这里采用非ORM方式，效率较高。(`sqlalchemy`中有`bulk_insert_mappings`方法为ORM形式)
+此外，此方法如果同`property`一起连用的话需要注意做一些转换。
+
+
+
 (End)
 
   [1]:http://docs.sqlalchemy.org/en/latest/orm/session_basics.html
