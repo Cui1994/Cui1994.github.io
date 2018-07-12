@@ -54,6 +54,8 @@ def test_lock(args1)
             raise e
         finally:
             redis_client.delete(lock_key)
+    else:
+        raise_user_exc()
 ```
 
 需要注意，加锁时一般要设置过期时间（为了防止异常原因导致死锁），但这两个操作需要是原子操作，即需要保证只要上锁，必定会过期。
@@ -73,7 +75,6 @@ import gevent
 import md5
 import functools
 from gevent import Timeout
-from pkgen.pkgen import PkGen
 from uuid import uuid1
 from zeus_core.redis_client import create_redis_client
 
