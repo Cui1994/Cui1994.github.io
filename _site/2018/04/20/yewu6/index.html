@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Python Web 基础向（六） 查询</title>
+    <meta name="description" content="本篇文章将介绍实际业务中的查询场景。一般来说，这部分要做的只是从数据层调用查询方法获取数据并返回给api层。但在业务量不断上涨的过程中，可能会出现百万级以上的大规模数据查询场景，也可能会存在基础信息（用户账户信息等）被多个接口同时调用查询的场景，给DB造成很大压力。这时就需要考虑引入协程和缓存等方式来降低数据库I...">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2018/04/20/yewu6/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>Python Web 基础向（六） 查询</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2018-04-20
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Python Web" title="Category: Python Web" rel="category">Python Web</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#ORM" title="Tag: ORM" rel="tag">ORM</a-->
+        <a href="/tag/#ORM" title="Tag: ORM" rel="tag">ORM</a>&nbsp;
+    
+        <!--a href="/tag/#%E7%BC%93%E5%AD%98" title="Tag: 缓存" rel="tag">缓存</a-->
+        <a href="/tag/#缓存" title="Tag: 缓存" rel="tag">缓存</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#一般场景" id="markdown-toc-一般场景">一般场景</a></li>
+  <li><a href="#条件分页查询" id="markdown-toc-条件分页查询">条件分页查询</a></li>
+  <li><a href="#大数据量查询" id="markdown-toc-大数据量查询">大数据量查询</a></li>
+  <li><a href="#缓存" id="markdown-toc-缓存">缓存</a></li>
+</ul>
+
+<p>本篇文章将介绍实际业务中的查询场景。一般来说，这部分要做的只是从数据层调用查询方法获取数据并返回给api层。但在业务量不断上涨的过程中，可能会出现百万级以上的大规模数据查询场景，也可能会存在基础信息（用户账户信息等）被多个接口同时调用查询的场景，给DB造成很大压力。这时就需要考虑引入协程和缓存等方式来降低数据库IO。除此之外，还将介绍一些查询中经常碰到的一些场景的处理方法。</p>
+
+<p><img src="http://or9cryhof.bkt.clouddn.com/6a00d8347d063969e201bb091e1152970d-800wi.png" alt="此处输入图片的描述" /></p>
+
+<h2 id="一般场景">一般场景</h2>
+
+<p>调用数据层的查询方法即可，需要考虑数据缺失的异常情况，单个查询数据丢失时是否抛错，列表查询丢失数据时是否返回空值等。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># query/student.py</span>
+
+<span class="kn">from</span> <span class="nn">my_project.data.student</span> <span class="kn">import</span> <span class="n">Student</span>
+<span class="kn">from</span> <span class="nn">my_project.util.trans</span> <span class="kn">import</span> <span class="n">convert_student_info_to_dict</span>
+<span class="kn">from</span> <span class="nn">my_project.exc</span> <span class="kn">import</span> <span class="n">raise_user_exc</span><span class="p">,</span> <span class="n">ProjectErrorCode</span>
+
+
+<span class="k">class</span> <span class="nc">StudentQuery</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">student</span> <span class="o">=</span> <span class="n">Student</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">get_student_info_with_student_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">student_id</span><span class="p">):</span>
+        <span class="n">student_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">student</span><span class="o">.</span><span class="n">mget_student_with_id</span><span class="p">(</span><span class="n">student_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">student_info</span><span class="p">:</span>
+            <span class="n">raise_user_exc</span><span class="p">(</span><span class="n">ProjectErrorCode</span><span class="o">.</span><span class="n">STUDENT_NOT_EXIST</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">convert_student_info_to_dict</span><span class="p">(</span><span class="n">student_info</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="条件分页查询">条件分页查询</h2>
+
+<p>这是Web应用常见的筛选搜索情况，需要结合多个条件搜索并对结果进行分页。</p>
+
+<p>这个场景下，需要根据不同的条件组合查询方式，并根据页数和大小进行取模，并返回数据总量用于前端分页。如果筛选条件并不存在于数据库的列中，而是通过某一列与其他表关联，在筛选之前要拿到所有充当外键的列的值，传入当前<code class="highlighter-rouge">model</code>对象中进行查询。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># models/student</span>
+
+<span class="k">class</span> <span class="nc">StudentModel</span><span class="p">(</span><span class="n">DeclarativeBase</span><span class="p">):</span>
+
+	<span class="c"># ...</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">mget_student_list</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">count</span><span class="p">:</span>
+            <span class="n">query_</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="nb">id</span><span class="p">))</span><span class="o">.</span><span class="nb">filter</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">is_deleted</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">query_</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span><span class="o">.</span><span class="nb">filter</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">is_deleted</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">condition</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'to_date'</span><span class="p">)</span> <span class="ow">and</span> <span class="n">condition</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'from_date'</span><span class="p">):</span>
+        	<span class="c"># utc2datetime为时间戳转datetime对象的工具方法</span>
+            <span class="n">to_date</span> <span class="o">=</span> <span class="n">utc2datetime</span><span class="p">(</span><span class="n">condition</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'to_date'</span><span class="p">))</span>
+            <span class="n">from_date</span> <span class="o">=</span> <span class="n">utc2datetime</span><span class="p">(</span><span class="n">condition</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'from_date'</span><span class="p">))</span>
+            <span class="n">query_</span> <span class="o">=</span> <span class="n">query_</span><span class="o">.</span><span class="nb">filter</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">created_at</span> <span class="o">&gt;=</span> <span class="n">from_date</span><span class="p">,</span>
+                                   <span class="n">cls</span><span class="o">.</span><span class="n">created_at</span> <span class="o">&lt;=</span> <span class="n">to_date</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">condition</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'school_id'</span><span class="p">):</span>
+            <span class="n">query_</span> <span class="o">=</span> <span class="n">query_</span><span class="o">.</span><span class="nb">filter</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">school_id</span> <span class="o">==</span> <span class="n">condition</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'school_id'</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">count</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">query_</span><span class="o">.</span><span class="n">scalar</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="n">condition</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'page'</span><span class="p">)</span> <span class="ow">and</span> <span class="n">condition</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'page_size'</span><span class="p">):</span>
+            <span class="n">query_</span> <span class="o">=</span> <span class="n">query_</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="nb">id</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">condition</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'page'</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">condition</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'page_size'</span><span class="p">)</span>
+            <span class="n">query_</span> <span class="o">=</span> <span class="n">query_</span><span class="o">.</span><span class="n">offset</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">condition</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'page_size'</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">query_</span><span class="o">.</span><span class="nb">all</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>返回结果作为筛选结果的展示内容，如果需要展示的字段涉及其他表的内容，则需要构建<code class="highlighter-rouge">_extend_journals</code>方法进行组合，要注意查询其他表内容时需要批量获取以降低数据库IO。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># query/student.py</span>
+
+<span class="k">class</span> <span class="nc">StudentQuery</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	
+	<span class="c"># ...</span>
+
+    <span class="k">def</span> <span class="nf">_extend_journals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">student_list</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">student_id_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">student</span><span class="o">.</span><span class="nb">id</span> <span class="k">for</span> <span class="n">student</span> <span class="ow">in</span> <span class="n">student_list</span><span class="p">]</span>
+        <span class="n">identity_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">student</span><span class="o">.</span><span class="n">mget_student_identity_list_with_id_list</span><span class="p">(</span><span class="n">student_id_list</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">student_list</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s">'name'</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="c"># ...</span>
+                <span class="s">'identity_id'</span><span class="p">:</span> <span class="n">identity_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="nb">id</span><span class="p">)</span><span class="o">.</span><span class="nb">id</span>
+            <span class="p">})</span>
+
+    <span class="k">def</span> <span class="nf">get_student_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">):</span>
+        <span class="n">student_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">student</span><span class="o">.</span><span class="n">mget_student_list</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">student_count</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s">'student_count'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="s">'student_list'</span><span class="p">:</span> <span class="p">[]</span>
+            <span class="p">}</span>
+        <span class="n">student_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">student</span><span class="o">.</span><span class="n">mget_student_list</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s">'student_count'</span><span class="p">:</span> <span class="n">student_count</span><span class="p">,</span>
+            <span class="s">'student_list'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extend_journals</span><span class="p">(</span><span class="n">student_list</span><span class="p">)</span>
+        <span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="大数据量查询">大数据量查询</h2>
+
+<p>实际业务场景中经常会碰到大数据量数据查询的情况，如获取某一城市所有的学生列表。大数据量查询本身是需要一定耗时的，因此首先想到的思路是离线计算，将对应城市所有的学生列表存在线下库里的某一列中，查询时就可以实时取出，我们将在之后详细介绍此类业务场景的思路。但事与愿违，你的项目中可能不得不处理一些大数据量的查询工作，这时可以借助python的协程解决高IO负载查询。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># query/student.py</span>
+
+<span class="k">class</span> <span class="nc">StudentQuery</span><span class="p">(</span><span class="n">objecy</span><span class="p">):</span>
+
+	<span class="c"># ...</span>
+
+    <span class="k">def</span> <span class="nf">get_all_student_id_with_school_id_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">school_id_list</span><span class="p">):</span>
+    	<span class="c"># 这里分块大小需根据DB数据规模而定，或做成可配，以后会讲到配置可视化问题。</span>
+        <span class="n">block_size</span> <span class="o">=</span> <span class="mi">5000</span>
+        
+        <span class="k">def</span> <span class="nf">sync_get_all_student_with_school_id_list</span><span class="p">(</span><span class="n">block_school_id_list</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">student</span><span class="o">.</span><span class="n">get_all_student_id_with_school_id_list</span><span class="p">(</span><span class="n">block_school_id_list</span><span class="p">)</span>
+        
+        <span class="n">jobs</span> <span class="o">=</span> <span class="p">[</span><span class="n">gevent</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">sync_get_all_student_with_school_id_list</span><span class="p">,</span> <span class="n">school_id_list</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="n">block_size</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">school_id_list</span><span class="p">),</span> <span class="n">block_size</span><span class="p">)]</span>
+        <span class="n">gevent</span><span class="o">.</span><span class="n">joinall</span><span class="p">(</span><span class="n">jobs</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">job</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">,</span> <span class="n">results</span><span class="p">)</span> <span class="k">if</span> <span class="n">results</span> <span class="k">else</span> <span class="p">[]</span>
+</code></pre></div></div>
+
+<h2 id="缓存">缓存</h2>
+
+<p>需要缓存的部分一般为批量取用，如通过一批学生id获取学生的信息。</p>
+
+<p>缓存有多种实现方式，实现策略都大同小异，这里以redis为例搭建缓存系统，缓存策略如下(缓存接近缓存容量时可以引入缓存失效策略，这里暂时不考虑)：</p>
+
+<ol>
+  <li>给每个类型的缓存设定相应的key类型，并加上缓存取用的id组合为唯一键值，并将<code class="highlighter-rouge">id_list</code>替换为<code class="highlighter-rouge">key_list</code>。</li>
+  <li>从redis中取<code class="highlighter-rouge">key_list</code>对应的值，得到<code class="highlighter-rouge">res_list</code>。</li>
+  <li>遍历<code class="highlighter-rouge">id_list</code>，若<code class="highlighter-rouge">res_list</code>的对应位置值为空，则该id缓存失效，将其添加到需要查询数据库的<code class="highlighter-rouge">query_list</code>中。</li>
+  <li>从数据库中查询<code class="highlighter-rouge">query_list</code>的信息，并将其set到redis对应的<code class="highlighter-rouge">key</code>中。</li>
+  <li>将缓存取到的结果和数据库取到的结果组合并返回。</li>
+  <li>当数据库收到<code class="highlighter-rouge">update</code>和<code class="highlighter-rouge">insert</code>命令时将redis中对应key的缓存更正或失效。这里可以在代码中进行，也可以监听数据库日志借助消息队列进行操作（大厂做法），这里略过这方面的内容。</li>
+</ol>
+
+<p>需要注意，由于缓存的超时时间一般较久，在遇到问题时再去处理redis较为麻烦，因此需要开关控制，在出问题时可直接绕过缓存读取数据库中内容，而不必等缓存失效。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># cache/student.py</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">from</span> <span class="nn">my_project.data.student</span> <span class="kn">import</span> <span class="n">Student</span>
+<span class="kn">from</span> <span class="nn">my_project.util.redis_client</span> <span class="kn">import</span> <span class="n">redis_client</span>
+<span class="kn">from</span> <span class="nn">my_project.util.json_helper</span> <span class="kn">import</span> <span class="n">MyJsonEncoder</span><span class="p">,</span> <span class="n">my_json_obj_hook</span>
+<span class="kn">from</span> <span class="nn">my_project.util.trans</span> <span class="kn">import</span> <span class="n">convert_student_info_to_dict</span>
+<span class="kn">from</span> <span class="nn">my_project.settings</span> <span class="kn">import</span> <span class="n">STUDENT_INFO_CACHE_TIME</span>
+
+<span class="k">class</span> <span class="nc">StudentCache</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_student_info</span><span class="p">(</span><span class="n">student_ids</span><span class="p">):</span>
+        <span class="n">student_info_redis_key</span> <span class="o">=</span> <span class="s">"STUDENT_INFO_{}"</span>
+        <span class="n">query_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">cache_time</span> <span class="o">=</span> <span class="n">STUDENT_INFO_CACHE_TIME</span>
+        <span class="k">if</span> <span class="n">cache_time</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">redis_client</span><span class="o">.</span><span class="n">pipeline</span><span class="p">(</span><span class="n">transaction</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">pipe</span><span class="p">:</span>
+                <span class="n">BLOCK_SIZE</span> <span class="o">=</span> <span class="mi">100</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">student_ids</span><span class="p">),</span> <span class="n">BLOCK_SIZE</span><span class="p">):</span>
+                    <span class="n">pipe</span><span class="o">.</span><span class="n">mget</span><span class="p">([</span><span class="n">student_info_redis_key</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">student_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">student_id</span> <span class="ow">in</span> <span class="n">student_ids</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">BLOCK_SIZE</span><span class="p">]])</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">pipe</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">student_ids</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">res</span><span class="p">[</span><span class="n">i</span> <span class="o">/</span> <span class="n">BLOCK_SIZE</span><span class="p">][</span><span class="n">i</span> <span class="o">%</span> <span class="n">BLOCK_SIZE</span><span class="p">]:</span>
+                    <span class="n">query_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">student_ids</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">result</span><span class="p">[</span><span class="n">student_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="n">i</span> <span class="o">/</span> <span class="n">BLOCK_SIZE</span><span class="p">][</span><span class="n">i</span> <span class="o">%</span> <span class="n">BLOCK_SIZE</span><span class="p">],</span>
+                                                        <span class="n">object_hook</span><span class="o">=</span><span class="n">my_json_obj_hook</span><span class="p">)</span>
+                    <span class="c"># 这里的object_hook和下面的Encoder使用工具类中json序列化中的方法，实现对数据库中一些对象的序列化和反序列化</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">query_list</span> <span class="o">=</span> <span class="n">student_ids</span>
+
+        <span class="n">new_query_dict</span> <span class="o">=</span> <span class="n">Student</span><span class="p">()</span><span class="o">.</span><span class="n">mget_student_list</span><span class="p">(</span><span class="n">query_list</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">redis_client</span><span class="o">.</span><span class="n">pipeline</span><span class="p">(</span><span class="n">transaction</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">pipe</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">student</span> <span class="ow">in</span> <span class="n">new_query_dict</span><span class="p">:</span>
+                <span class="n">student_info</span> <span class="o">=</span> <span class="n">convert_student_info_to_dict</span><span class="p">(</span><span class="n">student</span><span class="p">)</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">student</span><span class="o">.</span><span class="nb">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">student_info</span>
+                <span class="k">if</span> <span class="n">cache_time</span><span class="p">:</span>
+                    <span class="n">pipe</span><span class="o">.</span><span class="nb">set</span><span class="p">(</span><span class="n">student_info_redis_key</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">student</span><span class="o">.</span><span class="nb">id</span><span class="p">),</span>
+                             <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">student_info</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">MyJsonEncoder</span><span class="p">),</span>
+                             <span class="n">cache_time</span><span class="p">)</span>
+            <span class="n">pipe</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">result</span>
+
+</code></pre></div></div>
+
+<p>(End)</p>
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2018/01/17/yewu2/">Python Web 基础向（二） 操作数据库
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+        
+            </ul>
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2018/03/07/yewu5/">Python Web 基础向（五） api层</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+        <p><strong>下一篇</strong> <a href="/2018/07/12/yewu7/">Python Web 基础向（七）分布式锁</a></p>
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2018/04/20/yewu6/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2018/04/20/yewu6/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本站访客数<span id="busuanzi_value_site_uv"></span>人次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>

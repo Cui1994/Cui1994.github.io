@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Python Web 基础向（二） 操作数据库</title>
+    <meta name="description" content="从这篇文章开始，将对上文中所提起及的各抽象层进行进一步阐述，涉及互联网业务代码中的各项基本操作。本文以MySQL为例操作关系型数据库。注: 此系列文章依托Flask框架介绍，但涉及框架内容较少，具有一定普适性。">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2018/01/17/yewu2/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>Python Web 基础向（二） 操作数据库</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2018-01-17
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Python Web" title="Category: Python Web" rel="category">Python Web</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#ORM" title="Tag: ORM" rel="tag">ORM</a-->
+        <a href="/tag/#ORM" title="Tag: ORM" rel="tag">ORM</a>&nbsp;
+    
+        <!--a href="/tag/#sql" title="Tag: sql" rel="tag">sql</a-->
+        <a href="/tag/#sql" title="Tag: sql" rel="tag">sql</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#操作数据库" id="markdown-toc-操作数据库">操作数据库</a></li>
+  <li><a href="#orm" id="markdown-toc-orm">ORM</a>    <ul>
+      <li><a href="#初始化" id="markdown-toc-初始化">初始化</a></li>
+      <li><a href="#构建model对象" id="markdown-toc-构建model对象">构建Model对象</a></li>
+      <li><a href="#查询方法" id="markdown-toc-查询方法">查询方法</a></li>
+      <li><a href="#tips" id="markdown-toc-tips">Tips</a>        <ul>
+          <li><a href="#在group之前执行order" id="markdown-toc-在group之前执行order">在group之前执行order</a></li>
+          <li><a href="#在列中储存数组" id="markdown-toc-在列中储存数组">在列中储存数组</a></li>
+          <li><a href="#批量插入" id="markdown-toc-批量插入">批量插入</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>从这篇文章开始，将对上文中所提起及的各抽象层进行进一步阐述，涉及互联网业务代码中的各项基本操作。本文以MySQL为例操作关系型数据库。</p>
+
+<p>注: 此系列文章依托Flask框架介绍，但涉及框架内容较少，具有一定普适性。</p>
+
+<p><img src="http://or9cryhof.bkt.clouddn.com/timg%20%281%29_gaitubao_com_339x254.jpeg" alt="" /></p>
+
+<h2 id="操作数据库">操作数据库</h2>
+
+<p>虽然一般数据库由DBA进行维护，但仍然推荐将建表的SQL语句以文件形式储存在代码中。</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">//</span> <span class="n">project</span><span class="p">.</span><span class="k">sql</span>
+
+<span class="k">create</span> <span class="k">database</span> <span class="n">if</span> <span class="k">not</span> <span class="k">exists</span> <span class="n">test</span><span class="p">;</span>
+
+<span class="n">use</span> <span class="n">test</span><span class="p">;</span>
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="nv">`student`</span> <span class="p">(</span>
+    <span class="n">id</span> <span class="n">BIGINT</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="n">AUTO_INCREMENT</span> <span class="k">COMMENT</span> <span class="s1">'自增主键'</span><span class="p">,</span>
+    <span class="n">name</span> <span class="n">STRING</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> <span class="s1">''</span> <span class="k">COMMENT</span> <span class="s1">'姓名'</span><span class="p">,</span>
+    <span class="n">school_id</span> <span class="n">INT</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> <span class="mi">0</span> <span class="k">COMMENT</span> <span class="s1">'学校id'</span><span class="p">,</span>
+    <span class="n">grade</span> <span class="n">INT</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> <span class="mi">0</span> <span class="k">COMMENT</span> <span class="s1">'年级'</span><span class="p">,</span>
+    <span class="n">class_no</span> <span class="n">INT</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> <span class="mi">0</span> <span class="k">COMMENT</span> <span class="s1">'班级'</span><span class="p">,</span>
+    <span class="n">created_at</span> <span class="k">TIMESTAMP</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> <span class="k">CURRENT_TIMESTAMP</span> <span class="k">COMMENT</span> <span class="s1">'创建时间'</span><span class="p">,</span>
+    <span class="n">updated_at</span> <span class="k">TIMESTAMP</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> <span class="k">CURRENT_TIMESTAMP</span> <span class="k">ON</span> <span class="k">UPDATE</span> <span class="k">CURRENT_TIMESTAMP</span> <span class="k">COMMENT</span> <span class="s1">'更新时间'</span><span class="p">,</span>
+    <span class="n">is_deleted</span> <span class="n">tinyint</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> <span class="s1">'0'</span> <span class="k">COMMENT</span> <span class="s1">'该记录是否还存在'</span><span class="p">,</span>
+    <span class="k">primary</span> <span class="k">key</span><span class="p">(</span><span class="n">id</span><span class="p">),</span>
+    <span class="k">KEY</span> <span class="nv">`ix_school_id`</span> <span class="p">(</span><span class="n">school_id</span><span class="p">),</span>
+    <span class="k">KEY</span> <span class="nv">`ix_created_at`</span> <span class="p">(</span><span class="nv">`created_at`</span><span class="p">)</span> <span class="k">USING</span> <span class="n">BTREE</span><span class="p">,</span>
+    <span class="k">KEY</span> <span class="nv">`ix_updated_at`</span> <span class="p">(</span><span class="nv">`updated_at`</span><span class="p">)</span> <span class="k">USING</span> <span class="n">BTREE</span>
+<span class="p">)</span><span class="n">ENGINE</span><span class="o">=</span><span class="n">InnoDB</span> <span class="k">DEFAULT</span> <span class="n">CHARSET</span><span class="o">=</span><span class="n">utf8</span> <span class="k">COMMENT</span> <span class="s1">'学生记录表'</span><span class="p">;</span>
+<span class="p">...</span>
+
+</code></pre></div></div>
+
+<p>每张表中除了自增主键外，还应有以下三列分别用于数据库归档和软删除等操作:</p>
+
+<ul>
+  <li>created_at</li>
+  <li>updated_at</li>
+  <li>is_deleted</li>
+</ul>
+
+<h2 id="orm">ORM</h2>
+
+<p>对于大多数业务，借助ORM对数据库进行操作足以满足需求。这里以SQLAlchemy为例。</p>
+
+<p>这里所有的代码位于DB层，即<code class="highlighter-rouge">models</code>目录下。</p>
+
+<h3 id="初始化">初始化</h3>
+
+<p>应当在包的<code class="highlighter-rouge">__init__.py</code>文件中完成一些初始化操作。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># models/__init__.py</span>
+
+<span class="kn">import</span> <span class="nn">functools</span>
+
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">create_engine</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="kn">import</span> <span class="n">sessionmaker</span><span class="p">,</span> <span class="n">Session</span><span class="p">,</span> <span class="n">scoped_session</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.exc</span> <span class="kn">import</span> <span class="n">SQLAlchemyError</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.ext.declarative</span> <span class="kn">import</span> <span class="n">declarative_base</span>
+
+<span class="n">DB_CONNECT_STRING</span> <span class="o">=</span> <span class="s">'mysql+mysqldb://username:password@localhost/database?charset=utf8'</span>
+<span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="n">DB_CONNECT_STRING</span><span class="p">)</span>
+<span class="n">session_factory</span> <span class="o">=</span> <span class="n">sessionmaker</span><span class="p">(</span><span class="n">class_</span><span class="o">=</span><span class="n">RoutingSession</span><span class="p">,</span> <span class="n">bind</span><span class="o">=</span><span class="n">engine</span><span class="p">)</span>
+<span class="n">DBSession</span> <span class="o">=</span> <span class="n">scoped_session</span><span class="p">(</span><span class="n">session_factory</span><span class="p">)</span>
+
+<span class="n">DeclarativeBase</span> <span class="o">=</span> <span class="n">declarative_base</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>当然，你也可以做适当封装，例如抽象出<code class="highlighter-rouge">auto_commit</code>装饰器以适应不同逻辑：</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># models/__init__.py</span>
+
+<span class="k">class</span> <span class="nc">RoutingSession</span><span class="p">(</span><span class="n">Session</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">exc_val</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exc_val</span><span class="p">,</span> <span class="n">SQLAlchemyError</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">SQLAlchemyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            
+
+<span class="k">def</span> <span class="nf">gen_commit_deco</span><span class="p">(</span><span class="n">session_factory</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">decorated</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+        <span class="nd">@functools.wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">session_factory</span><span class="p">():</span>
+                    <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">SQLAlchemyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span>
+        <span class="k">return</span> <span class="n">wrapper</span>
+    <span class="k">return</span> <span class="n">decorated</span>
+
+<span class="n">session_factory</span> <span class="o">=</span> <span class="n">sessionmaker</span><span class="p">(</span><span class="n">class_</span><span class="o">=</span><span class="n">RoutingSession</span><span class="p">,</span> <span class="n">bind</span><span class="o">=</span><span class="n">engine</span><span class="p">)</span>
+<span class="n">DBSession</span> <span class="o">=</span> <span class="n">scoped_session</span><span class="p">(</span><span class="n">session_factory</span><span class="p">)</span>
+<span class="n">auto_commit</span> <span class="o">=</span> <span class="n">gen_commit_deco</span><span class="p">(</span><span class="n">DBSession</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>需要说明的是，Session使用方法可以很灵活，具体参照<a href="http://docs.sqlalchemy.org/en/latest/orm/session_basics.html">SQLAlchemy官方文档</a>，这里使用<code class="highlighter-rouge">scoped_session</code>包装Session，因此可以在代码中多次实例化Session对象，拿到的都是同一个实例。如果你不愿这样做的话，则需要留心Session的生命周期。</p>
+
+<h3 id="构建model对象">构建Model对象</h3>
+
+<p>在这里构建你的Model对象，完成基本的增查改删操作。需要注意的地方有两点：</p>
+
+<ol>
+  <li>构造<code class="highlighter-rouge">convert_param_dict</code>方法以过滤Model类不含有的字段，用于<code class="highlighter-rouge">insert</code>和<code class="highlighter-rouge">update</code>方法中。</li>
+  <li>如果无特殊说明，在方法名称前加<code class="highlighter-rouge">m</code>表示批量查询。</li>
+</ol>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># models/student.py</span>
+
+<span class="k">class</span> <span class="nc">StudentModel</span><span class="p">(</span><span class="n">DeclarativeBase</span><span class="p">):</span>
+
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">'student'</span>
+
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s">u''</span><span class="p">)</span>
+    <span class="n">school_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">grade</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">class_no</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">created_at</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">DateTime</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+    <span class="n">updated_at</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">DateTime</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="n">onupdate</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+    <span class="n">is_deleted</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">SmallInteger</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">convert_param_dict</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">student</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">student</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                  <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">StudentModel</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="ow">and</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">student</span><span class="p">):</span>
+        <span class="n">instance</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="o">**</span><span class="n">cls</span><span class="o">.</span><span class="n">convert_param_dict</span><span class="p">(</span><span class="n">student</span><span class="p">))</span>
+        <span class="n">DBSession</span><span class="p">()</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
+        <span class="n">DBSession</span><span class="p">()</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">instance</span><span class="o">.</span><span class="nb">id</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">student</span><span class="p">):</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">convert_param_dict</span><span class="p">(</span><span class="n">student</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">DBSession</span><span class="p">()</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span><span class="o">.</span>\
+            <span class="nb">filter</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="nb">id</span> <span class="o">==</span> <span class="n">student</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'id'</span><span class="p">),</span>
+                   <span class="n">cls</span><span class="o">.</span><span class="n">is_deleted</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span>\
+            <span class="n">update</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+        <span class="n">DBSession</span><span class="p">()</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span><span class="o">.</span>\
+            <span class="nb">filter</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="nb">id</span> <span class="o">==</span> <span class="nb">id</span><span class="p">,</span>
+                   <span class="n">cls</span><span class="o">.</span><span class="n">is_deleted</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span>\
+            <span class="n">update</span><span class="p">({</span><span class="s">'is_deleted'</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_student_with_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">student_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DBSession</span><span class="p">()</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span><span class="o">.</span>\
+            <span class="nb">filter</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="nb">id</span> <span class="o">==</span> <span class="n">student_id</span><span class="p">,</span>
+                   <span class="n">cls</span><span class="o">.</span><span class="n">is_deleted</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span>\
+            <span class="nb">all</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h3 id="查询方法">查询方法</h3>
+
+<p>DB层中会有大量的查询方法，这时候需要留心，有的查询会随着数据量的增加持续上升。由于DB层是最内层的服务，一个导致慢查询的方法不但会使整个请求时长增大，甚至可能拖垮你的数据库。
+关于数据库查询优化网上有大量博客文章可供参考，这里不加赘述，只列举出几个常见的注意点。</p>
+
+<ol>
+  <li>避免同时使用<code class="highlighter-rouge">DESC</code>和<code class="highlighter-rouge">LIMIT OFFSET</code>的SQL。</li>
+  <li>在使用<code class="highlighter-rouge">LIMIT OFFSET</code>做分页查询时注意数据量预期和使用场景，若数据量过大则需要优化为以限制id并加LIMIT的方式。</li>
+  <li>使用<code class="highlighter-rouge">ORDER BY</code>语句需要考虑索引优化。</li>
+  <li>避免数据库重复io，批量场景需要重新定义批量查询接口。</li>
+  <li>只拿对应的查询数据，即避免不经思考使用<code class="highlighter-rouge">SELECT *</code>。</li>
+  <li>所有的判断和计算在查询DB层之前完成。</li>
+</ol>
+
+<p>如果你在数据库方面没有很多的经验，最好的方式是每次新增或者改动DB层查询方法时，先在数据库explain一下你的查询语句，观察扫描了多少行，是否命中索引等等，防患于未然。</p>
+
+<h3 id="tips">Tips</h3>
+
+<h4 id="在group之前执行order">在group之前执行order</h4>
+
+<p>应用场景为在聚合数据中获取某一列值最大的一条记录，需要在<code class="highlighter-rouge">group_by</code>前先排序，可以应用<code class="highlighter-rouge">from_self</code>方法重新生成子查询，如下：</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">DBSession</span><span class="p">()</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span><span class="o">.</span><span class="n">from_self</span><span class="p">()</span><span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="nb">id</span><span class="p">)</span><span class="o">.</span><span class="nb">all</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">from_self</code>可以根据查询结果生成一个子查询，不但可以改变sql执行的固有顺序，还可以在<code class="highlighter-rouge">limit</code>或<code class="highlighter-rouge">offset</code>之后继续进行查询语句。</p>
+
+<h4 id="在列中储存数组">在列中储存数组</h4>
+
+<p>应尽量避免在mysql的一列中存储大字段类型的数据，但如果有需要使用的场景，也应注意在将文本型数据转换为相应数组或字典时，避免使用eval方法。这里以数组为例列出一种储存数组型数据的方式。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># model/student_group.py</span>
+
+<span class="k">class</span> <span class="nc">StudentGroupModel</span><span class="p">(</span><span class="n">DeclarativeBase</span><span class="p">):</span>
+
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">'student_group'</span>
+
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">student_ids_str</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Text</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s">""</span><span class="p">)</span>
+
+    <span class="n">created_at</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">DateTime</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+    <span class="n">updated_at</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">DateTime</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="n">onupdate</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+    <span class="n">is_deleted</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">SmallInteger</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">student_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_ids_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">','</span><span class="p">))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_ids_str</span> <span class="k">else</span> <span class="p">[]</span>
+
+    <span class="nd">@student_ids.setter</span>
+    <span class="k">def</span> <span class="nf">student_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">student_ids</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">student_ids_str</span> <span class="o">=</span> <span class="s">","</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">student_ids</span><span class="p">))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">student_list</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="n">student_list</span> <span class="o">=</span> <span class="s">","</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">student_list</span><span class="p">]))</span>
+        <span class="n">DBSession</span><span class="p">()</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+</code></pre></div></div>
+
+<h4 id="批量插入">批量插入</h4>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">multi_insert</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">student_list</span><span class="p">):</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="p">[</span><span class="n">cls</span><span class="o">.</span><span class="n">convert_param_dict</span><span class="p">(</span><span class="n">student</span><span class="p">)</span> <span class="k">for</span> <span class="n">student</span> <span class="ow">in</span> <span class="n">student_list</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">DBSession</span><span class="p">()</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">__table__</span><span class="o">.</span><span class="n">insert</span><span class="p">(),</span> <span class="n">param</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>依托<code class="highlighter-rouge">sqlalchemy</code>的批量插入有许多方法，这里采用非ORM方式，效率较高。(<code class="highlighter-rouge">sqlalchemy</code>中有<code class="highlighter-rouge">bulk_insert_mappings</code>方法为ORM形式)
+此外，此方法如果同<code class="highlighter-rouge">property</code>一起连用的话需要注意做一些转换。</p>
+
+<p>(End)</p>
+
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2018/04/20/yewu6/">Python Web 基础向（六） 查询
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+        
+            </ul>
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2018/01/16/yewu1/">Python Web 基础向（一） 项目结构</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+        <p><strong>下一篇</strong> <a href="/2018/01/20/boke/">什么是优秀的公开博客</a></p>
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2018/01/17/yewu2/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2018/01/17/yewu2/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本站访客数<span id="busuanzi_value_site_uv"></span>人次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>

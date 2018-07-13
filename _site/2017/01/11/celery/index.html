@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>项目中引入celery</title>
+    <meta name="description" content="捣鼓了两天自己的直播通项目，终于大概有了雏形，在主页的视图函数中集成了爬虫，爬取用户关注主播的在线hangtag。但在运行时发现打开主页时延迟明显，有时候竟然长达数秒，突然想起了之前了解到的celery，试试能不能解决这一问题。">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2017/01/11/celery/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>项目中引入celery</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2017-01-11
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#直播通" title="Category: 直播通" rel="category">直播通</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#celery" title="Tag: celery" rel="tag">celery</a-->
+        <a href="/tag/#celery" title="Tag: celery" rel="tag">celery</a>&nbsp;
+    
+        <!--a href="/tag/#%E7%9B%B4%E6%92%AD%E9%80%9A" title="Tag: 直播通" rel="tag">直播通</a-->
+        <a href="/tag/#直播通" title="Tag: 直播通" rel="tag">直播通</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#celery是什么" id="markdown-toc-celery是什么">celery是什么</a></li>
+  <li><a href="#让celery跑起来" id="markdown-toc-让celery跑起来">让celery跑起来</a></li>
+</ul>
+
+<p>捣鼓了两天自己的直播通项目，终于大概有了雏形，在主页的视图函数中集成了爬虫，爬取用户关注主播的在线hangtag。但在运行时发现打开主页时延迟明显，有时候竟然长达数秒，突然想起了之前了解到的celery，试试能不能解决这一问题。</p>
+
+<h2 id="celery是什么">celery是什么</h2>
+<p>关于celery的知识全部在网上了解，星星点点，但还是有所收获。celery是一个典型的异步任务系统，在应用上下文之外执行任务，将消耗资源的东西通通交给celery来做，可以让主机迅速向应客户端的请求。</p>
+
+<p>celery有三个核心组件：</p>
+
+<ul>
+  <li>客户端：在flask系统中和flask一起运行</li>
+  <li>workers：就是传说中的second terminal，用来执行异步任务，可以有多个</li>
+  <li>消息代理：用来进行celery的通信，一般用redis。</li>
+</ul>
+
+<p>为什么用redis？因为其实时性强，一般用作数据频繁插入，更新或者删除的任务中，以减少对数据库的操作</p>
+
+<h2 id="让celery跑起来">让celery跑起来</h2>
+
+<p>这部分还是比较简单的，有几个主要步骤。</p>
+
+<ul>
+  <li>安装之后要在配置文件中写入用作消息代理的redis的服务器，两行搞定。
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+</code></pre></div>    </div>
+  </li>
+  <li>之后创建celery实例，这里是直接抄来的，至于原因还没搞懂。
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>celery = Celery(__name__, broker=Config.CELERY_BROKER_URL)
+celery.conf.update(app.config)
+</code></pre></div>    </div>
+  </li>
+  <li>创建celery任务，使用装饰器，先跑起来再说。
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>@celery.task(name='circle_task')
+def circletask():
+  logging.info('lalala')
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<p>之后满怀信心，直接打开三个终端开始有样学样，第一个打开redis-server，第二个运行app，第三个打开celery，抄了个命令:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ celery -A manage.celery worker --loglevel=info
+</code></pre></div></div>
+
+<p>然而打开后发现没有动静，才想起并没有提供任务执行的delay。随即又想到我的目的是进行计划任务，让任务可以固定时间重复进行，直接开始搜celery进行实现的方法，还好google够强大，又找到了下面的配置方法：</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CELERYBEAT_SCHEDULE = {
+        'every-minute': {
+            'task': 'circle_task',
+            #'schedule': crontab(minute='*/1'),
+            # 'args': (1,2),
+            'schedule': timedelta(seconds=60)
+        	},
+    	}
+</code></pre></div></div>
+
+<p>运行命令也变成了：</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ celery -A manage.celery worker --loglevel=info --beat
+$ celery -A proj worker -B -l info
+</code></pre></div></div>
+
+<p>至于里面的参数，只知道timedelta和crontab都可以设置间隔时间，其他的没有深入了解。将代码改好后运行celery，问题来了。</p>
+
+<ul>
+  <li>首先是celery说任务方法没有注册：
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Received unregistered task of type 'circle_task'.
+The message has been ignored and discarded.
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<p>在stack overflow溜达了一圈，终于找到解决方法，在配置文件中声明这个方法即可，于是：</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CELERY_IMPORTS = ['app.task']
+</code></pre></div></div>
+<p>解决成功。这里千万注意加app，天知道我经历了什么。</p>
+
+<ul>
+  <li>之后运行celery，终于不报错了天呐，屏幕上也出现了lalala的logging，这还说什么，改代码！在task中添加了之前在index视图函数中的爬虫部分，运行celery，好，可以运行。等等，这一大片红字是什么！
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>'RuntimeError: application not registered on db 
+         instance and no application bound to current context
+</code></pre></div>    </div>
+    <p>原来是没有程序上下文不能进行sqlalchemy的操作，于是，在程序段前添加</p>
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>with app.app_context():
+</code></pre></div>    </div>
+    <p>成功！</p>
+  </li>
+</ul>
+
+<p><img src="http://i1.piimg.com/567571/88020dc0eeab8185.png" alt="此处输入图片的描述" /></p>
+
+<p>最后终于成功看到了模拟上线提醒的logging字样，激动万分，编程的大起大落真是…哈！</p>
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+        
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+    </div>
+    <div class="nex">
+
+        
+        <p><strong>下一篇</strong> <a href="/2017/01/15/gunicorn/">项目部署路上的坑</a></p>
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2017/01/11/celery/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2017/01/11/celery/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本站访客数<span id="busuanzi_value_site_uv"></span>人次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>

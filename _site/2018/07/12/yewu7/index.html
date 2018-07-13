@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Python Web 基础向（七）分布式锁</title>
+    <meta name="description" content="当多个线程同时操作共享的内存数据时，为了解决线程安全问题，各语言都引入并发锁来确保同一时间只有一个线程会操作共享内存。而现在的大规模互联网应用一般采用分布式和集群来提高后端服务性能，同一个服务可能在不同的机器或容器中都存在实例，多线程中的并发锁也失去了意义，这时就引入了分布式锁的概念，当然它们的目的是相同的，都是...">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2018/07/12/yewu7/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>Python Web 基础向（七）分布式锁</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2018-07-12
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Python Web" title="Category: Python Web" rel="category">Python Web</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#redis" title="Tag: redis" rel="tag">redis</a-->
+        <a href="/tag/#redis" title="Tag: redis" rel="tag">redis</a>&nbsp;
+    
+        <!--a href="/tag/#%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81" title="Tag: 分布式锁" rel="tag">分布式锁</a-->
+        <a href="/tag/#分布式锁" title="Tag: 分布式锁" rel="tag">分布式锁</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#应用场景" id="markdown-toc-应用场景">应用场景</a></li>
+  <li><a href="#python实现" id="markdown-toc-python实现">python实现</a>    <ul>
+      <li><a href="#一般实现" id="markdown-toc-一般实现">一般实现</a></li>
+      <li><a href="#装饰器实现" id="markdown-toc-装饰器实现">装饰器实现</a></li>
+    </ul>
+  </li>
+</ul>
+
+<p>当多个线程同时操作共享的内存数据时，为了解决线程安全问题，各语言都引入并发锁来确保同一时间只有一个线程会操作共享内存。而现在的大规模互联网应用一般采用分布式和集群来提高后端服务性能，同一个服务可能在不同的机器或容器中都存在实例，多线程中的并发锁也失去了意义，这时就引入了分布式锁的概念，当然它们的目的是相同的，都是为了限制同一时间内一个资源只能被一个请求操作，或者说某个方法只能被运行一次。</p>
+
+<p>目前业内实现分布式锁的方式主要有下面三种：</p>
+
+<ul>
+  <li>
+    <p>基于数据库的悲观锁乐观锁</p>
+  </li>
+  <li>
+    <p>基于redis的分布式事务锁</p>
+  </li>
+  <li>
+    <p>基于Zookeeper的节点锁</p>
+  </li>
+</ul>
+
+<p>其中redis简单易用，应用最广也较为稳定，本文主要介绍这种方式下的分布式锁。</p>
+
+<h2 id="应用场景">应用场景</h2>
+
+<p>一般而言，下面几个条件满足其中之一的业务场景就需要考虑引入分布式情况。</p>
+
+<ul>
+  <li>
+    <p>多个用户操作同一资源。如抢单，抢红包等场景。</p>
+  </li>
+  <li>
+    <p>单用户操作的不可重复的敏感资源。如缴费，扣款等。</p>
+  </li>
+  <li>
+    <p>不能保证幂等的更新操作。如各类活动积分。</p>
+  </li>
+</ul>
+
+<p>在引入分布式事务锁时需要考虑清楚业务场景是否需要和适合上锁，虽说上锁成本和难度都不高，但盲目上锁会占用redis资源，一定程度上也会降低接口性能，所以还是三思而后行。</p>
+
+<h2 id="python实现">python实现</h2>
+
+<p>目前分布式锁的设计思路，大家应该没有什么疑问，都是按照下图的流程来进行业务操作。</p>
+
+<p><img src="http://or9cryhof.bkt.clouddn.com/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81.png" alt="此处输入图片的描述" /></p>
+
+<h3 id="一般实现">一般实现</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># ...</span>
+<span class="n">SOME_LOCK_KEY</span> <span class="o">=</span> <span class="s">'project.some_lock_key:{}'</span>
+
+<span class="k">def</span> <span class="nf">test_lock</span><span class="p">(</span><span class="n">args1</span><span class="p">)</span>
+    <span class="n">lock_key</span> <span class="o">=</span> <span class="n">SOME_LOCK_KEY</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args1</span><span class="p">)</span> <span class="c"># 设定加锁参数</span>
+    <span class="k">if</span> <span class="n">redis_client</span><span class="o">.</span><span class="nb">set</span><span class="p">(</span><span class="n">lock_key</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">ex</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c"># ... 执行业务代码</span>
+        <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">())</span>
+            <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">redis_client</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">lock_key</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">raise_user_exc</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>需要注意，加锁时一般要设置过期时间（为了防止异常原因导致死锁），但这两个操作需要是原子操作，即需要保证只要上锁，必定会过期。</p>
+
+<p>这里python中redis的<code class="highlighter-rouge">set</code>方法可满足此条件。</p>
+
+<h3 id="装饰器实现">装饰器实现</h3>
+
+<p>这里引入一个开源项目，来源未知，可对指定位置的参数上锁，简单易用，附上源码。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># -*- coding: utf-8 -*-</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">'RedisLocker'</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">gevent</span>
+<span class="kn">import</span> <span class="nn">md5</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">from</span> <span class="nn">gevent</span> <span class="kn">import</span> <span class="n">Timeout</span>
+<span class="kn">from</span> <span class="nn">uuid</span> <span class="kn">import</span> <span class="n">uuid1</span>
+<span class="kn">from</span> <span class="nn">zeus_core.redis_client</span> <span class="kn">import</span> <span class="n">create_redis_client</span>
+
+
+<span class="k">class</span> <span class="nc">LockerExc</span><span class="p">(</span><span class="nb">Exception</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LockerExc</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_LockerContext</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="s">"""
+    _LockerContext.
+
+    Inside a `_LockerContext`, `_acquire` will be called when enter the context,
+    i.e. before your code execute, and `_release` will be called when exit.
+
+    :param locker: RedisLocker object wraps public access APIs.
+    :param key: Key of redis lock.
+    :param token: Token of redis lock.
+    :param expr: Expiration time before the lock auto release.
+    :param nx: NX flag of redis, `nx=True` means `set` when not exists.
+
+    Returns an :py:class:`~LockerContext`.
+    """</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">locker</span><span class="p">,</span>
+            <span class="n">key</span><span class="p">,</span>
+            <span class="n">token</span><span class="p">,</span>
+            <span class="n">expr</span><span class="p">,</span>
+            <span class="n">nx</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_locker</span> <span class="o">=</span> <span class="n">locker</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_token</span> <span class="o">=</span> <span class="n">token</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="n">expr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nx</span> <span class="o">=</span> <span class="n">nx</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_acquire</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_release</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_acquire</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">Timeout</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_locker</span><span class="o">.</span><span class="n">timeout</span><span class="p">,</span>
+            <span class="n">LockerExc</span><span class="p">(</span><span class="s">'acquire lock timeout'</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">retry_count</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">retry_count</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_locker</span><span class="o">.</span><span class="n">max_retry</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">LockerExc</span><span class="p">(</span><span class="s">'acquire lock exceed max retry'</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_locker</span><span class="o">.</span><span class="n">redis</span><span class="o">.</span><span class="nb">set</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_token</span><span class="p">,</span> <span class="n">ex</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_expr</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_nx</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="mi">1</span>
+                <span class="n">gevent</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_locker</span><span class="o">.</span><span class="n">retry_delay</span><span class="p">)</span>
+                <span class="n">retry_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">_release</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_locker</span><span class="o">.</span><span class="n">redis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">token</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_token</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_locker</span><span class="o">.</span><span class="n">redis</span><span class="o">.</span><span class="n">expire</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">1</span>
+
+
+<span class="k">class</span> <span class="nc">RedisLocker</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="s">"""
+    RedisLocker.
+
+    :param redis_dsn: Redis DSN.
+    :param max_retry: Max tries until an redis lock acquired.
+    :param retry_delay: Intervals between requests, if the former request fails
+        to acquire the lock.
+    :param timeout: Timeout until the redis lock acquired.
+    Returns an :py:class:`~RedisLocker`.
+
+    RedisLocker is designed to acquire redis lock on function and function's
+    specific arguments.
+
+    Inside the code snippet below, the function `function_tobe_locked` will be
+    locked by its first two(index 0 and 1) arguments `bank_card_id` and
+    `withdraw`, until the function returns. Otherwise, any call with the same
+    function name, same bank_card_id and same withdraw will be blocked.
+
+    .. code:: python
+
+    &gt;&gt;&gt; locker = RedisLocker('redis_dsn')
+    &gt;&gt;&gt; @locker.lock_on_argument(3, 0, 1)
+    &gt;&gt;&gt; def function_tobe_locked(bank_card_id, withdraw, *args):
+    &gt;&gt;&gt;     # biz logic here
+    &gt;&gt;&gt;
+    """</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">redis_dsn</span><span class="p">,</span>
+            <span class="n">max_retry</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">retry_delay</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_redis</span> <span class="o">=</span> <span class="n">create_redis_client</span><span class="p">(</span><span class="n">redis_dsn</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_retry</span> <span class="o">=</span> <span class="n">max_retry</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_retry_delay</span> <span class="o">=</span> <span class="n">retry_delay</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span> <span class="o">=</span> <span class="n">timeout</span>
+
+    <span class="k">def</span> <span class="nf">lock_on_argument</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="o">*</span><span class="n">positions</span><span class="p">):</span>
+        <span class="s">"""
+        :param expr: Expiration time for the lock.
+        :param positions: Indexes specifying the arguments which would be
+            assigned to create the arugments' signature for the locker.
+
+        Superficially `expr` could be assigned by any legal digits, however,
+        it's highly recommended to set `expr` greater than `self._timeout`
+        to avoid the situation that the function blocked, and redis lock
+        released automatically before the function return. Meanwhile, another
+        request could acquire the lock before its timeout, and the race
+        condition appears again.
+        """</span>
+        <span class="k">def</span> <span class="nf">_lock</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+            <span class="nd">@functools.wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">wraps</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="n">include_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">args</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">positions</span><span class="p">]</span>
+                <span class="n">key</span><span class="p">,</span> <span class="n">token</span> <span class="o">=</span> <span class="n">RedisLocker</span><span class="o">.</span><span class="n">init_key_token_pair</span><span class="p">(</span>
+                    <span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">include_args</span><span class="p">)</span>
+                <span class="k">with</span> <span class="n">_LockerContext</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">wraps</span>
+        <span class="k">return</span> <span class="n">_lock</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">init_key_token_pair</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">args_signature</span> <span class="o">=</span> <span class="n">md5</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
+            <span class="s">':'</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span> <span class="k">for</span> <span class="n">ar</span> <span class="ow">in</span> <span class="n">args</span><span class="p">]))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+        <span class="n">module_routes</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">__module__</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">'.'</span><span class="p">)</span>
+        <span class="n">module_routes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+        <span class="n">func_signature</span> <span class="o">=</span> <span class="n">md5</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s">':'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">module_routes</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="s">'{}:lock|{}'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">func_signature</span><span class="p">,</span> <span class="n">args_signature</span><span class="p">)</span>
+        <span class="c"># token = PkGen().pkgen().pk</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid1</span><span class="p">())</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">'-'</span><span class="p">,</span> <span class="s">''</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">key</span><span class="p">,</span> <span class="n">token</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">redis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_redis</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">max_retry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_retry</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">retry_delay</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_retry_delay</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">timeout</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span><span class="p">)</span>
+
+</code></pre></div></div>
+<p>(End)</p>
+
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2018/04/20/yewu6/">Python Web 基础向（六） 查询</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2018/07/12/yewu7/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2018/07/12/yewu7/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本站访客数<span id="busuanzi_value_site_uv"></span>人次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>

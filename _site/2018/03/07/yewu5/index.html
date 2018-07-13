@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Python Web 基础向（五） api层</title>
+    <meta name="description" content="提供HTTP服务的api层负责处理以下任务：  管理路由  获取并检查参数  将请求分发给相应的逻辑层 (简单的函数调用，略)  包装返回数据  处理错误api层的代码应简单清晰，甚至你的每个路由对应的函数都“长得”差不多，这部分代码不应掺杂任何逻辑处理，他要做的仅仅是将请求指向相应的逻辑类去处理。">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2018/03/07/yewu5/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>Python Web 基础向（五） api层</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2018-03-07
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Python Web" title="Category: Python Web" rel="category">Python Web</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#Flask" title="Tag: Flask" rel="tag">Flask</a-->
+        <a href="/tag/#Flask" title="Tag: Flask" rel="tag">Flask</a>&nbsp;
+    
+        <!--a href="/tag/#%E9%99%8D%E7%BA%A7%E7%AD%96%E7%95%A5" title="Tag: 降级策略" rel="tag">降级策略</a-->
+        <a href="/tag/#降级策略" title="Tag: 降级策略" rel="tag">降级策略</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#管理路由" id="markdown-toc-管理路由">管理路由</a></li>
+  <li><a href="#获取并检查参数" id="markdown-toc-获取并检查参数">获取并检查参数</a></li>
+  <li><a href="#组合并包装响应" id="markdown-toc-组合并包装响应">组合并包装响应</a>    <ul>
+      <li><a href="#降级策略" id="markdown-toc-降级策略">降级策略</a></li>
+    </ul>
+  </li>
+  <li><a href="#处理错误" id="markdown-toc-处理错误">处理错误</a></li>
+</ul>
+
+<p>提供HTTP服务的api层负责处理以下任务：</p>
+<ul>
+  <li>管理路由</li>
+  <li>获取并检查参数</li>
+  <li>将请求分发给相应的逻辑层 (简单的函数调用，略)</li>
+  <li>包装返回数据</li>
+  <li>处理错误</li>
+</ul>
+
+<p>api层的代码应简单清晰，甚至你的每个路由对应的函数都“长得”差不多，这部分代码不应掺杂任何逻辑处理，他要做的仅仅是将请求指向相应的逻辑类去处理。</p>
+
+<h2 id="管理路由">管理路由</h2>
+
+<p><code class="highlighter-rouge">Flask</code>较为简单，一般来说，要实现基本功能，只需在<code class="highlighter-rouge">api</code>目录下生成蓝图和视图函数，在<code class="highlighter-rouge">app.py</code>中注册蓝图，并添加404和500的处理即可。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">my_project.api.student</span> <span class="kn">import</span> <span class="n">student_api</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+<span class="nd">@app.errorhandler</span><span class="p">(</span><span class="mi">404</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">page_not_found</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s">'api not found: {}'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">error</span><span class="p">))</span>
+    <span class="k">return</span> <span class="s">'This api is not exits.'</span><span class="p">,</span> <span class="mi">404</span>
+
+
+<span class="nd">@app.errorhandler</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">server_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s">'server error: {}'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">error</span><span class="p">))</span>
+    <span class="k">return</span> <span class="s">'Server error.'</span><span class="p">,</span> <span class="mi">500</span>
+
+<span class="n">app</span><span class="o">.</span><span class="n">register_blueprint</span><span class="p">(</span><span class="n">student_api</span><span class="p">,</span> <span class="n">url_prefix</span><span class="o">=</span><span class="s">'/student'</span><span class="p">)</span>
+
+</code></pre></div></div>
+
+<p>除此之外， 需要考虑与前端交互的跨域请求访问情况，这部分可依赖<code class="highlighter-rouge">CORS</code>实现。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">cors</span> <span class="o">=</span> <span class="n">CORS</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">resources</span><span class="o">=</span><span class="p">{</span><span class="s">r"/student/*"</span><span class="p">:</span> <span class="p">{</span><span class="s">"origins"</span><span class="p">:</span> <span class="s">"*"</span><span class="p">},},</span> <span class="n">supports_credentials</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>当然，你还需要测试你的server是否可用的ping路由和默认路由。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@app.route</span><span class="p">(</span><span class="s">'/ping'</span><span class="p">)</span>
+<span class="nd">@cross_origin</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">ping</span><span class="p">():</span>
+    <span class="k">return</span> <span class="bp">True</span>
+
+<span class="nd">@app.route</span><span class="p">(</span><span class="s">'/'</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">hello_world</span><span class="p">():</span>
+    <span class="k">return</span> <span class="s">u'Hello World!'</span>
+</code></pre></div></div>
+
+<p>更进一步，可以借助钩子在请求前后完成一些额外的工作，例如判断前端（或app）的设备类型，记录一层请求的用时等，也可在这部分完成。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@app.before_request</span>
+<span class="k">def</span> <span class="nf">before_request</span><span class="p">():</span>
+    <span class="n">stat_ctx</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">stat_ctx</span><span class="p">[</span><span class="s">'method'</span><span class="p">]</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span>
+    <span class="n">stat_ctx</span><span class="p">[</span><span class="s">'url'</span><span class="p">]</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">url</span>
+    <span class="n">stat_ctx</span><span class="p">[</span><span class="s">'start_time'</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">stat_ctx</span> <span class="o">=</span> <span class="n">stat_ctx</span>
+
+
+<span class="nd">@app.after_request</span>
+<span class="k">def</span> <span class="nf">after_request</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
+    <span class="n">stat_ctx</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">stat_ctx</span>
+    <span class="n">stat_ctx</span><span class="p">[</span><span class="s">'end_time'</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">u'[stat_ctx] my_project: {method} {url} response in {time}'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">stat_ctx</span><span class="p">[</span><span class="s">'method'</span><span class="p">],</span> <span class="n">url</span><span class="o">=</span><span class="n">stat_ctx</span><span class="p">[</span><span class="s">'url'</span><span class="p">],</span> <span class="n">time</span><span class="o">=</span><span class="n">stat_ctx</span><span class="p">[</span><span class="s">'end_time'</span><span class="p">]</span> <span class="o">-</span> <span class="n">stat_ctx</span><span class="p">[</span><span class="s">'start_time'</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">response</span>
+</code></pre></div></div>
+
+<p>至此，<code class="highlighter-rouge">app.py</code>的功能基本完整，其他涉及具体业务的api可以在<code class="highlighter-rouge">my_project/api</code>目录下新开蓝图。</p>
+
+<h2 id="获取并检查参数">获取并检查参数</h2>
+
+<p>HTTP协议在请求中添加参数有多种方式，相应的，flask的<code class="highlighter-rouge">Request</code>对象会提供多种获取参数的方式。在获取参数时需要弄清楚参数传递的具体类型，否则不能正确拿到参数。</p>
+
+<ul>
+  <li>URL参数 将参数放在url中，可通过<code class="highlighter-rouge">request.args.get('key')</code>获取。</li>
+  <li>Form-data 通过HTML的<code class="highlighter-rouge">form</code>标签传递参数，通过<code class="highlighter-rouge">request.form.get('key')</code>获取。</li>
+  <li>x-www-form-urlencoded 与From-data类似，只是请求方式有区别。获取参数方式相同。</li>
+  <li>application/json 最常见的参数传递方式，通过<code class="highlighter-rouge">request.json.get('key')</code>获取。</li>
+</ul>
+
+<p>flask获取请求参数的方法有的基于<code class="highlighter-rouge">werkzueg</code>的<code class="highlighter-rouge">BaseRequest</code>对象实现，有的自己做了封装，使用时注意参照源码。这里为了方便，可以在工具类中加入参数的部分。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># util/params.py</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="s">"""获取request中的参数"""</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">get_data</span><span class="p">():</span>
+        <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">get_data</span><span class="p">()))</span>
+    <span class="k">return</span> <span class="n">params</span>
+</code></pre></div></div>
+
+<p>获取列表数据也可以构建相应方法，或在代码中直接获取，这里不再赘述。
+有一点需要注意，<code class="highlighter-rouge">get_data</code>方法获取参数时从<code class="highlighter-rouge">stream</code>中读取数据，而<code class="highlighter-rouge">request</code>对象中很多方法在调用之后会清空<code class="highlighter-rouge">stream</code>，导致无法通过<code class="highlighter-rouge">get_data</code>拿到数据，尽量将其作为兜底逻辑而不是首选。</p>
+
+<h2 id="组合并包装响应">组合并包装响应</h2>
+
+<p>这部分只需要构造相应的工具类中的<code class="highlighter-rouge">response</code>和<code class="highlighter-rouge">trans</code>函数即可，需要注意的是关键路径上的查询接口。</p>
+
+<h3 id="降级策略">降级策略</h3>
+
+<p>一般而言，服务器需要将查询接口的结果完整地返回给前端，但服务器也有开小差的情况，为了防止比较重要的查询接口因为一些小的或者非关键路径上的服务的错误而全部挂掉，或者在高并发场景下需要牺牲一部分内容或者功能的显示来换取负载上的优化，需要对这类接口建立降级策略。</p>
+
+<p>降级根据介入方式可以分为主动降级和自动降级。</p>
+
+<p>主动降级简而言之就是可以通过手动开关来限制对某个接口或服务的调用，从而实现功能降级，实现方式也是通过在接口前设置降级开关来实现。</p>
+
+<p>而自动降级则与服务熔断的某些特征相似，当某个接口或服务异常被捕获或异常量超过阈值，则自动触发降级逻辑。</p>
+
+<p>降级是微服务框架兴起后经常被提起的名词，目前有许多相对成熟的开源轮子如Hystrix完整地实现了服务降级配置功能，有兴趣可以自行查阅。这里通过一段简单代码说明降级的策略和作用（当然市面上的各种微服务框架的降级策略要复杂的多）</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># api/student.py</span>
+
+<span class="nd">@student_api.route</span><span class="p">(</span><span class="s">'/info/update'</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s">'GET'</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">update_student_info</span><span class="p">():</span>
+
+    <span class="n">rtn</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_get_grade</span><span class="p">(</span><span class="n">student_id</span><span class="p">):</span>
+        <span class="n">student_info</span> <span class="o">=</span> <span class="n">StudentQuery</span><span class="p">()</span><span class="o">.</span><span class="n">get_student_info_with_student_id</span><span class="p">(</span><span class="n">student_id</span><span class="p">)</span>
+        <span class="n">rtn</span><span class="p">[</span><span class="n">student_id</span><span class="p">][</span><span class="s">'grade'</span><span class="p">]</span> <span class="o">=</span> <span class="n">student_info</span><span class="o">.</span><span class="n">grade</span>
+
+    <span class="k">def</span> <span class="nf">_get_default_grade</span><span class="p">(</span><span class="n">student_id</span><span class="p">):</span>
+        <span class="n">rtn</span><span class="p">[</span><span class="n">student_id</span><span class="p">][</span><span class="s">'student_info'</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="n">tags</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">getlist</span><span class="p">(</span><span class="s">"tags"</span><span class="p">)</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">get_params</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="n">student_id</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'student_id'</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s">"grade"</span> <span class="ow">in</span> <span class="n">tags</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_get_grade</span><span class="p">(</span><span class="n">student_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">"get student grade error: {}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="n">_get_default_grade</span><span class="p">(</span><span class="n">student_id</span><span class="p">)</span>
+            
+    <span class="k">return</span> <span class="n">response</span><span class="p">(</span><span class="n">ResponseCode</span><span class="o">.</span><span class="n">SUCCEED</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">rtn</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="处理错误">处理错误</h2>
+
+<p>如果没有外部rpc调用，可以在<code class="highlighter-rouge">util/response.py</code>中增加捕捉错误的装饰器即可，这里需要将所有的错误包住，记录日志，并返回相应的错误码和信息。如果存在外部rpc调用，则可以在每个<code class="highlighter-rouge">rpc</code>目录下新增相应的错误捕获代码。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># util/response.py</span>
+
+<span class="kn">from</span> <span class="nn">my_project.exc</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ProjectUserException</span><span class="p">,</span>
+    <span class="n">ProjectSystemException</span><span class="p">,</span>
+    <span class="n">ProjectUnknownException</span>
+<span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">custom_exception_capture</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">ProjectUserException</span><span class="p">,</span> <span class="n">ProjectSystemException</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">response</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="ow">or</span>
+                            <span class="n">ResponseCodeExplain</span><span class="p">[</span><span class="n">ResponseCode</span><span class="o">.</span><span class="n">SYSTEM_ERROR</span><span class="p">])</span>
+        <span class="k">except</span> <span class="n">ProjectUnknownException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">response</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="ow">or</span>
+                            <span class="n">ResponseCodeExplain</span><span class="p">[</span><span class="n">ResponseCode</span><span class="o">.</span><span class="n">SYSTEM_ERROR</span><span class="p">])</span>
+        <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">response</span><span class="p">(</span><span class="n">ResponseCode</span><span class="o">.</span><span class="n">FAILED</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">wrapper</span>
+</code></pre></div></div>
+
+<p>(End)</p>
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2018/02/24/yewu4/">Python Web 基础向（四） 浅谈数据层</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+        <p><strong>下一篇</strong> <a href="/2018/04/20/yewu6/">Python Web 基础向（六） 查询</a></p>
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2018/03/07/yewu5/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2018/03/07/yewu5/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本站访客数<span id="busuanzi_value_site_uv"></span>人次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>

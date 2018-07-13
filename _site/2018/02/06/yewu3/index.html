@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Python Web 基础向（三） 异常＆工具类</title>
+    <meta name="description" content="在实际业务中，经常会碰到大量需要重复使用的函数，一般会选择将其抽象成为工具函数放在util目录下。值得一提的是，抛错函数也属于大量重复使用的函数这一范畴，但与工具类函数不同的是，抛错在工具类函数中也会被用到，因此这部分内容应放在项目根目录下。">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2018/02/06/yewu3/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>Python Web 基础向（三） 异常＆工具类</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2018-02-06
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Python Web" title="Category: Python Web" rel="category">Python Web</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#%E5%BC%82%E5%B8%B8" title="Tag: 异常" rel="tag">异常</a-->
+        <a href="/tag/#异常" title="Tag: 异常" rel="tag">异常</a>&nbsp;
+    
+        <!--a href="/tag/#request" title="Tag: request" rel="tag">request</a-->
+        <a href="/tag/#request" title="Tag: request" rel="tag">request</a>&nbsp;
+    
+        <!--a href="/tag/#%E5%B7%A5%E5%85%B7%E5%87%BD%E6%95%B0" title="Tag: 工具函数" rel="tag">工具函数</a-->
+        <a href="/tag/#工具函数" title="Tag: 工具函数" rel="tag">工具函数</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#异常" id="markdown-toc-异常">异常</a></li>
+  <li><a href="#工具类" id="markdown-toc-工具类">工具类</a>    <ul>
+      <li><a href="#request" id="markdown-toc-request">request</a></li>
+      <li><a href="#validate" id="markdown-toc-validate">validate</a></li>
+      <li><a href="#trans" id="markdown-toc-trans">trans</a></li>
+      <li><a href="#contants" id="markdown-toc-contants">contants</a></li>
+      <li><a href="#response" id="markdown-toc-response">response</a></li>
+    </ul>
+  </li>
+</ul>
+
+<p>在实际业务中，经常会碰到大量需要重复使用的函数，一般会选择将其抽象成为工具函数放在<code class="highlighter-rouge">util</code>目录下。值得一提的是，抛错函数也属于大量重复使用的函数这一范畴，但与工具类函数不同的是，抛错在工具类函数中也会被用到，因此这部分内容应放在项目根目录下。</p>
+
+<p><img src="http://or9cryhof.bkt.clouddn.com/timg_gaitubao_com_320x253.jpeg" alt="" /></p>
+
+<h2 id="异常">异常</h2>
+
+<p>首先，这部分并不是错误处理，而是异常抛出。</p>
+
+<p>为什么需要抛错函数呢？如果项目是涉及RPC调用的微服务架构，抛错函数自然是必须的，各个服务需要统一自己的错误类型并在适当时候抛出。如果项目是单纯的HTTP模型，也需要根据系统中不同的错误类型返回给前端不同的错误信息，如果没有公共的抛错函数和错误类型，处理错误将成为一场灾难。</p>
+
+<p>这部分内容实现起来是很容易的，只需要构造异常类型，引入不同的错误码和异常信息即可。需要注意是这边要和错误处理的part对应。</p>
+
+<p>一般情况下需要抛出三种异常：</p>
+
+<ul>
+  <li><code class="highlighter-rouge">UserException</code>: 需要展示给用户的异常</li>
+  <li><code class="highlighter-rouge">SystemException</code>: 错误信息需要向用户隐藏的异常</li>
+  <li><code class="highlighter-rouge">UnknownException</code>: 未知错误</li>
+</ul>
+
+<p>同样在错误处理部分也需要对三种类型的异常进行区分。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># exc.py</span>
+
+<span class="k">class</span> <span class="nc">ProjectErrorCode</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">UNKNOWN_ERROR</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">DATABASE_ERROR</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">TIMEOUT_ERROR</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="n">PARAM_IS_EMPTY</span> <span class="o">=</span> <span class="mi">100</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_value_to_name</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">err_code</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="nb">getattr</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">'_'</span><span class="p">))[</span><span class="n">err_code</span><span class="p">]</span>
+
+
+<span class="n">TRANSLATIONS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">ProjectErrorCode</span><span class="o">.</span><span class="n">UNKNOWN_ERROR</span><span class="p">:</span> <span class="s">u'系统异常，请稍后再试'</span><span class="p">,</span>
+    <span class="n">ProjectErrorCode</span><span class="o">.</span><span class="n">DATABASE_ERROR</span><span class="p">:</span> <span class="s">u'数据库错误'</span><span class="p">,</span>
+    <span class="n">ProjectErrorCode</span><span class="o">.</span><span class="n">TIMEOUT_ERROR</span><span class="p">:</span> <span class="s">u'连接超时'</span><span class="p">,</span>
+
+    <span class="n">ProjectErrorCode</span><span class="o">.</span><span class="n">PARAM_IS_EMPTY</span><span class="p">:</span> <span class="s">u'参数不可为空'</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">ProjectException</span><span class="p">(</span><span class="nb">Exception</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">code</span> <span class="o">=</span> <span class="n">code</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
+
+
+<span class="k">class</span> <span class="nc">ProjectUserException</span><span class="p">(</span><span class="n">ProjectException</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">def</span> <span class="nf">raise_user_exc</span><span class="p">(</span><span class="n">err_code</span><span class="p">,</span> <span class="n">err_msg</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">translation</span> <span class="o">=</span> <span class="n">err_msg</span> <span class="ow">or</span> <span class="n">TRANSLATIONS</span><span class="p">[</span><span class="n">err_code</span><span class="p">]</span>
+    <span class="k">raise</span> <span class="n">ProjectUserException</span><span class="p">(</span>
+        <span class="n">err_code</span><span class="p">,</span>
+        <span class="n">ProjectErrorCode</span><span class="o">.</span><span class="n">_value_to_name</span><span class="p">(</span><span class="n">err_code</span><span class="p">),</span>
+        <span class="n">translation</span>
+    <span class="p">)</span>
+
+<span class="c"># ... </span>
+</code></pre></div></div>
+
+<h2 id="工具类">工具类</h2>
+
+<p>我最开始做这件事的时候往往会烦恼抽象的粒度问题，即尽管都是重复使用，哪种函数应该抽象成公用的工具类，哪种函数应该成为逻辑层聚合根的类方法。在经历了几个项目的磨练后，发现只需要遵循一个简单的原则：与业务无关的公用代码都可抽象成为工具函数。而这种工具函数的形式风格都是非常灵活的，可以简单写成一个个单独的函数，也可以聚合成类，也可以是装饰器，但需要注意工具函数尽量统一成一个出口，以封装参数的形式提供功能。由于这部分比较简单，本文列举几个常用的工具c抽象以供参考。</p>
+
+<h3 id="request">request</h3>
+
+<p>封装需要发起HTTP请求第三方服务的函数, 负责检查相应状态码、处理异常、记录日志并抛错。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># util/request.py</span>
+
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">project.exc</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ProjectErrorCode</span><span class="p">,</span>
+    <span class="n">raise_user_exc</span>
+<span class="p">)</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="n">connect_timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">read_timeout</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">is_form_data</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">ssl_verify</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">return_json</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="s">"""
+    GET:params为参数
+    POST:data为post参数,params为URL中参数,connect_time为连接超时时间,read_timeout为读超时时间
+    """</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s">'GET'</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span>
+                                    <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+                                    <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+                                    <span class="n">timeout</span><span class="o">=</span><span class="p">(</span><span class="n">connect_timeout</span><span class="p">,</span> <span class="n">read_timeout</span><span class="p">),</span>
+                                    <span class="n">verify</span><span class="o">=</span><span class="n">ssl_verify</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s">'POST'</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">is_form_data</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span>
+                                     <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+                                     <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+                                     <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+                                     <span class="n">timeout</span><span class="o">=</span><span class="p">(</span><span class="n">connect_timeout</span><span class="p">,</span> <span class="n">read_timeout</span><span class="p">),</span>
+                                     <span class="n">verify</span><span class="o">=</span><span class="n">ssl_verify</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s">'DELETE'</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">url</span><span class="p">,</span>
+                                       <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+                                       <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+                                       <span class="n">timeout</span><span class="o">=</span><span class="p">(</span><span class="n">connect_timeout</span><span class="p">,</span> <span class="n">read_timeout</span><span class="p">),</span>
+                                       <span class="n">verify</span><span class="o">=</span><span class="n">ssl_verify</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="k">if</span> <span class="n">return_json</span> <span class="k">else</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">u'http请求返回,URL[{}],耗时[{}],返回值[{}]'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">url</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">elapsed</span><span class="o">.</span><span class="n">microseconds</span><span class="p">,</span> <span class="n">result</span><span class="p">))</span>
+    <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectTimeout</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">'[CONNECT_TIMEOUT]URL[{}],PARAMS[{}],DATA[{}]'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
+        <span class="n">raise_user_exc</span><span class="p">(</span><span class="n">ProjectErrorCode</span><span class="o">.</span><span class="n">CONNECT_TIMEOUT_ERROR</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ReadTimeout</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">'[READ_TIMEOUT]URL[{}],PARAMS[{}],DATA[{}]'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
+        <span class="n">raise_user_exc</span><span class="p">(</span><span class="n">ProjectErrorCode</span><span class="o">.</span><span class="n">READ_TIMEOUT_ERROR</span><span class="p">)</span>
+    <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s">'[HTTP_RESPONSE_ERROR]URL[{}],PARAMS[{}],DATA[{}],ERROR[{}]'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>   <span class="c"># noqa</span>
+                <span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ex</span><span class="p">)))</span>
+        <span class="n">raise_user_exc</span><span class="p">(</span><span class="n">ProjectErrorCode</span><span class="o">.</span><span class="n">HTTP_RESPONSE_ERROR</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ex</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">500</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s">'[HTTP_5XX_ERROR]URL[{}],PARAMS[{}],DATA[{}]'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
+        <span class="n">raise_user_exc</span><span class="p">(</span><span class="n">ProjectErrorCode</span><span class="o">.</span><span class="n">HTTP_5XX_ERROR</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">int</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">400</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s">'[HTTP_4XX_ERROR]URL[{}],PARAMS[{}],DATA[{}]'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
+        <span class="n">raise_user_exc</span><span class="p">(</span><span class="n">ProjectErrorCode</span><span class="o">.</span><span class="n">HTTP_4XX_ERROR</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+</code></pre></div></div>
+
+<h3 id="validate">validate</h3>
+
+<p>一些正则判别式，负责校验参数等。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># util/validate.py</span>
+
+<span class="kn">import</span> <span class="nn">re</span>
+
+
+<span class="k">def</span> <span class="nf">check_user_name_format</span><span class="p">(</span><span class="n">name_str</span><span class="p">):</span>
+    <span class="n">regex_str</span> <span class="o">=</span> <span class="s">r'^[\u4E00-\u9FA5A-Za-z0-9_]+$'</span>
+    <span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="n">regex_str</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pattern</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">name_str</span><span class="p">)</span>
+
+</code></pre></div></div>
+
+<h3 id="trans">trans</h3>
+
+<p>一些变换类函数，负责处理数据结构的转换。例如将ORM对象转换为字典，将参数中的key转换为自己需要的key等。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># util/trans.py</span>
+
+<span class="k">def</span> <span class="nf">convert_student_info_to_dict</span><span class="p">(</span><span class="n">student_info</span><span class="p">):</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">d</span><span class="p">[</span><span class="s">'name'</span><span class="p">]</span> <span class="o">=</span> <span class="n">student_info</span><span class="o">.</span><span class="n">name</span>
+    <span class="n">d</span><span class="p">[</span><span class="s">'school_id'</span><span class="p">]</span> <span class="o">=</span> <span class="n">student_info</span><span class="o">.</span><span class="n">school_id</span>
+    <span class="n">d</span><span class="p">[</span><span class="s">'grade'</span><span class="p">]</span> <span class="o">=</span> <span class="n">student_info</span><span class="o">.</span><span class="n">grade</span>
+    <span class="n">d</span><span class="p">[</span><span class="s">'class_no'</span><span class="p">]</span> <span class="o">=</span> <span class="n">student_info</span><span class="o">.</span><span class="n">class_no</span>
+    <span class="k">return</span> <span class="n">d</span>
+</code></pre></div></div>
+
+<h3 id="contants">contants</h3>
+
+<p>与<code class="highlighter-rouge">trans</code>作用类似，不过负责处理的是信息表示的转换。例如将外界的状态码表示转换为中文等。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># util/contants.py</span>
+
+<span class="n">STATUS_TO_ZH</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="mi">0</span><span class="p">:</span> <span class="s">u'失败'</span><span class="p">,</span>
+    <span class="mi">1</span><span class="p">:</span> <span class="s">u'成功'</span><span class="p">,</span>
+    <span class="mi">2</span><span class="p">:</span> <span class="s">u'处理中'</span><span class="p">,</span>
+    <span class="mi">3</span><span class="p">:</span> <span class="s">u'已过期'</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="response">response</h3>
+
+<p>构造返回给客户端的响应方法，统一相应格式，并统一记录状态码。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># util/response.py</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Response</span>
+
+
+<span class="k">class</span> <span class="nc">ResponseCode</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">SUCCEED</span> <span class="o">=</span> <span class="mi">200</span>
+    <span class="n">API_CLOSED</span> <span class="o">=</span> <span class="mi">101</span>
+    <span class="n">FAILED</span> <span class="o">=</span> <span class="mi">400</span>
+    <span class="n">INVALID_PARAM</span> <span class="o">=</span> <span class="mi">501</span>
+
+
+<span class="n">ResponseCodeExplain</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">ResponseCode</span><span class="o">.</span><span class="n">SUCCEED</span><span class="p">:</span> <span class="s">u'请求成功'</span><span class="p">,</span>
+    <span class="n">ResponseCode</span><span class="o">.</span><span class="n">FAILED</span><span class="p">:</span> <span class="s">u'请求失败'</span><span class="p">,</span>
+    <span class="n">ResponseCode</span><span class="o">.</span><span class="n">API_CLOSED</span><span class="p">:</span> <span class="s">u'功能未开放'</span><span class="p">,</span>
+    <span class="n">ResponseCode</span><span class="o">.</span><span class="n">INVALID_PARAM</span><span class="p">:</span> <span class="s">u'参数不合法'</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">jsonify_</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="n">js</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">separators</span><span class="o">=</span><span class="p">[</span><span class="s">','</span><span class="p">,</span> <span class="s">':'</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">js</span><span class="p">,</span> <span class="n">mimetype</span><span class="o">=</span><span class="s">u'application/json'</span><span class="p">,</span>
+                    <span class="n">content_type</span><span class="o">=</span><span class="s">u'application/json; charset=utf-8'</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">response</span><span class="p">(</span><span class="n">code</span><span class="o">=</span><span class="n">ResponseCode</span><span class="o">.</span><span class="n">SUCCEED</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">message</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="s">u'code'</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span> <span class="s">u'msg'</span><span class="p">:</span> <span class="n">message</span><span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="s">u'code'</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span> <span class="s">u'msg'</span><span class="p">:</span> <span class="n">ResponseCodeExplain</span><span class="p">[</span><span class="n">code</span><span class="p">]}</span>
+
+    <span class="k">if</span> <span class="n">code</span> <span class="o">!=</span> <span class="n">ResponseCode</span><span class="o">.</span><span class="n">SUCCEED</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">jsonify_</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">result</span><span class="p">[</span><span class="s">'data'</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+    <span class="k">return</span> <span class="n">jsonify_</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>这里列举的只是通常会用到的几个工具类，具体项目中这部分内容还可以更宽泛，比如处理不同格式的文件、各种数据分析之类的函数等等。
+本篇较简单，大部分拆箱即用，所以不再啰嗦了。</p>
+
+<p>(End)</p>
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2018/01/31/TheGreatestShowman/">《马戏之王》—— 另一种形式的爽片</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+        <p><strong>下一篇</strong> <a href="/2018/02/24/yewu4/">Python Web 基础向（四） 浅谈数据层</a></p>
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2018/02/06/yewu3/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2018/02/06/yewu3/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本站访客数<span id="busuanzi_value_site_uv"></span>人次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>
