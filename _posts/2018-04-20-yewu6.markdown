@@ -1,17 +1,30 @@
 ---
 layout: post
-category: "工作"
-title:  "python在一般互联网业务中的应用（六） 查询"
-tags: [python]
+category: "Python Web"
+title:  "Python Web 基础向（六） 查询"
+tags: [ORM, 缓存]
 ---
+
+* content
+{:toc}
+
 
 本篇文章将介绍实际业务中的查询场景。一般来说，这部分要做的只是从数据层调用查询方法获取数据并返回给api层。但在业务量不断上涨的过程中，可能会出现百万级以上的大规模数据查询场景，也可能会存在基础信息（用户账户信息等）被多个接口同时调用查询的场景，给DB造成很大压力。这时就需要考虑引入协程和缓存等方式来降低数据库IO。除此之外，还将介绍一些查询中经常碰到的一些场景的处理方法。
 
-# 一般场景
+![此处输入图片的描述][1]
+
+  [1]: http://or9cryhof.bkt.clouddn.com/6a00d8347d063969e201bb091e1152970d-800wi.png
+
+
+
+
+
+
+## 一般场景
 
 调用数据层的查询方法即可，需要考虑数据缺失的异常情况，单个查询数据丢失时是否抛错，列表查询丢失数据时是否返回空值等。
 
-```
+```python
 # query/student.py
 
 from my_project.data.student import Student
@@ -31,13 +44,13 @@ class StudentQuery(object):
         return convert_student_info_to_dict(student_info)
 ```
 
-# 条件分页查询
+## 条件分页查询
 
 这是Web应用常见的筛选搜索情况，需要结合多个条件搜索并对结果进行分页。
 
 这个场景下，需要根据不同的条件组合查询方式，并根据页数和大小进行取模，并返回数据总量用于前端分页。如果筛选条件并不存在于数据库的列中，而是通过某一列与其他表关联，在筛选之前要拿到所有充当外键的列的值，传入当前`model`对象中进行查询。
 
-```
+```python
 # models/student
 
 class StudentModel(DeclarativeBase):
@@ -72,7 +85,7 @@ class StudentModel(DeclarativeBase):
 
 返回结果作为筛选结果的展示内容，如果需要展示的字段涉及其他表的内容，则需要构建`_extend_journals`方法进行组合，要注意查询其他表内容时需要批量获取以降低数据库IO。
 
-```
+```python
 # query/student.py
 
 class StudentQuery(object):
@@ -104,11 +117,11 @@ class StudentQuery(object):
         }
 ```
 
-# 大数据量查询
+## 大数据量查询
 
 实际业务场景中经常会碰到大数据量数据查询的情况，如获取某一城市所有的学生列表。大数据量查询本身是需要一定耗时的，因此首先想到的思路是离线计算，将对应城市所有的学生列表存在线下库里的某一列中，查询时就可以实时取出，我们将在之后详细介绍此类业务场景的思路。但事与愿违，你的项目中可能不得不处理一些大数据量的查询工作，这时可以借助python的协程解决高IO负载查询。
 
-```
+```python
 # query/student.py
 
 class StudentQuery(objecy):
@@ -129,7 +142,7 @@ class StudentQuery(objecy):
         return reduce(lambda a, b: a + b, results) if results else []
 ```
 
-# 缓存
+## 缓存
 
 需要缓存的部分一般为批量取用，如通过一批学生id获取学生的信息。
 
@@ -144,7 +157,7 @@ class StudentQuery(objecy):
 
 需要注意，由于缓存的超时时间一般较久，在遇到问题时再去处理redis较为麻烦，因此需要开关控制，在出问题时可直接绕过缓存读取数据库中内容，而不必等缓存失效。
 
-```
+```python
 # cache/student.py
 
 import json

@@ -1,14 +1,24 @@
 ---
 layout: post
-category: "工作"
-title:  "python在一般互联网业务中的应用（三） 异常＆工具类"
-tags: [python]
+category: "Python Web"
+title:  "Python Web 基础向（三） 异常＆工具类"
+tags: [异常, request, 工具函数]
 ---
+
+* content
+{:toc}
 
 
 在实际业务中，经常会碰到大量需要重复使用的函数，一般会选择将其抽象成为工具函数放在`util`目录下。值得一提的是，抛错函数也属于大量重复使用的函数这一范畴，但与工具类函数不同的是，抛错在工具类函数中也会被用到，因此这部分内容应放在项目根目录下。
 
-# 异常
+![](http://or9cryhof.bkt.clouddn.com/timg_gaitubao_com_320x253.jpeg)
+
+
+
+
+
+
+## 异常
 
 首先，这部分并不是错误处理，而是异常抛出。
 
@@ -24,7 +34,7 @@ tags: [python]
 
 同样在错误处理部分也需要对三种类型的异常进行区分。
 
-```
+```python
 # exc.py
 
 class ProjectErrorCode(object):
@@ -71,15 +81,15 @@ def raise_user_exc(err_code, err_msg=None):
 # ... 
 ```
 
-# 工具类
+## 工具类
 
 我最开始做这件事的时候往往会烦恼抽象的粒度问题，即尽管都是重复使用，哪种函数应该抽象成公用的工具类，哪种函数应该成为逻辑层聚合根的类方法。在经历了几个项目的磨练后，发现只需要遵循一个简单的原则：与业务无关的公用代码都可抽象成为工具函数。而这种工具函数的形式风格都是非常灵活的，可以简单写成一个个单独的函数，也可以聚合成类，也可以是装饰器，但需要注意工具函数尽量统一成一个出口，以封装参数的形式提供功能。由于这部分比较简单，本文列举几个常用的工具c抽象以供参考。
 
-## request
+### request
 
 封装需要发起HTTP请求第三方服务的函数, 负责检查相应状态码、处理异常、记录日志并抛错。
 
-```
+```python
 # util/request.py
 
 import requests
@@ -154,11 +164,11 @@ def request(method, url, params=None, data=None, headers=None,
 
 ```
 
-## validate
+### validate
 
 一些正则判别式，负责校验参数等。
 
-```
+```python
 # util/validate.py
 
 import re
@@ -171,11 +181,11 @@ def check_user_name_format(name_str):
 
 ```
 
-## trans
+### trans
 
 一些变换类函数，负责处理数据结构的转换。例如将ORM对象转换为字典，将参数中的key转换为自己需要的key等。
 
-```
+```python
 # util/trans.py
 
 def convert_student_info_to_dict(student_info):
@@ -187,11 +197,11 @@ def convert_student_info_to_dict(student_info):
     return d
 ```
 
-## contants
+### contants
 
 与`trans`作用类似，不过负责处理的是信息表示的转换。例如将外界的状态码表示转换为中文等。
 
-```
+```python
 # util/contants.py
 
 STATUS_TO_ZH = {
@@ -202,11 +212,11 @@ STATUS_TO_ZH = {
 }
 ```
 
-## response
+### response
 
 构造返回给客户端的响应方法，统一相应格式，并统一记录状态码。
 
-```
+```python
 # util/response.py
 
 import json

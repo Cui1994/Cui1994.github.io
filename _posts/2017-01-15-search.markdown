@@ -1,18 +1,26 @@
 ---
 layout: post
-category: "学习"
-title:  "flask项目中添加搜索功能"
-tags: [直播通, flask]
+category: "直播通"
+title:  "项目中添加搜索功能"
+tags: [直播通, Flask]
 ---
 
-这部分内容的起因是我想在自己的flask项目直播通中加入一个搜索框用来搜索数据库中的主播姓名，于是在网上搜索flask 搜索关键字，当时没注意出来的都是全文搜索的教程，一步步做下来却发现原来根本和自己的需求不符合，可见弄清需求是多么重要啊！虽然走了点弯路，却意外发现了全文搜索的方法。
+* content
+{:toc}
+
+这部分内容的起因是我想在自己的Flask项目直播通中加入一个搜索框用来搜索数据库中的主播姓名，于是在网上搜索flask 搜索关键字，当时没注意出来的都是全文搜索的教程，一步步做下来却发现原来根本和自己的需求不符合，可见弄清需求是多么重要啊！虽然走了点弯路，却意外发现了全文搜索的方法。
+
+
+
+
+
 
 ## 设置搜索框
 考虑到用户体验，这里想做导航栏上的搜索框，也就是全局搜索框，这就要用到flask中的程序上下文g，在处理请求时用作临时存储的对象，每次请求都会重设这个变量。很显然，这里就需要将一个搜索框设置成为程序上下文，具体做法如下。
 
 - 创建搜索框
 很简单，在forms中添加
-```
+```python
 class SearchForm(Form):
 	search = StringField(u'', validators=[Required()])
 ```
@@ -20,7 +28,7 @@ class SearchForm(Form):
 
 - 定义全局变量
 在main.view中写入：
-```
+```python
 @main.before_app_request
 def before_request(): #定义全局变量
     g.search_form = SearchForm()
@@ -28,7 +36,7 @@ def before_request(): #定义全局变量
 就将一个搜索框设置成为了程序上下文变量。
 
 - 创建搜索和搜索结果的视图函数
-```
+```python
 @main.route('/search', methods = ['POST'])
 def search():
     if not g.search_form.validate_on_submit():
@@ -55,7 +63,7 @@ def search_results(query):
 
 ## 模糊搜索
 模糊搜索其实很简单，只要对数据库中进行模糊检索即可，一条语句适用于很多场合：
-```
+```python
 User.query.filter(User.name.like('%'+query+'%')).all()
 ```
 

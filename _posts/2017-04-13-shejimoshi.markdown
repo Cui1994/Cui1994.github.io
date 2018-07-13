@@ -1,11 +1,20 @@
 ---
 layout: post
-category: "学习"
-title:  "大话设计模式Python实现"
+category: "设计模式"
+title:  "《大话设计模式》Python实现"
 tags: [设计模式]
 ---
 
+* content
+{:toc}
+
 学习自大话设计模式，将其C#语言实现翻译为Python，同时参照此系列博客：[Python设计模式][1] 加深理解。
+
+![](http://or9cryhof.bkt.clouddn.com/designpatterns_gaitubao_com_383x181.png)
+
+
+
+
 
 ## 1.简单工厂模式
 
@@ -26,7 +35,7 @@ tags: [设计模式]
 
 ```python
 # -*- coding:utf-8 -*-
-import re=
+import re
 
 class Operation(object):
 	def __init__(self, a, b):

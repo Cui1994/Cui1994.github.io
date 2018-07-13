@@ -1,19 +1,29 @@
 ---
 layout: post
-category: "工作"
-title:  "python在一般互联网业务中的应用（二） 操作数据库"
-tags: [python]
+category: "Python Web"
+title:  "Python Web 基础向（二） 操作数据库"
+tags: [ORM, sql]
 ---
+
+* content
+{:toc}
 
 从这篇文章开始，将对上文中所提起及的各抽象层进行进一步阐述，涉及互联网业务代码中的各项基本操作。本文以MySQL为例操作关系型数据库。
 
 注: 此系列文章依托Flask框架介绍，但涉及框架内容较少，具有一定普适性。
 
-# 操作数据库
+![](http://or9cryhof.bkt.clouddn.com/timg%20%281%29_gaitubao_com_339x254.jpeg)
+
+
+
+
+
+
+## 操作数据库
 
 虽然一般数据库由DBA进行维护，但仍然推荐将建表的SQL语句以文件形式储存在代码中。
 
-```
+```sql
 // project.sql
 
 create database if not exists test;
@@ -54,7 +64,7 @@ CREATE TABLE `student` (
 
 应当在包的`__init__.py`文件中完成一些初始化操作。
 
-```
+```python
 # models/__init__.py
 
 import functools
@@ -73,7 +83,7 @@ DeclarativeBase = declarative_base()
 ```
 
 当然，你也可以做适当封装，例如抽象出`auto_commit`装饰器以适应不同逻辑：
-```
+```python
 # models/__init__.py
 
 class RoutingSession(Session):
@@ -121,7 +131,7 @@ auto_commit = gen_commit_deco(DBSession)
 2. 如果无特殊说明，在方法名称前加`m`表示批量查询。
 
 
-```
+```python
 # models/student.py
 
 class StudentModel(DeclarativeBase):
@@ -190,11 +200,11 @@ DB层中会有大量的查询方法，这时候需要留心，有的查询会随
 
 ### Tips
 
-#### 在`group_by`之前执行`order_by`方法
+#### 在group之前执行order
 
 应用场景为在聚合数据中获取某一列值最大的一条记录，需要在`group_by`前先排序，可以应用`from_self`方法重新生成子查询，如下：
 
-```
+```python
 DBSession().query(model).order_by(model.created_at.desc()).from_self().group_by(model.id).all()
 ```
 
@@ -204,7 +214,7 @@ DBSession().query(model).order_by(model.created_at.desc()).from_self().group_by(
 
 应尽量避免在mysql的一列中存储大字段类型的数据，但如果有需要使用的场景，也应注意在将文本型数据转换为相应数组或字典时，避免使用eval方法。这里以数组为例列出一种储存数组型数据的方式。
 
-```
+```python
 # model/student_group.py
 
 class StudentGroupModel(DeclarativeBase):
@@ -235,7 +245,7 @@ class StudentGroupModel(DeclarativeBase):
 
 #### 批量插入
 
-```
+```python
     @classmethod
     def multi_insert(cls, student_list):
         param = [cls.convert_param_dict(student) for student in student_list]

@@ -1,9 +1,12 @@
 ---
 layout: post
-category: "工作"
-title:  "python在一般互联网业务中的应用（五） api层"
-tags: [python]
+category: "Python Web"
+title:  "Python Web 基础向（五） api层"
+tags: [Flask, 降级策略]
 ---
+
+* content
+{:toc}
 
 提供HTTP服务的api层负责处理以下任务：
 - 管理路由
@@ -14,11 +17,15 @@ tags: [python]
 
 api层的代码应简单清晰，甚至你的每个路由对应的函数都“长得”差不多，这部分代码不应掺杂任何逻辑处理，他要做的仅仅是将请求指向相应的逻辑类去处理。
 
-# 管理路由
+
+
+
+
+## 管理路由
 
 `Flask`较为简单，一般来说，要实现基本功能，只需在`api`目录下生成蓝图和视图函数，在`app.py`中注册蓝图，并添加404和500的处理即可。
 
-```Python
+```python
 from my_project.api.student import student_api
 
 logger = logging.getLogger(__name__)
@@ -42,13 +49,13 @@ app.register_blueprint(student_api, url_prefix='/student')
 
 除此之外， 需要考虑与前端交互的跨域请求访问情况，这部分可依赖`CORS`实现。
 
-```
+```python
 cors = CORS(app, resources={r"/student/*": {"origins": "*"},}, supports_credentials=True)
 ```
 
 当然，你还需要测试你的server是否可用的ping路由和默认路由。
 
-```
+```python
 @app.route('/ping')
 @cross_origin()
 def ping():
@@ -61,7 +68,7 @@ def hello_world():
 
 更进一步，可以借助钩子在请求前后完成一些额外的工作，例如判断前端（或app）的设备类型，记录一层请求的用时等，也可在这部分完成。
 
-```
+```python
 @app.before_request
 def before_request():
     stat_ctx = dict()
@@ -75,16 +82,13 @@ def before_request():
 def after_request(response):
     stat_ctx = request.stat_ctx
     stat_ctx['end_time'] = time.time()
-    logger.info(u'[stat_ctx] my_project: {method} {url} response in {time}'.format(method=stat_ctx['method'],
-                                                                                   url=stat_ctx['url'],
-                                                                                   time=stat_ctx['end_time'] - stat_ctx[
-                                                                                       'start_time']))
+    logger.info(u'[stat_ctx] my_project: {method} {url} response in {time}'.format(method=stat_ctx['method'], url=stat_ctx['url'], time=stat_ctx['end_time'] - stat_ctx['start_time']))
     return response
 ```
 
 至此，`app.py`的功能基本完整，其他涉及具体业务的api可以在`my_project/api`目录下新开蓝图。
 
-# 获取并检查参数
+## 获取并检查参数
 
 HTTP协议在请求中添加参数有多种方式，相应的，flask的`Request`对象会提供多种获取参数的方式。在获取参数时需要弄清楚参数传递的具体类型，否则不能正确拿到参数。
 
@@ -95,7 +99,7 @@ HTTP协议在请求中添加参数有多种方式，相应的，flask的`Request
 
 flask获取请求参数的方法有的基于`werkzueg`的`BaseRequest`对象实现，有的自己做了封装，使用时注意参照源码。这里为了方便，可以在工具类中加入参数的部分。
 
-```
+```python
 # util/params.py
 
 import json
@@ -114,11 +118,11 @@ def get_params(request):
 获取列表数据也可以构建相应方法，或在代码中直接获取，这里不再赘述。
 有一点需要注意，`get_data`方法获取参数时从`stream`中读取数据，而`request`对象中很多方法在调用之后会清空`stream`，导致无法通过`get_data`拿到数据，尽量将其作为兜底逻辑而不是首选。
 
-# 组合并包装响应
+## 组合并包装响应
 
 这部分只需要构造相应的工具类中的`response`和`trans`函数即可，需要注意的是关键路径上的查询接口。
 
-## 降级策略
+### 降级策略
 
 一般而言，服务器需要将查询接口的结果完整地返回给前端，但服务器也有开小差的情况，为了防止比较重要的查询接口因为一些小的或者非关键路径上的服务的错误而全部挂掉，或者在高并发场景下需要牺牲一部分内容或者功能的显示来换取负载上的优化，需要对这类接口建立降级策略。
 
@@ -130,7 +134,7 @@ def get_params(request):
 
 降级是微服务框架兴起后经常被提起的名词，目前有许多相对成熟的开源轮子如Hystrix完整地实现了服务降级配置功能，有兴趣可以自行查阅。这里通过一段简单代码说明降级的策略和作用（当然市面上的各种微服务框架的降级策略要复杂的多）
 
-```
+```python
 # api/student.py
 
 @student_api.route('/info/update', methods=['GET'])
@@ -159,11 +163,11 @@ def update_student_info():
     return response(ResponseCode.SUCCEED, data=rtn)
 ```
 
-# 处理错误
+## 处理错误
 
 如果没有外部rpc调用，可以在`util/response.py`中增加捕捉错误的装饰器即可，这里需要将所有的错误包住，记录日志，并返回相应的错误码和信息。如果存在外部rpc调用，则可以在每个`rpc`目录下新增相应的错误捕获代码。
 
-```
+```python
 # util/response.py
 
 from my_project.exc import (

@@ -1,11 +1,21 @@
 ---
 layout: post
-category: "学习"
+category: "Python"
 title:  "Python的迭代器，可迭代对象和生成器"
-tags: [python]
+tags: [迭代器, 生成器]
 ---
 
+* content
+{:toc}
+
+
+
+
+
+
+
 ## 可迭代对象和迭代器对象
+
 可迭代对象`iterable`可通过内置方法`iter()`生成迭代器对象`iterator`。
 可以使用此方法的对象自身为迭代器或序列，即自身存在`__iter__`或`__getitem__`属性。
 迭代器可使用`next()`方法生成下一个元素，最终抛出`StopIteration`异常。
@@ -107,7 +117,7 @@ if __name__ == '__main__':
 因此可以将某个类的`__iter__`方法实现为生成器函数来实现可迭代对象。
 
 素数demo：
-```
+```python
 class PrimeNumber:
 
 	def __init__(self, start, stop):
