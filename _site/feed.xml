@@ -5,9 +5,36 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Sat, 14 Jul 2018 16:22:41 +0800</pubDate>
-    <lastBuildDate>Sat, 14 Jul 2018 16:22:41 +0800</lastBuildDate>
+    <pubDate>Sun, 15 Jul 2018 18:30:55 +0800</pubDate>
+    <lastBuildDate>Sun, 15 Jul 2018 18:30:55 +0800</lastBuildDate>
     <generator>Jekyll v3.6.2</generator>
+    
+      <item>
+        <title>大规模Web服务的一般性痛点与解决方案</title>
+        <description>
+如今，各类Web架构竞相辉映，集群，微服务，异地多活，分布式等名词层出不穷，这些东西是你日常工作的一部分，或者至少也是不少技术类文章中的热词，于开发人员来讲并不生疏。但这些东西是怎么来的，为了解决什么样的问题，确是值得思索的命题。
+
+其实，如今各类成熟的Web服务架构并非一蹴而就的，而是随着服务规模的不断增大而演化过来的。刚来时可能服务的用户并不多，业务线也很少，这时的应用程序、数据库、静态文件可能都在一台服务器上，代码能够正常运行即可满足要求。而随着用户量的增加，一台服务器就无法满足需求了，流量的上升导致访问速度越来越慢，数据量的增大导致储存空间的不足，这时候就会将应用程序、数据库和文件服务进行分离，分别放在三台服务器上。之后，随着规模进一步加大，越来越多的问题暴露出来：为了解决应用程序服务的压力，出现了代理服务器、集群和负载均衡的概念；为了解决数据库压力，出现了读写分离、缓存服务器和分布式数据库的概念；为了解决文件服务器的压力，出现了CDN加速的概念；为了应对冗杂的业务线，出现了微服务和职能划分的概念……服务架构也慢慢趋于成熟变成了现在的模样。
+
+本文就简单介绍下大规模Web服务发展过程中出现的一般性问题和解决方案。
+
+</description>
+        <pubDate>Sun, 15 Jul 2018 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2018/07/15/web/</link>
+        <guid isPermaLink="true">http://localhost:4000/2018/07/15/web/</guid>
+        
+        <category>服务架构</category>
+        
+        <category>MySQL</category>
+        
+        <category>页面缓存</category>
+        
+        <category>扩展</category>
+        
+        
+        <category>服务架构</category>
+        
+      </item>
     
       <item>
         <title>Python Web 基础向（七）分布式锁</title>
@@ -208,25 +235,6 @@ python由于其语法简单精炼，学习成本低，开发周期短，如今�
         
         
         <category>Python Web</category>
-        
-      </item>
-    
-      <item>
-        <title>《大话设计模式》Python实现</title>
-        <description>
-学习自大话设计模式，将其C#语言实现翻译为Python，同时参照此系列博客：&lt;a href=&quot;http://www.jianshu.com/p/84ae207ccaf7&quot;&gt;Python设计模式&lt;/a&gt; 加深理解。
-
-&lt;img src=&quot;http://or9cryhof.bkt.clouddn.com/designpatterns_gaitubao_com_383x181.png&quot; alt=&quot;&quot; /&gt;
-
-</description>
-        <pubDate>Thu, 13 Apr 2017 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2017/04/13/shejimoshi/</link>
-        <guid isPermaLink="true">http://localhost:4000/2017/04/13/shejimoshi/</guid>
-        
-        <category>设计模式</category>
-        
-        
-        <category>设计模式</category>
         
       </item>
     
