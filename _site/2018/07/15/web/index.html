@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>大规模Web服务的一般性痛点与解决方案</title>
+    <meta name="description" content="如今，各类Web架构竞相辉映，集群，微服务，异地多活，分布式等名词层出不穷，这些东西是你日常工作的一部分，或者至少也是不少技术类文章中的热词，于开发人员来讲并不生疏。但这些东西是怎么来的，为了解决什么样的问题，确是值得思索的命题。其实，如今各类成熟的Web服务架构并非一蹴而就的，而是随着服务规模的不断增大而演化过...">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2018/07/15/web/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>大规模Web服务的一般性痛点与解决方案</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2018-07-15
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#服务架构" title="Category: 服务架构" rel="category">服务架构</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#%E6%9C%8D%E5%8A%A1%E6%9E%B6%E6%9E%84" title="Tag: 服务架构" rel="tag">服务架构</a-->
+        <a href="/tag/#服务架构" title="Tag: 服务架构" rel="tag">服务架构</a>&nbsp;
+    
+        <!--a href="/tag/#MySQL" title="Tag: MySQL" rel="tag">MySQL</a-->
+        <a href="/tag/#MySQL" title="Tag: MySQL" rel="tag">MySQL</a>&nbsp;
+    
+        <!--a href="/tag/#%E9%A1%B5%E9%9D%A2%E7%BC%93%E5%AD%98" title="Tag: 页面缓存" rel="tag">页面缓存</a-->
+        <a href="/tag/#页面缓存" title="Tag: 页面缓存" rel="tag">页面缓存</a>&nbsp;
+    
+        <!--a href="/tag/#%E6%89%A9%E5%B1%95" title="Tag: 扩展" rel="tag">扩展</a-->
+        <a href="/tag/#扩展" title="Tag: 扩展" rel="tag">扩展</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#大规模服务要解决的问题" id="markdown-toc-大规模服务要解决的问题">大规模服务要解决的问题</a></li>
+  <li><a href="#负载" id="markdown-toc-负载">负载</a>    <ul>
+      <li><a href="#cpu负载" id="markdown-toc-cpu负载">CPU负载</a></li>
+      <li><a href="#io负载" id="markdown-toc-io负载">I/O负载</a>        <ul>
+          <li><a href="#页面缓存" id="markdown-toc-页面缓存">页面缓存</a></li>
+          <li><a href="#mysql局部横向扩展" id="markdown-toc-mysql局部横向扩展">MySQL局部横向扩展</a>            <ul>
+              <li><a href="#分割" id="markdown-toc-分割">分割</a></li>
+              <li><a href="#读写分离" id="markdown-toc-读写分离">读写分离</a></li>
+            </ul>
+          </li>
+          <li><a href="#索引服务器" id="markdown-toc-索引服务器">索引服务器</a></li>
+        </ul>
+      </li>
+      <li><a href="#系统负载调优" id="markdown-toc-系统负载调优">系统负载调优</a></li>
+    </ul>
+  </li>
+  <li><a href="#冗余" id="markdown-toc-冗余">冗余</a>    <ul>
+      <li><a href="#应用程序服务器" id="markdown-toc-应用程序服务器">应用程序服务器</a></li>
+      <li><a href="#数据库服务器" id="markdown-toc-数据库服务器">数据库服务器</a>        <ul>
+          <li><a href="#slave服务器" id="markdown-toc-slave服务器">slave服务器</a></li>
+          <li><a href="#master服务器" id="markdown-toc-master服务器">master服务器</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><a href="#web服务的基础设施" id="markdown-toc-web服务的基础设施">Web服务的基础设施</a>    <ul>
+      <li><a href="#虚拟化技术" id="markdown-toc-虚拟化技术">虚拟化技术</a></li>
+    </ul>
+  </li>
+</ul>
+
+<p>如今，各类Web架构竞相辉映，集群，微服务，异地多活，分布式等名词层出不穷，这些东西是你日常工作的一部分，或者至少也是不少技术类文章中的热词，于开发人员来讲并不生疏。但这些东西是怎么来的，为了解决什么样的问题，确是值得思索的命题。</p>
+
+<p>其实，如今各类成熟的Web服务架构并非一蹴而就的，而是随着服务规模的不断增大而演化过来的。刚来时可能服务的用户并不多，业务线也很少，这时的应用程序、数据库、静态文件可能都在一台服务器上，代码能够正常运行即可满足要求。而随着用户量的增加，一台服务器就无法满足需求了，流量的上升导致访问速度越来越慢，数据量的增大导致储存空间的不足，这时候就会将应用程序、数据库和文件服务进行分离，分别放在三台服务器上。之后，随着规模进一步加大，越来越多的问题暴露出来：为了解决应用程序服务的压力，出现了代理服务器、集群和负载均衡的概念；为了解决数据库压力，出现了读写分离、缓存服务器和分布式数据库的概念；为了解决文件服务器的压力，出现了CDN加速的概念；为了应对冗杂的业务线，出现了微服务和职能划分的概念……服务架构也慢慢趋于成熟变成了现在的模样。</p>
+
+<p>本文就简单介绍下大规模Web服务发展过程中出现的一般性问题和解决方案。</p>
+
+<h2 id="大规模服务要解决的问题">大规模服务要解决的问题</h2>
+
+<p>与只有几台服务器的小规模服务相比，大规模服务要解决的问题主要存在与一下几点：</p>
+
+<ul>
+  <li>
+    <p>负载：如何应对一台服务器无法承担的流量压力。</p>
+  </li>
+  <li>
+    <p>冗余性：如何保证在某些服务器出现故障时系统仍然能维持正常运行。</p>
+  </li>
+  <li>
+    <p>低成本运维：如何在多台服务器中定位和发现问题，如何监控服务的健康性。</p>
+  </li>
+  <li>
+    <p>开发方式：如何多部门，多开发人员协同开发。</p>
+  </li>
+</ul>
+
+<p>本文将主要围绕前两点讨论，关于运维方面的知识暂不做过多介绍。</p>
+
+<h2 id="负载">负载</h2>
+
+<p>如开篇所讲，Web服务的基础设施一般由几部分组成：</p>
+
+<ul>
+  <li>
+    <p>代理服务器：负责接收和分发请求，处理负载均衡。</p>
+  </li>
+  <li>
+    <p>进程服务器：处理业务逻辑和计算，产生CPU负载。</p>
+  </li>
+  <li>
+    <p>数据库服务器：处理数据读写，产生I/O负载。</p>
+  </li>
+</ul>
+
+<h3 id="cpu负载">CPU负载</h3>
+
+<p>CPU负载产生的原因很简单，请求增加带来系统运算处理能力的加大，单位时间内需处理的任务数量加大带来CPU负载上升。</p>
+
+<p>由于应用进程服务每个服务相互独立，因此解决CPU负载的方式简单通用，即扩展服务器，但扩展方式稍有区别：</p>
+
+<ul>
+  <li>
+    <p>横向扩展：通过增加服务器的数量来提高整体的处理能力。</p>
+  </li>
+  <li>
+    <p>纵向扩展：通过提高硬件性能来提高处理能力。</p>
+  </li>
+</ul>
+
+<p>考虑到性价比，目前横向扩展的应用较为广泛。</p>
+
+<h3 id="io负载">I/O负载</h3>
+
+<p>相对于CPU负载，I/O负载陈胜的云因稍微复杂，解决方式也略微棘手。</p>
+
+<p>进程读取磁盘中数据的一般过程如下：</p>
+
+<p><img src="http://or9cryhof.bkt.clouddn.com/%E8%AF%B7%E6%B1%82%E5%88%86%E9%85%8D%E5%86%85%E5%AD%98.png" alt="" /></p>
+
+<p>磁盘到内存的读写速度是很慢的：</p>
+
+<ul>
+  <li>
+    <p>查找速度：由于数据的搜索是磁盘旋转的物理动作，与在内存中查找数据的速度相比慢了10^5倍。</p>
+  </li>
+  <li>
+    <p>传输速度：磁盘到内存的总线传输速度比内存到CPU的总线传输速度慢了10^2倍。</p>
+  </li>
+</ul>
+
+<h4 id="页面缓存">页面缓存</h4>
+
+<p>操作系统会对磁盘上的文件进行页面缓存，即<strong>内核分配过的内存不会释放，而是会一直保留下来</strong>，但内存容量毕竟有限，会遵照下面的缓存策略对磁盘进行缓存：</p>
+
+<ul>
+  <li>
+    <p>LRU(Leasr Recently Used)：最近使用的数据会被缓存，即新的数据会取代老数据在内存中的位置。</p>
+  </li>
+  <li>
+    <p>内存有空闲时就缓存：内存会在空闲时自动缓存磁盘中的文件（注：重启之后所有的页面缓存会失效，这也是为什么数据库服务器在重启之后需要cat所有数据库文件）。</p>
+  </li>
+</ul>
+
+<p>当数据量提高时，内存的容量开始小于数据库大小，由此产生了大数据量I/O负载的痛点：<strong>无法都在内存中进行计算</strong>。</p>
+
+<p>针对这一原因，I/O负载的解决思路如下：</p>
+
+<ul>
+  <li>
+    <p>减小数据大小：采用压缩等算法。</p>
+  </li>
+  <li>
+    <p>扩展：如果数据量不大，可采用纵向扩展，即增加内存；横向难度较高，考虑局部分散。</p>
+  </li>
+  <li>
+    <p>降低读取次数：一些对数复杂度的算法，批量数据集中读取等技巧。</p>
+  </li>
+</ul>
+
+<h4 id="mysql局部横向扩展">MySQL局部横向扩展</h4>
+
+<p>与应用程序的简单横向扩展不同，数据库的横向扩展并不能通过增加服务器数量的方式来提高处理能力，因为单纯将数据复制，不能缓存到内存的部分依然不能缓存，这是需要考虑局部的横向扩展，这里以Mysql为例做简单介绍。</p>
+
+<p><img src="http://or9cryhof.bkt.clouddn.com/mysql.png" alt="" /></p>
+
+<h5 id="分割">分割</h5>
+
+<p>既然一台机子（一个数据库）上的数据量无法分割，就将数据库分割到多台服务器上。分割的方式有很多种，最简单的就是<strong>以表为单位进行分割</strong>，目前很多企业选用这种方式，将不同的表分散在不同的数据库服务器中，这样做的优势在于成本较低，对业务的侵入性较小，开发人员唯一需要关注的就是不要在业务代码中使用<code class="highlighter-rouge">join</code>查询而用<code class="highlighter-rouge">where in</code>作为替代。</p>
+
+<h5 id="读写分离">读写分离</h5>
+
+<p>在分割的基础上，要对同一张表的服务器再进行横向扩展就要采用读写分离的策略，即在多台服务器（一般为4的倍数）中选取一台作为master，通过负载均衡服务器或代理将所有<code class="highlighter-rouge">update</code>的更新查询发给master，把只有<code class="highlighter-rouge">select</code>等读取查询发给其余的slave，通过master和slave的复制实现数据同步。</p>
+
+<h4 id="索引服务器">索引服务器</h4>
+
+<p>当数据吞吐量远超过RDBMS的能力，即无论采取什么方式都无法优化大数据量读取或优化起来成本较高时，可以考虑在数据库服务器和上层服务之间架设索引服务器（如elasticsearch），定时同步数据库数据与索引服务器数据，上层在读取数据时可以直接从索引服务器中读取。</p>
+
+<p><img src="http://or9cryhof.bkt.clouddn.com/%E7%B4%A2%E5%BC%95%E6%9C%8D%E5%8A%A1%E5%99%A8.png" alt="" /></p>
+
+<h3 id="系统负载调优">系统负载调优</h3>
+
+<p>当规模提高带来请求相应变慢时，开发者的首要直觉都是我的系统“卡了”，这时就需要系统调优来将你的系统服务恢复正常，即找到问题并排除之。</p>
+
+<p>系统调优的核心点在于发现负载来源于CPU还是I/O，思路基本如下图。</p>
+
+<p><img src="http://or9cryhof.bkt.clouddn.com/%E7%B3%BB%E7%BB%9F%E8%B0%83%E4%BC%98.png" alt="" /></p>
+
+<h2 id="冗余">冗余</h2>
+
+<p>服务的冗余是为了解决Web服务负载横向扩展带来的安全问题，即需要保证在横向扩展中的一台服务器出现故障时整体服务的运行不受影响。目前业内做法是在整体服务处理能力最大值的70%下平稳运行，即如果服务负载达到阈值的70%就需要加大服务器的冗余数量。</p>
+
+<h3 id="应用程序服务器">应用程序服务器</h3>
+
+<p>应用程序服务器的冗余非常简单，只需要在负载均衡服务器做好<strong>失败转移</strong>和<strong>失败恢复</strong>即可，即如果服务器出现故障就将其剔除出集群，待故障处理完毕之后将其加入集群。</p>
+
+<h3 id="数据库服务器">数据库服务器</h3>
+
+<h4 id="slave服务器">slave服务器</h4>
+
+<p>同应用程序服务器一样，只需要在上层的负载均衡服务器或代理层处理即可，但有一点需要注意，由于数据库服务器出现故障之后存在数据恢复和复制的问题，需要停掉一台正常服务器进行恢复，也可能存在主从切换的问题，因此在进行冗余时master和slave的比例一般为1：3。</p>
+
+<h4 id="master服务器">master服务器</h4>
+
+<p>master服务的冗余相对就困难许多，目前业内的一般做法是对不同master服务器之间进行双向复制，以保证master的冗余。但如果在一方写入的瞬间领一台服务器停机，就会出现数据不一致的风险，结合Web服务自身特点，可以暂时忽略风险，优先保证性能。</p>
+
+<h2 id="web服务的基础设施">Web服务的基础设施</h2>
+
+<p>由于性价比的考虑，越来越多的Web服务开始采用其他专业提供基础服务设施的企业提供的资源搭建。</p>
+
+<p>目前服务的基础设施搭建有两种思路：</p>
+
+<ul>
+  <li>
+    <p>垂直结合：从上层到底层服务全部自行构建。</p>
+  </li>
+  <li>
+    <p>水平分散：不同模块采用不同企业的服务。</p>
+  </li>
+</ul>
+
+<h3 id="虚拟化技术">虚拟化技术</h3>
+
+<p>所谓虚拟化技术就是将各类实体资源（如服务器）进行抽象，再重新分配到实体资源中，即两个服务器可以在一个机器上运行。如一个服务器如果有I/O空闲，就可以引入数据库服务器，如果存在CPU空闲，则可以引入应用程序服务器。这种技术一定程度上提高了基础设施的利用率。</p>
+
+<p>(End)</p>
+
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2018/07/12/yewu7/">Python Web 基础向（七）分布式锁</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+        <p><strong>下一篇</strong> <a href="/2018/07/16/linux/">Linux基础（一）内核及系统调用</a></p>
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2018/07/15/web/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2018/07/15/web/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>

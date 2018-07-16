@@ -6,15 +6,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Python Web 基础向（一） 项目结构</title>
-    <meta name="description" content="在互联网行业中，关于业务还是技术，多多少少有些争论。认为技术大于业务的极客们认为，唯有技术才是立家之本，技术的进步可以实现更多业务迭代。而认为业务大于技术的实干家则认为业务是推动技术进步的源泉，而技术服务于业务，唯有解决业务问题才能发挥技术的价值。且不论哪种思想更有说服力，如今的互联网行业业务和技术缺一不可相辅相...">
+    <title>Linux基础（一）内核及系统调用</title>
+    <meta name="description" content="本文对Linux系统编程的一些基本概念做一些介绍，对应用程序系统调用的流程进行说明。  该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。书中的编程练习这里不做展示和说明。">
 
     <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
     <link rel="icon" href="/favicon.ico?" type="image/x-icon">
     <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
     <link rel="stylesheet" href="/css/main.css ">
-    <link rel="canonical" href="http://localhost:4000/2018/01/16/yewu1/">
+    <link rel="canonical" href="http://localhost:4000/2018/07/16/linux/">
     <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
 
 
@@ -110,11 +110,11 @@
 
         <div class="page clearfix" post>
     <div class="left">
-        <h1>Python Web 基础向（一） 项目结构</h1>
+        <h1>Linux基础（一）内核及系统调用</h1>
         <div class="label">
 
             <div class="label-card">
-                <i class="fa fa-calendar"></i>2018-01-16
+                <i class="fa fa-calendar"></i>2018-07-16
             </div>
 
             <div class="label-card">
@@ -134,7 +134,7 @@
   <i class="fa fa-th-list"></i>
   
     
-        <a href="/category/#Python Web" title="Category: Python Web" rel="category">Python Web</a>
+        <a href="/category/#Linux" title="Category: Linux" rel="category">Linux</a>
     
   
 
@@ -151,11 +151,11 @@
   <i class="fa fa-tags"></i>
   
     
-        <!--a href="/tag/#%E4%B8%9A%E5%8A%A1" title="Tag: 业务" rel="tag">业务</a-->
-        <a href="/tag/#业务" title="Tag: 业务" rel="tag">业务</a>&nbsp;
+        <!--a href="/tag/#Linux" title="Tag: Linux" rel="tag">Linux</a-->
+        <a href="/tag/#Linux" title="Tag: Linux" rel="tag">Linux</a>&nbsp;
     
-        <!--a href="/tag/#%E9%AA%A8%E6%9E%B6" title="Tag: 骨架" rel="tag">骨架</a-->
-        <a href="/tag/#骨架" title="Tag: 骨架" rel="tag">骨架</a>
+        <!--a href="/tag/#%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0" title="Tag: 读书笔记" rel="tag">读书笔记</a-->
+        <a href="/tag/#读书笔记" title="Tag: 读书笔记" rel="tag">读书笔记</a>
     
   
 
@@ -167,69 +167,63 @@
         <hr>
         <article itemscope itemtype="http://schema.org/BlogPosting">
         <ul id="markdown-toc">
-  <li><a href="#项目结构" id="markdown-toc-项目结构">项目结构</a></li>
-  <li><a href="#tips" id="markdown-toc-tips">tips</a></li>
+  <li><a href="#内核" id="markdown-toc-内核">内核</a>    <ul>
+      <li><a href="#具体职责" id="markdown-toc-具体职责">具体职责</a></li>
+      <li><a href="#内核态" id="markdown-toc-内核态">内核态</a></li>
+    </ul>
+  </li>
+  <li><a href="#系统调用" id="markdown-toc-系统调用">系统调用</a>    <ul>
+      <li><a href="#调用系统调用的执行过程" id="markdown-toc-调用系统调用的执行过程">调用系统调用的执行过程</a></li>
+    </ul>
+  </li>
 </ul>
 
-<p>在互联网行业中，关于业务还是技术，多多少少有些争论。认为技术大于业务的极客们认为，唯有技术才是立家之本，技术的进步可以实现更多业务迭代。而认为业务大于技术的实干家则认为业务是推动技术进步的源泉，而技术服务于业务，唯有解决业务问题才能发挥技术的价值。且不论哪种思想更有说服力，如今的互联网行业业务和技术缺一不可相辅相成是既定事实，而作为开发者的我们，唯有在业务中不断积累技术，用技术实现业务创新才是推动自身成长的正途。</p>
+<p>本文对Linux系统编程的一些基本概念做一些介绍，对应用程序系统调用的流程进行说明。</p>
 
-<p>python由于其语法简单精炼，学习成本低，开发周期短，如今已然从一门脚本语言往工程化的方向发展，收到越来越多的互联网公司，尤其是创业公司的追捧。但其动态语言的一些特性仍然使其在实际业务的开发中产生一些问题，尤其是大型项目的中后期，如果开发不当，会造成比较严重的代码灾难。接下来的几篇文章将提供一种用python来写业务的正确姿势，以尽量克服python在大型项目中的各种缺陷。</p>
+<blockquote>
+  <p>该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
+书中的编程练习这里不做展示和说明。</p>
+</blockquote>
 
-<h2 id="项目结构">项目结构</h2>
+<h2 id="内核">内核</h2>
 
-<p>作为业务代码，一个完整的项目经常包括以下几部分：</p>
+<p>是操作系统的核心，指<strong>管理和分配计算机资源（如CPU、RAM和设备）的核心软件层</strong>。</p>
+
+<h3 id="具体职责">具体职责</h3>
 
 <ul>
-  <li>API层: 解析请求参数，屏蔽无效参数，调用逻辑层，组装相应并返回。</li>
-  <li>业务逻辑层: 业务逻辑的抽象层(可以简单理解为写if和for的地方)，处理会产生结果的业务。</li>
-  <li>查询逻辑层: 处理单纯的查询业务，所有逻辑不会对数据产生影响。(可简单理解为GET请求后对应的部分)</li>
-  <li>数据层: Model聚合层，直接操作DB层。</li>
-  <li>DB层: 一般为ORM，处理与数据库的映射。</li>
-  <li>外部调用层: 封装调用外部业务的http或rpc请求，供逻辑层调用。</li>
-  <li>配置项: 一般为app、消息队列和外部调用的一系列配置。</li>
-  <li>脚本层: crontab或workflow的任务脚本，不供其他类调用，可调用数据层。</li>
-  <li>工具类: 一些翻译类或组装类，供API层和逻辑层调用。</li>
-  <li>消息层: 处理消息队列的消息，可调用数据层。</li>
-  <li>文档</li>
-  <li>单元测试</li>
+  <li>进程调度</li>
+  <li>内存管理</li>
+  <li>文件系统</li>
+  <li>创建和终止进程</li>
+  <li>设备访问</li>
+  <li>联网</li>
+  <li>提供系统调用应用编程接口（API）</li>
 </ul>
 
-<p>基于上述部分，你的项目代码应包含以下结构(省略了各目录下细分结构)：</p>
+<h3 id="内核态">内核态</h3>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>|____my_project
-| |____api
-| |____conf
-| |____data
-| |____doc
-| |____domain
-| |____message
-| |____models
-| |____query
-| |____rpc
-| |____scripts
-| |____test
-| |____util
-|______init__.py
-|____app.py
-|____settings.py
+<p>CPU运行的两种不同状态：<strong>内核态</strong>和<strong>用户态</strong>。</p>
 
-</code></pre></div></div>
+<p>相应的，虚拟内存内存区域划分（标记）为用户空间部分和内核空间部分，CPU处于用户态时只能访问用户空间的内存，处于内核态时可访问所有部分。</p>
 
-<p>如果是第一次开始一个项目工程，则需要谨慎考虑工程中这些抽象层的功能和调用逻辑，展开来说，就是每一个抽象层只能含有对应功能的代码，每一个抽象层只能调用特定的抽象层，并被特定的抽象层调用。有了清晰的层次结构，即使参与者的代码功底较差，也不至于使工程成为灾难而无从下手。笔者认为这是避免你的项目成为一锅粥的最有效的手段。</p>
+<p>只有处于内核态的CPU才可以执行特定操作，如宕机、访问内存管理硬件、初始化I/O设备等。</p>
 
-<p>关于调用逻辑，这里举个例子，一个api如果想访问DB层的数据，那它的调用关系应该是这样的：
-<code class="highlighter-rouge">API层 -&gt; 业务/查询逻辑层 -&gt; 数据层 -&gt; DB层</code>
-DB层只能被数据层调用，其他抽象层不能越过数据层直接对DB进行操作。</p>
+<h2 id="系统调用">系统调用</h2>
 
-<p>在项目不断扩展壮大的过程中，应坚决遵循期初设计的调用逻辑和功能抽象，以维持项目的层次结构。</p>
+<p>受控的内核入口，应用程序可以<strong>请求内核以自己名义去执行某些动作</strong>，内核以API形式提供这些入口。</p>
 
-<p>如果是在中途接手项目，则应理清项目的调用逻辑和功能设计，尊重并遵循设计者的层次结构。</p>
+<p>所有系统调用进入内核的方式相同，系统以一个唯一数字标识不同的系统调用，对应用程序不可见。</p>
 
-<p>在处理一个需求前，应首先拆分需求，考虑需求需要对项目中的哪些抽象层进行修改，并着手考虑代码设计。这样，再复杂的需求经过拆分，也将变得层次分明。你的项目代码的易读性和可维护性也不会随着业务的扩大而变得很糟。</p>
+<p>每个系统调用在内核中有自己的系统调用服务例程，借助glibc的外壳函数可以调用相应的服务例程，因此完整意义上的调用系统调用即<strong>借助外壳函数来调用相应的系统调用服务例程。</strong></p>
 
-<h2 id="tips">tips</h2>
+<h3 id="调用系统调用的执行过程">调用系统调用的执行过程</h3>
 
-<p>当然，如果你想寻求相对靠谱且通用性强的项目结构模板，这里有一款开源项目不错。<a href="http://cookiecutter.readthedocs.io/en/latest/readme.html">cookiecutter document</a></p>
+<p><img src="http://or9cryhof.bkt.clouddn.com/%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8.png" alt="" /></p>
+
+<p>调用系统调用过程通过<strong>中断</strong>指令实现用户态到内核态的切换。</p>
+
+<p>(End)</p>
 
 
         </article>
@@ -251,21 +245,6 @@ DB层只能被数据层调用，其他抽象层不能越过数据层直接对DB�
                     
                 
             
-        
-            
-            
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-            
                 
                     
                 
@@ -358,6 +337,21 @@ DB层只能被数据层调用，其他抽象层不能越过数据层直接对DB�
             
         
             
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
             
                 
                     
@@ -386,13 +380,11 @@ DB层只能被数据层调用，其他抽象层不能越过数据层直接对DB�
         <div class="post-recent">
     <div class="pre">
         
-        <p><strong>上一篇</strong> <a href="/2017/04/13/shejimoshi/">《大话设计模式》Python实现</a></p>
+        <p><strong>上一篇</strong> <a href="/2018/07/15/web/">大规模Web服务的一般性痛点与解决方案</a></p>
         
     </div>
     <div class="nex">
 
-        
-        <p><strong>下一篇</strong> <a href="/2018/01/17/yewu2/">Python Web 基础向（二） 操作数据库</a></p>
         
     </div>
 </div>
@@ -410,8 +402,8 @@ DB层只能被数据层调用，其他抽象层不能越过数据层直接对DB�
      */
 
     var disqus_config = function() {
-        this.page.url = 'http://localhost:4000/2018/01/16/yewu1/'; // Replace PAGE_URL with your page's canonical URL variable
-        this.page.identifier = 'http://localhost:4000/2018/01/16/yewu1/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+        this.page.url = 'http://localhost:4000/2018/07/16/linux/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2018/07/16/linux/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
     };
 
     (function() { // DON'T EDIT BELOW THIS LINE
