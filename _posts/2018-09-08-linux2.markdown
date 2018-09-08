@@ -1,4 +1,9 @@
-# Linux基础（二）文件系统及文件I/O
+---
+layout: post
+category: "Linux"
+title:  "Linux基础（二）文件系统及文件I/O"
+tags: [Linux, 读书笔记]
+---
 
 * content
 {:toc}
