@@ -25,6 +25,18 @@ type: page
 
 * [JoeCao微服务系列](https://github.com/JoeCao/JoeCao.github.io/issues/3)
 
+## 应用
+
+* [Mac桌面控制SizeUp](http://www.irradiatedsoftware.com/sizeup/)
+
+* [Sourcetree](https://www.sourcetreeapp.com/)
+
+* [Kitematic](https://kitematic.com/)
+
+* [Charles](https://www.charlesproxy.com/)
+
+* [vim配置 k-vim](https://github.com/wklken/k-vim)
+
 
 ## 问题
 
