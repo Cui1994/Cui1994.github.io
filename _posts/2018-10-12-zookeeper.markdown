@@ -258,6 +258,7 @@ public class TargetServer {
         server.register(args[0]);
         server.run();
     }
+}
 
 ```
 
