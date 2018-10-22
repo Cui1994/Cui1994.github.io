@@ -19,6 +19,8 @@ tags: [Zookeeper, 学习实战]
 
 Zookeeper是apache的一款开源项目，是一款基于观察者设计模式的分布式服务管理框架，负责存储和管理大家都关心的数据，接受观察者的注册。一旦数据发生变化，Zookeeper负责通知已经注册的观察者做出相应的反应。
 
+
+
 简单来说，**Zookeeper=文件系统+通知机制**。
 
 
@@ -39,13 +41,9 @@ Zookeeper是apache的一款开源项目，是一款基于观察者设计模式�
 ### 应用场景
 
 - 统一命名服务 隐藏服务ip
-
 - 统一配置管理
-
 - 统一集群管理
-
 - 服务器节点动态上线下
-
 - 软负载均衡
 
 
@@ -60,11 +58,15 @@ Zookeeper不能通过配置选定Master和Slaver，工作时只有一个节点�
 
 选举权重一般由**服务器ID**和**数据ID**决定。
 
+
+
 **选举状态**：
 - LOOKING，竞选状态。
 - FOLLOWING，随从状态，同步leader状态，参与投票。
 - OBSERVING，观察状态,同步leader状态，不参与投票。
 - LEADING，领导者状态。
+
+
 
 **5台服务器依次启动时的竞选流程**：
 1. 服务器1启动，给自己投票，然后发投票信息，由于其它机器还没有启动所以它收不到反馈信息，服务器1的状态一直属于Looking。
@@ -75,15 +77,15 @@ Zookeeper不能通过配置选定Master和Slaver，工作时只有一个节点�
 
 ![](http://or9cryhof.bkt.clouddn.com/fig01.png)
 
+
+
 ### 节点类型
 
 - **持久(PERSISTENT)**: CS断开连接之后，创建的节点不删除
-
 - **临时(Ephemeral)**: CS断开连接之后，创建的节点自己删除
-
 - **持久顺序编号(PERSISTENT_SEQUENTIAL)**: 每次都会创建的节点名称后悔附加一个单调递增的计数值，由父节点维护
-
 - **临时顺序编号(EPHEMERAL_SEQUENTIAL)**: 每次都会创建的节点名称后悔附加一个单调递增的计数值，由父节点维护，CS断开连接后自动删除
+
 
 
 ### 监听器
@@ -95,9 +97,13 @@ Zookeeper不能通过配置选定Master和Slaver，工作时只有一个节点�
 5. 当Zookeeper监听到有数据或者路径变化，就会发送消息给listener线程。
 6. listen线程调用自己的process()方法进行处理。
 
+
 常见的监听事件主要有：
+
 - 监听数据变化: `get path watch`
 - 监听子节点变化: `ls path watch`
+
+
 
 ### 写数据的流程
 
@@ -105,6 +111,8 @@ Zookeeper不能通过配置选定Master和Slaver，工作时只有一个节点�
 2. 如果Server不是Leader，Server1会将收到的请求转发给Leader，Leader会将写请求广播到各个Server，各个Server写成功后通知Leader。
 3. Leader收到半数以上Server写成功通知，就认为数据写成功，Leader会告诉Server1数据写成功。
 4. Server1通知Client写成功，整个写操作成功。
+
+
 
 ## 安装部署
 
@@ -118,6 +126,7 @@ https://mirrors.tuna.tsinghua.edu.cn/apache/zookeeper/zookeeper-3.4.10/
 
 将`conf/zoo_sample.cfg`修改为`conf/zoo.cfg`
 并将`zoo.cfg`中的dataDir目录进行修改（原本在/tmp目录下）
+
 
 各参数含义
 ```
