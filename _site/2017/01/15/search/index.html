@@ -102,6 +102,8 @@
                 
                     
                 
+                    
+                
             </ul>
         </nav>
     </div>
@@ -187,19 +189,19 @@
   </li>
   <li>定义全局变量
 在main.view中写入：
-    <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@main.before_app_request</span>
-<span class="k">def</span> <span class="nf">before_request</span><span class="p">():</span> <span class="c">#定义全局变量</span>
-  <span class="n">g</span><span class="o">.</span><span class="n">search_form</span> <span class="o">=</span> <span class="n">SearchForm</span><span class="p">()</span>
+    <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">@</span><span class="n">main</span><span class="o">.</span><span class="n">before_app_request</span>
+<span class="k">def</span> <span class="nf">before_request</span><span class="p">():</span> <span class="c1">#定义全局变量
+</span>  <span class="n">g</span><span class="o">.</span><span class="n">search_form</span> <span class="o">=</span> <span class="n">SearchForm</span><span class="p">()</span>
 </code></pre></div>    </div>
     <p>就将一个搜索框设置成为了程序上下文变量。</p>
   </li>
   <li>创建搜索和搜索结果的视图函数
-    <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@main.route</span><span class="p">(</span><span class="s">'/search'</span><span class="p">,</span> <span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="s">'POST'</span><span class="p">])</span>
+    <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">@</span><span class="n">main</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s">'/search'</span><span class="p">,</span> <span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="s">'POST'</span><span class="p">])</span>
 <span class="k">def</span> <span class="nf">search</span><span class="p">():</span>
   <span class="k">if</span> <span class="ow">not</span> <span class="n">g</span><span class="o">.</span><span class="n">search_form</span><span class="o">.</span><span class="n">validate_on_submit</span><span class="p">():</span>
       <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s">'.index'</span><span class="p">))</span>
   <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s">'.search_results'</span><span class="p">,</span> <span class="n">query</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">search_form</span><span class="o">.</span><span class="n">search</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
-<span class="nd">@main.route</span><span class="p">(</span><span class="s">'/search-results/&lt;query&gt;'</span><span class="p">)</span>
+<span class="o">@</span><span class="n">main</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s">'/search-results/&lt;query&gt;'</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">search_results</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
   <span class="k">pass</span>
 </code></pre></div>    </div>
@@ -241,6 +243,51 @@
         <hr>
 
         
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
         
             
             
@@ -351,39 +398,6 @@
                 
                     
                 
-            
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-            
-        
-            
-            
-                
-                    
-                
-                    
-                
-            
-        
-            
-            
-                
-                    
-                
-                    
-                
-            
-        
-            
             
                 
                     

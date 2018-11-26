@@ -102,6 +102,8 @@
                 
                     
                 
+                    
+                
             </ul>
         </nav>
     </div>
@@ -198,20 +200,20 @@
 	<span class="k">return</span> <span class="n">x</span>
 
 <span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">'__main__'</span><span class="p">:</span>
-    <span class="c"># 结果对象为[func(1), func(2), func(3)]</span>
-	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="n">func</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">func</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">func</span><span class="p">(</span><span class="mi">3</span><span class="p">)]:</span>
+    <span class="c1"># 结果对象为[func(1), func(2), func(3)]
+</span>	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="n">func</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">func</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">func</span><span class="p">(</span><span class="mi">3</span><span class="p">)]:</span>
 		<span class="k">print</span> <span class="n">x</span>
 
-<span class="c">########################################</span>
-<span class="c"># OUTPUT:</span>
-<span class="c"># run func...</span>
-<span class="c"># run func...</span>
-<span class="c"># run func...</span>
-<span class="c"># 1</span>
-<span class="c"># 2</span>
-<span class="c"># 3</span>
-<span class="c">########################################</span>
-</code></pre></div></div>
+<span class="c1">########################################
+# OUTPUT:
+# run func...
+# run func...
+# run func...
+# 1
+# 2
+# 3
+########################################
+</span></code></pre></div></div>
 
 <p>迭代版本：</p>
 
@@ -227,8 +229,8 @@
 
 	<span class="k">def</span> <span class="nf">next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_list</span><span class="p">):</span>
-			<span class="c"># tip:	can't return</span>
-			<span class="k">raise</span> <span class="nb">StopIteration</span>
+			<span class="c1"># tip:	can't return
+</span>			<span class="k">raise</span> <span class="nb">StopIteration</span>
 		<span class="k">else</span><span class="p">:</span>
 			<span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_list</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">])</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -249,20 +251,20 @@
 		<span class="k">return</span> <span class="n">MyIterator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_list</span><span class="p">)</span>
 
 <span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">'__main__'</span><span class="p">:</span>
-    <span class="c"># 结果对象为MyIterable([1,2,3])</span>
-	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">MyIterable</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]):</span>
+    <span class="c1"># 结果对象为MyIterable([1,2,3])
+</span>	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">MyIterable</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]):</span>
 		<span class="k">print</span> <span class="n">x</span>
 
-<span class="c">########################################</span>
-<span class="c"># OUTPUT:</span>
-<span class="c"># run func...</span>
-<span class="c"># 1</span>
-<span class="c"># run func...</span>
-<span class="c"># 2</span>
-<span class="c"># run func...</span>
-<span class="c"># 3</span>
-<span class="c">########################################</span>
-</code></pre></div></div>
+<span class="c1">########################################
+# OUTPUT:
+# run func...
+# 1
+# run func...
+# 2
+# run func...
+# 3
+########################################
+</span></code></pre></div></div>
 
 <h2 id="生成器函数">生成器函数</h2>
 <p>函数体中带有<code class="highlighter-rouge">yield</code>的函数几位生成器函数，调用生成器函数将返回一个生成器对象。
@@ -330,6 +332,51 @@
                     
                 
             
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
                 
                     
                 
@@ -398,39 +445,6 @@
                 
                     
                 
-            
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-            
-        
-            
-            
-                
-                    
-                
-                    
-                
-            
-        
-            
-            
-                
-                    
-                
-                    
-                
-            
-        
-            
             
                 
                     

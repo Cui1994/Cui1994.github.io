@@ -113,7 +113,7 @@ Linux内核维护着三种文件相关的数据结构
     + 文件大小
 
 ### 三个数据结构的引用关系
-![](http://or9cryhof.bkt.clouddn.com/WX20180908-153418@2x.png)
+![](https://i.loli.net/2018/11/26/5bfc05bb6dc2c.png)
 
 - 多个文件描述符指向同一打开文件句柄的情况：
 同一进程内复制的文件描述符，和fork出的子进程所获得的文件描述符副本都会指向同一文件句柄。
@@ -136,7 +136,7 @@ Shell中可以通过`ln`为已存在的文件创建新的硬链接，这样将�
 - **符号链接（软连接）**
 Shell中可以通过`ln-s`为已存在的文件创建软连接，它并不会引入新的指向i-node的指针，而是将文件名作为数据块的内容。
 
-![](http://or9cryhof.bkt.clouddn.com/WX20180908-160939@2x.png)
+![](https://i.loli.net/2018/11/26/5bfc05fcdff32.png)
 
 ## 文件I/O缓冲
 
@@ -179,7 +179,7 @@ stream = fdopen(fd, mode)
 
 ### 缓冲及刷新过程
 
-![](http://or9cryhof.bkt.clouddn.com/WX20180908-174206@2x.png)
+![](https://i.loli.net/2018/11/26/5bfc0586ad8da.png)
 
 
 (End)

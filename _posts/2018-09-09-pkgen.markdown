@@ -44,7 +44,7 @@ def pkgen(cls):
 
 所以推测问题在这，果然登陆机器查看pid最大值结果如下：
 
-![](http://or9cryhof.bkt.clouddn.com/WX20180909-214203@2x.png)
+![](https://i.loli.net/2018/11/26/5bfc0623ea159.png)
 
 而线上全部为32位机，所以暂时没有暴露问题。
 

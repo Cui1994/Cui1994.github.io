@@ -13,7 +13,7 @@ tags: [ORM, 缓存]
 
 ![此处输入图片的描述][1]
 
-  [1]: http://or9cryhof.bkt.clouddn.com/6a00d8347d063969e201bb091e1152970d-800wi.png
+  [1]: https://i.loli.net/2018/11/26/5bfc04705c3ce.png
 
 
 
@@ -74,7 +74,7 @@ class StudentModel(DeclarativeBase):
 
         if count:
             return query_.scalar()
-        
+
         if condition.get('page') and condition.get('page_size'):
             query_ = query_.order_by(cls.id.desc())
             offset = (condition.get('page') - 1) * condition.get('page_size')
@@ -89,7 +89,7 @@ class StudentModel(DeclarativeBase):
 # query/student.py
 
 class StudentQuery(object):
-	
+
 	# ...
 
     def _extend_journals(self, student_list):
@@ -131,10 +131,10 @@ class StudentQuery(objecy):
     def get_all_student_id_with_school_id_list(self, school_id_list):
     	# 这里分块大小需根据DB数据规模而定，或做成可配，以后会讲到配置可视化问题。
         block_size = 5000
-        
+
         def sync_get_all_student_with_school_id_list(block_school_id_list):
             return self.student.get_all_student_id_with_school_id_list(block_school_id_list)
-        
+
         jobs = [gevent.spawn(sync_get_all_student_with_school_id_list, school_id_list[i, i+block_size])
                 for i in range(0, len(school_id_list), block_size)]
         gevent.joinall(jobs)

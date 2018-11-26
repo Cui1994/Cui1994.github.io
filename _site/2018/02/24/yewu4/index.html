@@ -102,6 +102,8 @@
                 
                     
                 
+                    
+                
             </ul>
         </nav>
     </div>
@@ -170,26 +172,26 @@
 
 <p>这里要注意逻辑层聚合和数据层聚合的区别。<code class="highlighter-rouge">Activity</code>和<code class="highlighter-rouge">ActivityTracking</code>虽然是两张表，但都记录着活动相关的数据，因此可以聚合到一个<code class="highlighter-rouge">Acticity</code>数据类中。而在活动的业务层中，聚合的范围则要大得多，可能会对用户、账户、余额、等级等多方面的东西都有操作，这是活动这一业务所决定的（之后会提到）。</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># data/student.py</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># data/student.py
+</span>
 <span class="kn">from</span> <span class="nn">my_project.models</span> <span class="kn">import</span> <span class="n">auto_commit</span>
 <span class="kn">from</span> <span class="nn">my_project.models.student</span> <span class="kn">import</span> <span class="n">StudentModel</span>
 
 <span class="k">class</span> <span class="nc">Student</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 
-    <span class="nd">@auto_commit</span>
+    <span class="o">@</span><span class="n">auto_commit</span>
     <span class="k">def</span> <span class="nf">insert_student</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">student</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">StudentModel</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">student</span><span class="p">)</span>
 
-    <span class="nd">@auto_commit</span>
+    <span class="o">@</span><span class="n">auto_commit</span>
     <span class="k">def</span> <span class="nf">update_student</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">student</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">StudentModel</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">student</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">mget_student_with_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">student_id</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">StudentModel</span><span class="o">.</span><span class="n">mget_student_with_id</span><span class="p">(</span><span class="n">student_id</span><span class="p">)</span>
 
-    <span class="c"># ...</span>
-</code></pre></div></div>
+    <span class="c1"># ...
+</span></code></pre></div></div>
 
 <p>(End)</p>
 
@@ -211,6 +213,27 @@
             
                 
             
+        
+            
+            
+                
+            
+                
+            
+        
+            
+            
+                
+            
+                
+            
+        
+            
+            
+                
+            
+                
+            
                 
             
                 
@@ -247,25 +270,6 @@
             
         
             
-            
-                
-            
-        
-            
-            
-                
-            
-        
-            
-            
-                
-            
-                
-            
-        
-            
-            
-                
             
                 
             

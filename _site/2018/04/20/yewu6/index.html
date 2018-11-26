@@ -102,6 +102,8 @@
                 
                     
                 
+                    
+                
             </ul>
         </nav>
     </div>
@@ -181,8 +183,8 @@
 
 <p>调用数据层的查询方法即可，需要考虑数据缺失的异常情况，单个查询数据丢失时是否抛错，列表查询丢失数据时是否返回空值等。</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># query/student.py</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># query/student.py
+</span>
 <span class="kn">from</span> <span class="nn">my_project.data.student</span> <span class="kn">import</span> <span class="n">Student</span>
 <span class="kn">from</span> <span class="nn">my_project.util.trans</span> <span class="kn">import</span> <span class="n">convert_student_info_to_dict</span>
 <span class="kn">from</span> <span class="nn">my_project.exc</span> <span class="kn">import</span> <span class="n">raise_user_exc</span><span class="p">,</span> <span class="n">ProjectErrorCode</span>
@@ -206,21 +208,21 @@
 
 <p>这个场景下，需要根据不同的条件组合查询方式，并根据页数和大小进行取模，并返回数据总量用于前端分页。如果筛选条件并不存在于数据库的列中，而是通过某一列与其他表关联，在筛选之前要拿到所有充当外键的列的值，传入当前<code class="highlighter-rouge">model</code>对象中进行查询。</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># models/student</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># models/student
+</span>
 <span class="k">class</span> <span class="nc">StudentModel</span><span class="p">(</span><span class="n">DeclarativeBase</span><span class="p">):</span>
 
-	<span class="c"># ...</span>
-
-    <span class="nd">@classmethod</span>
+	<span class="c1"># ...
+</span>
+    <span class="o">@</span><span class="nb">classmethod</span>
     <span class="k">def</span> <span class="nf">mget_student_list</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">count</span><span class="p">:</span>
             <span class="n">query_</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="nb">id</span><span class="p">))</span><span class="o">.</span><span class="nb">filter</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">is_deleted</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">query_</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span><span class="o">.</span><span class="nb">filter</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">is_deleted</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">condition</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'to_date'</span><span class="p">)</span> <span class="ow">and</span> <span class="n">condition</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'from_date'</span><span class="p">):</span>
-        	<span class="c"># utc2datetime为时间戳转datetime对象的工具方法</span>
-            <span class="n">to_date</span> <span class="o">=</span> <span class="n">utc2datetime</span><span class="p">(</span><span class="n">condition</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'to_date'</span><span class="p">))</span>
+        	<span class="c1"># utc2datetime为时间戳转datetime对象的工具方法
+</span>            <span class="n">to_date</span> <span class="o">=</span> <span class="n">utc2datetime</span><span class="p">(</span><span class="n">condition</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'to_date'</span><span class="p">))</span>
             <span class="n">from_date</span> <span class="o">=</span> <span class="n">utc2datetime</span><span class="p">(</span><span class="n">condition</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'from_date'</span><span class="p">))</span>
             <span class="n">query_</span> <span class="o">=</span> <span class="n">query_</span><span class="o">.</span><span class="nb">filter</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">created_at</span> <span class="o">&gt;=</span> <span class="n">from_date</span><span class="p">,</span>
                                    <span class="n">cls</span><span class="o">.</span><span class="n">created_at</span> <span class="o">&lt;=</span> <span class="n">to_date</span><span class="p">)</span>
@@ -240,12 +242,12 @@
 
 <p>返回结果作为筛选结果的展示内容，如果需要展示的字段涉及其他表的内容，则需要构建<code class="highlighter-rouge">_extend_journals</code>方法进行组合，要注意查询其他表内容时需要批量获取以降低数据库IO。</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># query/student.py</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># query/student.py
+</span>
 <span class="k">class</span> <span class="nc">StudentQuery</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 	
-	<span class="c"># ...</span>
-
+	<span class="c1"># ...
+</span>
     <span class="k">def</span> <span class="nf">_extend_journals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">student_list</span><span class="p">):</span>
         <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">student_id_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">student</span><span class="o">.</span><span class="nb">id</span> <span class="k">for</span> <span class="n">student</span> <span class="ow">in</span> <span class="n">student_list</span><span class="p">]</span>
@@ -253,8 +255,8 @@
         <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">student_list</span><span class="p">:</span>
             <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
                 <span class="s">'name'</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                <span class="c"># ...</span>
-                <span class="s">'identity_id'</span><span class="p">:</span> <span class="n">identity_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="nb">id</span><span class="p">)</span><span class="o">.</span><span class="nb">id</span>
+                <span class="c1"># ...
+</span>                <span class="s">'identity_id'</span><span class="p">:</span> <span class="n">identity_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="nb">id</span><span class="p">)</span><span class="o">.</span><span class="nb">id</span>
             <span class="p">})</span>
 
     <span class="k">def</span> <span class="nf">get_student_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">):</span>
@@ -275,15 +277,15 @@
 
 <p>实际业务场景中经常会碰到大数据量数据查询的情况，如获取某一城市所有的学生列表。大数据量查询本身是需要一定耗时的，因此首先想到的思路是离线计算，将对应城市所有的学生列表存在线下库里的某一列中，查询时就可以实时取出，我们将在之后详细介绍此类业务场景的思路。但事与愿违，你的项目中可能不得不处理一些大数据量的查询工作，这时可以借助python的协程解决高IO负载查询。</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># query/student.py</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># query/student.py
+</span>
 <span class="k">class</span> <span class="nc">StudentQuery</span><span class="p">(</span><span class="n">objecy</span><span class="p">):</span>
 
-	<span class="c"># ...</span>
-
+	<span class="c1"># ...
+</span>
     <span class="k">def</span> <span class="nf">get_all_student_id_with_school_id_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">school_id_list</span><span class="p">):</span>
-    	<span class="c"># 这里分块大小需根据DB数据规模而定，或做成可配，以后会讲到配置可视化问题。</span>
-        <span class="n">block_size</span> <span class="o">=</span> <span class="mi">5000</span>
+    	<span class="c1"># 这里分块大小需根据DB数据规模而定，或做成可配，以后会讲到配置可视化问题。
+</span>        <span class="n">block_size</span> <span class="o">=</span> <span class="mi">5000</span>
         
         <span class="k">def</span> <span class="nf">sync_get_all_student_with_school_id_list</span><span class="p">(</span><span class="n">block_school_id_list</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">student</span><span class="o">.</span><span class="n">get_all_student_id_with_school_id_list</span><span class="p">(</span><span class="n">block_school_id_list</span><span class="p">)</span>
@@ -312,8 +314,8 @@
 
 <p>需要注意，由于缓存的超时时间一般较久，在遇到问题时再去处理redis较为麻烦，因此需要开关控制，在出问题时可直接绕过缓存读取数据库中内容，而不必等缓存失效。</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># cache/student.py</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># cache/student.py
+</span>
 <span class="kn">import</span> <span class="nn">json</span>
 
 <span class="kn">from</span> <span class="nn">my_project.data.student</span> <span class="kn">import</span> <span class="n">Student</span>
@@ -324,7 +326,7 @@
 
 <span class="k">class</span> <span class="nc">StudentCache</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 
-    <span class="nd">@staticmethod</span>
+    <span class="o">@</span><span class="nb">staticmethod</span>
     <span class="k">def</span> <span class="nf">get_student_info</span><span class="p">(</span><span class="n">student_ids</span><span class="p">):</span>
         <span class="n">student_info_redis_key</span> <span class="o">=</span> <span class="s">"STUDENT_INFO_{}"</span>
         <span class="n">query_list</span> <span class="o">=</span> <span class="p">[]</span>
@@ -334,7 +336,7 @@
             <span class="k">with</span> <span class="n">redis_client</span><span class="o">.</span><span class="n">pipeline</span><span class="p">(</span><span class="n">transaction</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">pipe</span><span class="p">:</span>
                 <span class="n">BLOCK_SIZE</span> <span class="o">=</span> <span class="mi">100</span>
                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">student_ids</span><span class="p">),</span> <span class="n">BLOCK_SIZE</span><span class="p">):</span>
-                    <span class="n">pipe</span><span class="o">.</span><span class="n">mget</span><span class="p">([</span><span class="n">student_info_redis_key</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">student_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">student_id</span> <span class="ow">in</span> <span class="n">student_ids</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">BLOCK_SIZE</span><span class="p">]])</span>
+                    <span class="n">pipe</span><span class="o">.</span><span class="n">mget</span><span class="p">([</span><span class="n">student_info_redis_key</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="n">student_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">student_id</span> <span class="ow">in</span> <span class="n">student_ids</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">BLOCK_SIZE</span><span class="p">]])</span>
                 <span class="n">res</span> <span class="o">=</span> <span class="n">pipe</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">student_ids</span><span class="p">)):</span>
@@ -343,8 +345,8 @@
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">result</span><span class="p">[</span><span class="n">student_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="n">i</span> <span class="o">/</span> <span class="n">BLOCK_SIZE</span><span class="p">][</span><span class="n">i</span> <span class="o">%</span> <span class="n">BLOCK_SIZE</span><span class="p">],</span>
                                                         <span class="n">object_hook</span><span class="o">=</span><span class="n">my_json_obj_hook</span><span class="p">)</span>
-                    <span class="c"># 这里的object_hook和下面的Encoder使用工具类中json序列化中的方法，实现对数据库中一些对象的序列化和反序列化</span>
-        <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># 这里的object_hook和下面的Encoder使用工具类中json序列化中的方法，实现对数据库中一些对象的序列化和反序列化
+</span>        <span class="k">else</span><span class="p">:</span>
             <span class="n">query_list</span> <span class="o">=</span> <span class="n">student_ids</span>
 
         <span class="n">new_query_dict</span> <span class="o">=</span> <span class="n">Student</span><span class="p">()</span><span class="o">.</span><span class="n">mget_student_list</span><span class="p">(</span><span class="n">query_list</span><span class="p">)</span>
@@ -354,7 +356,7 @@
                 <span class="n">student_info</span> <span class="o">=</span> <span class="n">convert_student_info_to_dict</span><span class="p">(</span><span class="n">student</span><span class="p">)</span>
                 <span class="n">result</span><span class="p">[</span><span class="n">student</span><span class="o">.</span><span class="nb">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">student_info</span>
                 <span class="k">if</span> <span class="n">cache_time</span><span class="p">:</span>
-                    <span class="n">pipe</span><span class="o">.</span><span class="nb">set</span><span class="p">(</span><span class="n">student_info_redis_key</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">student</span><span class="o">.</span><span class="nb">id</span><span class="p">),</span>
+                    <span class="n">pipe</span><span class="o">.</span><span class="nb">set</span><span class="p">(</span><span class="n">student_info_redis_key</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="n">student</span><span class="o">.</span><span class="nb">id</span><span class="p">),</span>
                              <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">student_info</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">MyJsonEncoder</span><span class="p">),</span>
                              <span class="n">cache_time</span><span class="p">)</span>
             <span class="n">pipe</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
@@ -399,6 +401,51 @@
                     
                 
             
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
                 
                     
                 
@@ -475,59 +522,6 @@
                 
             
         
-            
-            
-                
-                    
-                
-                    
-                
-            
-        
-            
-            
-                
-                    
-                        
-                        <h2 id="similar_posts">Similar Posts</h2>
-                        <ul>
-                        
-                        <li class="relatedPost">
-                            <a href="/2018/01/17/yewu2/">Python Web 基础向（二） 操作数据库
-                            
-                            </a>
-                        </li>
-                        
-                        
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-            
-        
-            
-            
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-            
-        
-        
-            </ul>
         
 
         <div class="post-recent">
@@ -587,8 +581,6 @@
                     Content
                 </div>
                 <ul id="content-side" class="content-ul">
-                    
-                    <li><a href="#similar_posts">Similar Posts</a></li>
                     
                     <li><a href="#comments">Comments</a></li>
                 </ul>

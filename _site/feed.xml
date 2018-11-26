@@ -5,9 +5,81 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 17 Jul 2018 00:01:26 +0800</pubDate>
-    <lastBuildDate>Tue, 17 Jul 2018 00:01:26 +0800</lastBuildDate>
-    <generator>Jekyll v3.6.2</generator>
+    <pubDate>Tue, 23 Oct 2018 01:00:41 +0800</pubDate>
+    <lastBuildDate>Tue, 23 Oct 2018 01:00:41 +0800</lastBuildDate>
+    <generator>Jekyll v3.8.4</generator>
+    
+      <item>
+        <title>Zookeeper全攻略</title>
+        <description>
+&lt;img src=&quot;http://or9cryhof.bkt.clouddn.com/images.jpeg&quot; alt=&quot;&quot; /&gt;
+
+</description>
+        <pubDate>Fri, 12 Oct 2018 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2018/10/12/zookeeper/</link>
+        <guid isPermaLink="true">http://localhost:4000/2018/10/12/zookeeper/</guid>
+        
+        <category>Zookeeper</category>
+        
+        <category>学习实战</category>
+        
+        
+        <category>Zookeeper</category>
+        
+      </item>
+    
+      <item>
+        <title>使用pkgen生成唯一id的问题</title>
+        <description>之前项目中有通过pkgen生成唯一id作为token字符串使用，一直未发现问题。
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;token&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PkGen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pkgen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pk&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+直到前些天在测试环境（服务器为阿里云）突然开始抛出异常。
+
+</description>
+        <pubDate>Sun, 09 Sep 2018 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2018/09/09/pkgen/</link>
+        <guid isPermaLink="true">http://localhost:4000/2018/09/09/pkgen/</guid>
+        
+        <category>Python</category>
+        
+        <category>排坑</category>
+        
+        
+        <category>Python</category>
+        
+      </item>
+    
+      <item>
+        <title>Linux基础（二）文件系统及文件I/O</title>
+        <description>
+理解Linux文件系统的关键一点在于&lt;strong&gt;一切皆文件&lt;/strong&gt;的思想。
+
+Linux中，文件既包括普通数据文件，又包括如设备、管道、套接字、目录、符号链接等特殊文件。
+
+文件系统指的是常规文件和目录的组织集合，Linux支持多种文件系统，并提供虚拟文件系统（VFS）来隐藏不同文件系统的实现细节。
+
+Linux内核维护了三种与文件相关的数据结构，也提供了一套通用的文件I/O模型对所有类型的文件进行操作。
+
+&lt;blockquote&gt;
+  该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
+书中的编程练习这里不做展示和说明。
+&lt;/blockquote&gt;
+
+</description>
+        <pubDate>Sat, 08 Sep 2018 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2018/09/08/linux2/</link>
+        <guid isPermaLink="true">http://localhost:4000/2018/09/08/linux2/</guid>
+        
+        <category>Linux</category>
+        
+        <category>读书笔记</category>
+        
+        
+        <category>Linux</category>
+        
+      </item>
     
       <item>
         <title>Linux基础（一）内核及系统调用</title>
@@ -177,64 +249,6 @@ api层的代码应简单清晰，甚至你的每个路由对应的函数都“�
         <category>request</category>
         
         <category>工具函数</category>
-        
-        
-        <category>Python Web</category>
-        
-      </item>
-    
-      <item>
-        <title>《马戏之王》—— 另一种形式的爽片</title>
-        <description>&lt;img src=&quot;http://or9cryhof.bkt.clouddn.com/p2507867454.jpg&quot; alt=&quot;马戏之王&quot; /&gt;
-
-</description>
-        <pubDate>Wed, 31 Jan 2018 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2018/01/31/TheGreatestShowman/</link>
-        <guid isPermaLink="true">http://localhost:4000/2018/01/31/TheGreatestShowman/</guid>
-        
-        <category>马戏之王</category>
-        
-        
-        <category>影评</category>
-        
-      </item>
-    
-      <item>
-        <title>什么是优秀的公开博客</title>
-        <description>
-坚持写博客是我一直以来的一个目标，当然现在看来做的很差，时而兴起才会写一写。在我的理解里，博客既是写给别人看，又是写给自己看的。对自己来说，有个属于自己的地方能够分享自己的所见、所想、所学、所感，对他人来说，你的博客说不定解决了其他人正在头疼的问题，于己于人好处多多。但博客这东西，客观来说还是良莠不齐，质量上乘的博客（如阮一峰）确实有其独到之处，我想借这篇文章尝试分析一下好的博客究竟好在哪里，也好找个标杆，早日写出优秀博客。
-
-&lt;img src=&quot;http://or9cryhof.bkt.clouddn.com/Blog-graphic-from-Istock_gaitubao_com_362x181.jpg&quot; alt=&quot;&quot; /&gt;
-
-</description>
-        <pubDate>Sat, 20 Jan 2018 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2018/01/20/boke/</link>
-        <guid isPermaLink="true">http://localhost:4000/2018/01/20/boke/</guid>
-        
-        <category>博客</category>
-        
-        
-        <category>杂谈</category>
-        
-      </item>
-    
-      <item>
-        <title>Python Web 基础向（二） 操作数据库</title>
-        <description>
-从这篇文章开始，将对上文中所提起及的各抽象层进行进一步阐述，涉及互联网业务代码中的各项基本操作。本文以MySQL为例操作关系型数据库。
-
-注: 此系列文章依托Flask框架介绍，但涉及框架内容较少，具有一定普适性。
-
-&lt;img src=&quot;http://or9cryhof.bkt.clouddn.com/timg%20%281%29_gaitubao_com_339x254.jpeg&quot; alt=&quot;&quot; /&gt;
-
-</description>
-        <pubDate>Wed, 17 Jan 2018 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2018/01/17/yewu2/</link>
-        <guid isPermaLink="true">http://localhost:4000/2018/01/17/yewu2/</guid>
-        
-        <category>ORM</category>
-        
-        <category>sql</category>
         
         
         <category>Python Web</category>

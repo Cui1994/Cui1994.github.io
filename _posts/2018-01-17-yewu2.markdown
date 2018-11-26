@@ -12,7 +12,7 @@ tags: [ORM, sql]
 
 注: 此系列文章依托Flask框架介绍，但涉及框架内容较少，具有一定普适性。
 
-![](http://or9cryhof.bkt.clouddn.com/timg%20%281%29_gaitubao_com_339x254.jpeg)
+![](https://i.loli.net/2018/11/26/5bfc01b1f2b0a.png)
 
 
 
@@ -102,7 +102,7 @@ class RoutingSession(Session):
             self.rollback()
         finally:
             self.close()
-            
+
 
 def gen_commit_deco(session_factory):
     def decorated(func):

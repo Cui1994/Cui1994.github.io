@@ -102,6 +102,8 @@
                 
                     
                 
+                    
+                
             </ul>
         </nav>
     </div>
@@ -203,8 +205,8 @@
 
 <p>同样在错误处理部分也需要对三种类型的异常进行区分。</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># exc.py</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># exc.py
+</span>
 <span class="k">class</span> <span class="nc">ProjectErrorCode</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="n">UNKNOWN_ERROR</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">DATABASE_ERROR</span> <span class="o">=</span> <span class="mi">1</span>
@@ -212,7 +214,7 @@
 
     <span class="n">PARAM_IS_EMPTY</span> <span class="o">=</span> <span class="mi">100</span>
 
-    <span class="nd">@classmethod</span>
+    <span class="o">@</span><span class="nb">classmethod</span>
     <span class="k">def</span> <span class="nf">_value_to_name</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">err_code</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="nb">getattr</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">'_'</span><span class="p">))[</span><span class="n">err_code</span><span class="p">]</span>
 
@@ -246,8 +248,8 @@
         <span class="n">translation</span>
     <span class="p">)</span>
 
-<span class="c"># ... </span>
-</code></pre></div></div>
+<span class="c1"># ... 
+</span></code></pre></div></div>
 
 <h2 id="工具类">工具类</h2>
 
@@ -257,8 +259,8 @@
 
 <p>封装需要发起HTTP请求第三方服务的函数, 负责检查相应状态码、处理异常、记录日志并抛错。</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># util/request.py</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># util/request.py
+</span>
 <span class="kn">import</span> <span class="nn">requests</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -301,30 +303,30 @@
                                        <span class="n">timeout</span><span class="o">=</span><span class="p">(</span><span class="n">connect_timeout</span><span class="p">,</span> <span class="n">read_timeout</span><span class="p">),</span>
                                        <span class="n">verify</span><span class="o">=</span><span class="n">ssl_verify</span><span class="p">)</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="k">if</span> <span class="n">return_json</span> <span class="k">else</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">u'http请求返回,URL[{}],耗时[{}],返回值[{}]'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">u'http请求返回,URL[{}],耗时[{}],返回值[{}]'</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span>
             <span class="n">url</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">elapsed</span><span class="o">.</span><span class="n">microseconds</span><span class="p">,</span> <span class="n">result</span><span class="p">))</span>
     <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectTimeout</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">'[CONNECT_TIMEOUT]URL[{}],PARAMS[{}],DATA[{}]'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">'[CONNECT_TIMEOUT]URL[{}],PARAMS[{}],DATA[{}]'</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span>
             <span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
         <span class="n">raise_user_exc</span><span class="p">(</span><span class="n">ProjectErrorCode</span><span class="o">.</span><span class="n">CONNECT_TIMEOUT_ERROR</span><span class="p">)</span>
     <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ReadTimeout</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">'[READ_TIMEOUT]URL[{}],PARAMS[{}],DATA[{}]'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">'[READ_TIMEOUT]URL[{}],PARAMS[{}],DATA[{}]'</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span>
             <span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
         <span class="n">raise_user_exc</span><span class="p">(</span><span class="n">ProjectErrorCode</span><span class="o">.</span><span class="n">READ_TIMEOUT_ERROR</span><span class="p">)</span>
     <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-            <span class="s">'[HTTP_RESPONSE_ERROR]URL[{}],PARAMS[{}],DATA[{}],ERROR[{}]'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>   <span class="c"># noqa</span>
-                <span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ex</span><span class="p">)))</span>
+            <span class="s">'[HTTP_RESPONSE_ERROR]URL[{}],PARAMS[{}],DATA[{}],ERROR[{}]'</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span>   <span class="c1"># noqa
+</span>                <span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ex</span><span class="p">)))</span>
         <span class="n">raise_user_exc</span><span class="p">(</span><span class="n">ProjectErrorCode</span><span class="o">.</span><span class="n">HTTP_RESPONSE_ERROR</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ex</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">500</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-            <span class="s">'[HTTP_5XX_ERROR]URL[{}],PARAMS[{}],DATA[{}]'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="s">'[HTTP_5XX_ERROR]URL[{}],PARAMS[{}],DATA[{}]'</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span>
                 <span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
         <span class="n">raise_user_exc</span><span class="p">(</span><span class="n">ProjectErrorCode</span><span class="o">.</span><span class="n">HTTP_5XX_ERROR</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">int</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">400</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-            <span class="s">'[HTTP_4XX_ERROR]URL[{}],PARAMS[{}],DATA[{}]'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="s">'[HTTP_4XX_ERROR]URL[{}],PARAMS[{}],DATA[{}]'</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span>
                 <span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
         <span class="n">raise_user_exc</span><span class="p">(</span><span class="n">ProjectErrorCode</span><span class="o">.</span><span class="n">HTTP_4XX_ERROR</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">result</span>
@@ -335,8 +337,8 @@
 
 <p>一些正则判别式，负责校验参数等。</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># util/validate.py</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># util/validate.py
+</span>
 <span class="kn">import</span> <span class="nn">re</span>
 
 
@@ -351,8 +353,8 @@
 
 <p>一些变换类函数，负责处理数据结构的转换。例如将ORM对象转换为字典，将参数中的key转换为自己需要的key等。</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># util/trans.py</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># util/trans.py
+</span>
 <span class="k">def</span> <span class="nf">convert_student_info_to_dict</span><span class="p">(</span><span class="n">student_info</span><span class="p">):</span>
     <span class="n">d</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
     <span class="n">d</span><span class="p">[</span><span class="s">'name'</span><span class="p">]</span> <span class="o">=</span> <span class="n">student_info</span><span class="o">.</span><span class="n">name</span>
@@ -366,8 +368,8 @@
 
 <p>与<code class="highlighter-rouge">trans</code>作用类似，不过负责处理的是信息表示的转换。例如将外界的状态码表示转换为中文等。</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># util/contants.py</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># util/contants.py
+</span>
 <span class="n">STATUS_TO_ZH</span> <span class="o">=</span> <span class="p">{</span>
     <span class="mi">0</span><span class="p">:</span> <span class="s">u'失败'</span><span class="p">,</span>
     <span class="mi">1</span><span class="p">:</span> <span class="s">u'成功'</span><span class="p">,</span>
@@ -380,8 +382,8 @@
 
 <p>构造返回给客户端的响应方法，统一相应格式，并统一记录状态码。</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># util/response.py</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># util/response.py
+</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Response</span>
 
@@ -467,6 +469,63 @@
                     
                 
             
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
                 
                     
                 
@@ -545,55 +604,6 @@
             
         
             
-            
-                
-                    
-                
-                    
-                
-                    
-                
-            
-        
-            
-            
-                
-                    
-                
-                    
-                
-                    
-                
-            
-        
-            
-            
-                
-                    
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-                    
-                
-            
-        
-            
-            
-                
-                    
-                
-                    
-                
-                    
-                
             
                 
                     

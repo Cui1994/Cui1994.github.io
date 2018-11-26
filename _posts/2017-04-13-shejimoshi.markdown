@@ -10,7 +10,7 @@ tags: [设计模式]
 
 学习自大话设计模式，将其C#语言实现翻译为Python，同时参照此系列博客：[Python设计模式][1] 加深理解。
 
-![](http://or9cryhof.bkt.clouddn.com/designpatterns_gaitubao_com_383x181.png)
+![](https://i.loli.net/2018/11/26/5bfc0186b4d84.png)
 
 
 
@@ -374,14 +374,14 @@ class FatherClass(object):
         print "first step: red"
         self.childmethod()
         print "third step: blue"
-        
+
     def childmethod(self):
         raise NotImplementedError
-    
+
 class ChildClass1(FatherClass):
     def childmethod(self):
         print "second step: green"
-        
+
 class ChildClass2(FatherClass):
     def childmethod(self):
         print "second step: yellow"
@@ -578,7 +578,7 @@ class SqlServerRole(IRole):
 	def get_role(self, roleid):
 		print u"在SQL Server中拿到一条role记录"
 
-# 产品类        
+# 产品类
 class AccessUser(IUser):
 	def insert_user(self, user):
 		print u"在Access中给User表增加一条记录."

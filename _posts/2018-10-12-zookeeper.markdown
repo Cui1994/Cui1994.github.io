@@ -8,7 +8,7 @@ tags: [Zookeeper, 学习实战]
 * content
 {:toc}
 
-![](http://or9cryhof.bkt.clouddn.com/images.jpeg)
+![](https://i.loli.net/2018/11/26/5bfc06d761bff.png)
 
 
 
@@ -36,7 +36,7 @@ Zookeeper是apache的一款开源项目，是一款基于观察者设计模式�
 
 类Unix文件系统的结构类似，整体为一棵树，每个节点为一个ZNode，每个ZNode存储1MB数据。
 
-![](http://or9cryhof.bkt.clouddn.com/zookeeper-data-model1.png)
+![](https://i.loli.net/2018/11/26/5bfc06416daa0.png)
 
 ### 应用场景
 
@@ -75,7 +75,7 @@ Zookeeper不能通过配置选定Master和Slaver，工作时只有一个节点�
 4. 服务器4启动，给自己投票，同时与之前启动的服务器1,2,3交换信息，尽管服务器4的编号大，但之前服务器3已经胜出，所以服务器4只能成为小弟。
 5. 服务器5启动，后面的逻辑同服务器4成为小弟。
 
-![](http://or9cryhof.bkt.clouddn.com/fig01.png)
+![](https://i.loli.net/2018/11/26/5bfc066f2ac55.png)
 
 
 

@@ -11,8 +11,7 @@ tags: [异常, request, 工具函数]
 
 在实际业务中，经常会碰到大量需要重复使用的函数，一般会选择将其抽象成为工具函数放在`util`目录下。值得一提的是，抛错函数也属于大量重复使用的函数这一范畴，但与工具类函数不同的是，抛错在工具类函数中也会被用到，因此这部分内容应放在项目根目录下。
 
-![](http://or9cryhof.bkt.clouddn.com/timg_gaitubao_com_320x253.jpeg)
-
+![](https://i.loli.net/2018/11/26/5bfc03bfac8d5.jpeg)
 
 
 
@@ -78,7 +77,7 @@ def raise_user_exc(err_code, err_msg=None):
         translation
     )
 
-# ... 
+# ...
 ```
 
 ## 工具类

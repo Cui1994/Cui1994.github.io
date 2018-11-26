@@ -102,6 +102,8 @@
                 
                     
                 
+                    
+                
             </ul>
         </nav>
     </div>
@@ -206,8 +208,8 @@
 
 <p>计算器实例：</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># -*- coding:utf-8 -*-</span>
-<span class="kn">import</span> <span class="nn">re</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># -*- coding:utf-8 -*-
+</span><span class="kn">import</span> <span class="nn">re</span>
 
 <span class="k">class</span> <span class="nc">Operation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
@@ -272,11 +274,11 @@
 
 <p>超市活动实例：</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># -*- coding:utf-8 -*-</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># -*- coding:utf-8 -*-
+</span>
 <span class="k">class</span> <span class="nc">Strategy</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-	<span class="c"># 抽象算法类</span>
-	<span class="k">def</span> <span class="nf">algorithm_interface</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="c1"># 抽象算法类
+</span>	<span class="k">def</span> <span class="nf">algorithm_interface</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="k">raise</span> <span class="nb">NotImplementedError</span><span class="p">()</span>
 
 <span class="k">class</span> <span class="nc">NormalStrategy</span><span class="p">(</span><span class="n">Strategy</span><span class="p">):</span>
@@ -302,8 +304,8 @@
 		<span class="k">return</span> <span class="n">money</span><span class="o">-</span><span class="p">(</span><span class="n">money</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">each_money</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">return_money</span>
 
 <span class="k">class</span> <span class="nc">Context</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-	<span class="c"># 上下文，封装策略的实现细节</span>
-	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">strategy_type</span><span class="p">):</span>
+	<span class="c1"># 上下文，封装策略的实现细节
+</span>	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">strategy_type</span><span class="p">):</span>
 		<span class="k">if</span> <span class="n">strategy_type</span> <span class="o">==</span> <span class="s">'normal'</span><span class="p">:</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">strategy</span> <span class="o">=</span> <span class="n">NormalStrategy</span><span class="p">()</span>
 		<span class="k">elif</span> <span class="n">strategy_type</span> <span class="o">==</span> <span class="s">'0.8 rebate'</span><span class="p">:</span>
@@ -344,8 +346,8 @@
 
 <p>穿衣服实例</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># -*- coding:utf-8 -*-</span>
-<span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># -*- coding:utf-8 -*-
+</span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 
 	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">''</span>
@@ -354,7 +356,7 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
 
 	<span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-		<span class="k">print</span> <span class="s">u'装扮的{0}'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+		<span class="k">print</span> <span class="s">u'装扮的{0}'</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
 <span class="k">class</span> <span class="nc">Finery</span><span class="p">(</span><span class="n">Person</span><span class="p">):</span>
 
@@ -399,8 +401,8 @@
 
 <p>代码实例：</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># -*- coding:utf-8 -*-</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># -*- coding:utf-8 -*-
+</span>
 <span class="k">class</span> <span class="nc">Subject</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 
 	<span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -432,8 +434,8 @@
 
 <p>计算器实例：</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># -*- coding:utf-8 -*-</span>
-<span class="kn">import</span> <span class="nn">re</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># -*- coding:utf-8 -*-
+</span><span class="kn">import</span> <span class="nn">re</span>
 
 <span class="k">class</span> <span class="nc">Operation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
@@ -528,8 +530,8 @@ tip：这里涉及了深浅拷贝的概念。</p>
 <span class="n">book1</span> <span class="o">=</span> <span class="n">Book</span><span class="p">(</span><span class="s">'Python'</span><span class="p">,</span> <span class="p">[</span><span class="s">'Tom'</span><span class="p">,</span> <span class="s">'Jack'</span><span class="p">],</span> <span class="mi">10</span><span class="p">)</span>
 <span class="n">book2</span> <span class="o">=</span> <span class="n">book1</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">price</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 <span class="k">print</span> <span class="n">book2</span><span class="o">.</span><span class="n">__dict__</span>
-<span class="c"># {'price': 20, 'name': 'Python', 'authors': ['Tom', 'Jack']}</span>
-</code></pre></div></div>
+<span class="c1"># {'price': 20, 'name': 'Python', 'authors': ['Tom', 'Jack']}
+</span></code></pre></div></div>
 
 <h2 id="10-模板方法模式">10. 模板方法模式</h2>
 
@@ -612,11 +614,11 @@ tip：这里涉及了深浅拷贝的概念。</p>
 
 <p>优点：对象内部的构建顺序是稳定的，建造者隐藏了产品如何组装。</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># -*- coding:utf-8 -*-</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># -*- coding:utf-8 -*-
+</span>
 <span class="k">class</span> <span class="nc">Builder</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<span class="c"># 抽象建造者类，也可以说是产品类</span>
-	<span class="k">def</span> <span class="nf">part1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="c1"># 抽象建造者类，也可以说是产品类
+</span>	<span class="k">def</span> <span class="nf">part1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="k">raise</span> <span class="nb">NotImplementedError</span>
 
 	<span class="k">def</span> <span class="nf">part2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -654,8 +656,8 @@ tip：这里涉及了深浅拷贝的概念。</p>
 <p>也可以将<code class="highlighter-rouge">Director</code>的代码已到<code class="highlighter-rouge">Builder</code>类中，实现模板方法模式。</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Builder</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="c"># ···</span>
-    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="c1"># ···
+</span>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">part1</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">part2</span><span class="p">()</span>
 </code></pre></div></div>
@@ -705,8 +707,8 @@ tip：这里涉及了深浅拷贝的概念。</p>
 
 <p>创建具有一定功能的产品实现时，需要先创建具体的工厂类，再由工厂类创建具有特定实现的产品对象。</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># -*- coding:utf-8 -*-</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># -*- coding:utf-8 -*-
+</span>
 <span class="k">class</span> <span class="nc">IUser</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 
 	<span class="k">def</span> <span class="nf">insert_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
@@ -737,8 +739,8 @@ tip：这里涉及了深浅拷贝的概念。</p>
 	<span class="k">def</span> <span class="nf">get_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roleid</span><span class="p">):</span>
 		<span class="k">print</span> <span class="s">u"在SQL Server中拿到一条role记录"</span>
 
-<span class="c"># 产品类        </span>
-<span class="k">class</span> <span class="nc">AccessUser</span><span class="p">(</span><span class="n">IUser</span><span class="p">):</span>
+<span class="c1"># 产品类        
+</span><span class="k">class</span> <span class="nc">AccessUser</span><span class="p">(</span><span class="n">IUser</span><span class="p">):</span>
 	<span class="k">def</span> <span class="nf">insert_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
 		<span class="k">print</span> <span class="s">u"在Access中给User表增加一条记录."</span>
 
@@ -752,16 +754,16 @@ tip：这里涉及了深浅拷贝的概念。</p>
 	<span class="k">def</span> <span class="nf">get_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roleid</span><span class="p">):</span>
 		<span class="k">print</span> <span class="s">u"在Access中拿到一条role记录"</span>
 
-<span class="c"># 抽象工厂类</span>
-<span class="k">class</span> <span class="nc">IFactory</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="c1"># 抽象工厂类
+</span><span class="k">class</span> <span class="nc">IFactory</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 	<span class="k">def</span> <span class="nf">create_user</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="k">raise</span> <span class="nb">NotImplementedError</span>
 
 	<span class="k">def</span> <span class="nf">create_role</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="k">raise</span> <span class="nb">NotImplementedError</span>
 
-<span class="c"># 具体工厂类</span>
-<span class="k">class</span> <span class="nc">SqlServerFactory</span><span class="p">(</span><span class="n">IFactory</span><span class="p">):</span>
+<span class="c1"># 具体工厂类
+</span><span class="k">class</span> <span class="nc">SqlServerFactory</span><span class="p">(</span><span class="n">IFactory</span><span class="p">):</span>
 
 	<span class="k">def</span> <span class="nf">create_user</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="k">return</span> <span class="n">SqlServerUser</span><span class="p">()</span>
@@ -769,8 +771,8 @@ tip：这里涉及了深浅拷贝的概念。</p>
 	<span class="k">def</span> <span class="nf">create_role</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="k">return</span> <span class="n">SqlServerRole</span><span class="p">()</span>
 
-<span class="c"># 具体工厂类</span>
-<span class="k">class</span> <span class="nc">AccessFactory</span><span class="p">(</span><span class="n">IFactory</span><span class="p">):</span>
+<span class="c1"># 具体工厂类
+</span><span class="k">class</span> <span class="nc">AccessFactory</span><span class="p">(</span><span class="n">IFactory</span><span class="p">):</span>
 
 	<span class="k">def</span> <span class="nf">create_user</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="k">return</span> <span class="n">AccessUser</span><span class="p">()</span>
@@ -809,8 +811,8 @@ tip：这里涉及了深浅拷贝的概念。</p>
 
 <p>工作实例：</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># -*- coding:utf-8 -*-</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># -*- coding:utf-8 -*-
+</span>
 <span class="k">class</span> <span class="nc">State</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 	<span class="k">def</span> <span class="nf">write_program</span><span class="p">(</span><span class="n">work</span><span class="p">):</span>
 		<span class="k">raise</span> <span class="nb">NotImplementedError</span>
@@ -818,7 +820,7 @@ tip：这里涉及了深浅拷贝的概念。</p>
 <span class="k">class</span> <span class="nc">ForenoonState</span><span class="p">(</span><span class="n">State</span><span class="p">):</span>
 	<span class="k">def</span> <span class="nf">write_program</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wrok</span><span class="p">):</span>
 		<span class="k">if</span> <span class="n">work</span><span class="o">.</span><span class="n">hour</span> <span class="o">&lt;</span> <span class="mi">12</span><span class="p">:</span>
-			<span class="k">print</span> <span class="s">u"当前时间: {}点， 上午工作，精神百倍"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">work</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span>
+			<span class="k">print</span> <span class="s">u"当前时间: {}点， 上午工作，精神百倍"</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="n">work</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span>
 		<span class="k">else</span><span class="p">:</span>
 			<span class="n">wrok</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">NoonState</span><span class="p">())</span>
 			<span class="n">work</span><span class="o">.</span><span class="n">write_program</span><span class="p">()</span>
@@ -826,7 +828,7 @@ tip：这里涉及了深浅拷贝的概念。</p>
 <span class="k">class</span> <span class="nc">NoonState</span><span class="p">(</span><span class="n">State</span><span class="p">):</span>
 	<span class="k">def</span> <span class="nf">write_program</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">work</span><span class="p">):</span>
 		<span class="k">if</span> <span class="n">work</span><span class="o">.</span><span class="n">hour</span> <span class="o">&lt;</span> <span class="mi">13</span><span class="p">:</span>
-			<span class="k">print</span> <span class="s">u"当前时间：{}点， 饿了，午饭； 困了，午休"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">work</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span>
+			<span class="k">print</span> <span class="s">u"当前时间：{}点， 饿了，午饭； 困了，午休"</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="n">work</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span>
 		<span class="k">else</span><span class="p">:</span>
 			<span class="n">work</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">AfternoonState</span><span class="p">())</span>
 			<span class="n">work</span><span class="o">.</span><span class="n">write_program</span><span class="p">()</span>
@@ -836,18 +838,18 @@ tip：这里涉及了深浅拷贝的概念。</p>
 		<span class="k">if</span> <span class="n">work</span><span class="o">.</span><span class="n">task_finished</span><span class="p">:</span>
 			<span class="n">work</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">RestState</span><span class="p">())</span>
 		<span class="k">if</span> <span class="n">work</span><span class="o">.</span><span class="n">hour</span> <span class="o">&lt;</span> <span class="mi">17</span><span class="p">:</span>
-			<span class="k">print</span> <span class="s">u"当前时间：{}点， 下午状态不错，继续努力"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">work</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span>
+			<span class="k">print</span> <span class="s">u"当前时间：{}点， 下午状态不错，继续努力"</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="n">work</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span>
 		<span class="k">else</span><span class="p">:</span>
 			<span class="n">work</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">EveningState</span><span class="p">())</span>
 			<span class="n">work</span><span class="o">.</span><span class="n">write_program</span><span class="p">()</span>
 
 <span class="k">class</span> <span class="nc">EveningState</span><span class="p">(</span><span class="n">State</span><span class="p">):</span>
 	<span class="k">def</span> <span class="nf">write_program</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">work</span><span class="p">):</span>
-		<span class="k">print</span> <span class="s">u"当前时间： {}点， 又要加班了！"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">work</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span>
+		<span class="k">print</span> <span class="s">u"当前时间： {}点， 又要加班了！"</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="n">work</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span>
 
 <span class="k">class</span> <span class="nc">RestState</span><span class="p">(</span><span class="n">State</span><span class="p">):</span>
 	<span class="k">def</span> <span class="nf">write_program</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">work</span><span class="p">):</span>
-		<span class="k">print</span> <span class="s">u"当前时间： {}点， 下班回家啦"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">work</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span>
+		<span class="k">print</span> <span class="s">u"当前时间： {}点， 下班回家啦"</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="n">work</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span>
 
 <span class="k">class</span> <span class="nc">Work</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -881,17 +883,17 @@ tip：这里涉及了深浅拷贝的概念。</p>
 
 <p>NBA翻译实例：</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># -*- coding:utf-8 -*-</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># -*- coding:utf-8 -*-
+</span>
 <span class="k">class</span> <span class="nc">Player</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
 
 	<span class="k">def</span> <span class="nf">attack</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-		<span class="k">print</span> <span class="s">u"{} 进攻"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+		<span class="k">print</span> <span class="s">u"{} 进攻"</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
 	<span class="k">def</span> <span class="nf">defense</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-		<span class="k">print</span> <span class="s">u"{} 防守"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+		<span class="k">print</span> <span class="s">u"{} 防守"</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
 <span class="k">class</span> <span class="nc">ForeignPlayer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 
@@ -899,10 +901,10 @@ tip：这里涉及了深浅拷贝的概念。</p>
 		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
 
 	<span class="k">def</span> <span class="nf">jingong</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-		<span class="k">print</span> <span class="s">u"{} 进攻"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+		<span class="k">print</span> <span class="s">u"{} 进攻"</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
 	<span class="k">def</span> <span class="nf">fangshou</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-		<span class="k">print</span> <span class="s">u"{} 防守"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+		<span class="k">print</span> <span class="s">u"{} 防守"</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
 <span class="k">class</span> <span class="nc">Translator</span><span class="p">(</span><span class="n">Player</span><span class="p">):</span>
 
@@ -955,6 +957,39 @@ tip：这里涉及了深浅拷贝的概念。</p>
                     
                 
             
+        
+            
+            
+                
+                    
+                
+            
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+            
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+            
+                
+                    
+                
+            
                 
                     
                 
@@ -1005,31 +1040,6 @@ tip：这里涉及了深浅拷贝的概念。</p>
                 
                     
                 
-            
-                
-                    
-                
-            
-                
-                    
-                
-            
-        
-            
-            
-                
-                    
-                
-            
-        
-            
-            
-                
-                    
-                
-            
-        
-            
             
                 
                     

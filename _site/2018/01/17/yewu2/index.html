@@ -102,6 +102,8 @@
                 
                     
                 
+                    
+                
             </ul>
         </nav>
     </div>
@@ -234,8 +236,8 @@
 
 <p>应当在包的<code class="highlighter-rouge">__init__.py</code>文件中完成一些初始化操作。</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># models/__init__.py</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># models/__init__.py
+</span>
 <span class="kn">import</span> <span class="nn">functools</span>
 
 <span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">create_engine</span>
@@ -252,8 +254,8 @@
 </code></pre></div></div>
 
 <p>当然，你也可以做适当封装，例如抽象出<code class="highlighter-rouge">auto_commit</code>装饰器以适应不同逻辑：</p>
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># models/__init__.py</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># models/__init__.py
+</span>
 <span class="k">class</span> <span class="nc">RoutingSession</span><span class="p">(</span><span class="n">Session</span><span class="p">):</span>
 
     <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -274,7 +276,7 @@
 
 <span class="k">def</span> <span class="nf">gen_commit_deco</span><span class="p">(</span><span class="n">session_factory</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">decorated</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
-        <span class="nd">@functools.wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+        <span class="o">@</span><span class="n">functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
         <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">with</span> <span class="n">session_factory</span><span class="p">():</span>
@@ -300,8 +302,8 @@
   <li>如果无特殊说明，在方法名称前加<code class="highlighter-rouge">m</code>表示批量查询。</li>
 </ol>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># models/student.py</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># models/student.py
+</span>
 <span class="k">class</span> <span class="nc">StudentModel</span><span class="p">(</span><span class="n">DeclarativeBase</span><span class="p">):</span>
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">'student'</span>
@@ -315,20 +317,20 @@
     <span class="n">updated_at</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">DateTime</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="n">onupdate</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
     <span class="n">is_deleted</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">SmallInteger</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-    <span class="nd">@classmethod</span>
+    <span class="o">@</span><span class="nb">classmethod</span>
     <span class="k">def</span> <span class="nf">convert_param_dict</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">student</span><span class="p">):</span>
         <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">student</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                   <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">StudentModel</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="ow">and</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">}</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="nd">@classmethod</span>
+    <span class="o">@</span><span class="nb">classmethod</span>
     <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">student</span><span class="p">):</span>
         <span class="n">instance</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="o">**</span><span class="n">cls</span><span class="o">.</span><span class="n">convert_param_dict</span><span class="p">(</span><span class="n">student</span><span class="p">))</span>
         <span class="n">DBSession</span><span class="p">()</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
         <span class="n">DBSession</span><span class="p">()</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">instance</span><span class="o">.</span><span class="nb">id</span>
 
-    <span class="nd">@classmethod</span>
+    <span class="o">@</span><span class="nb">classmethod</span>
     <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">student</span><span class="p">):</span>
         <span class="n">param</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">convert_param_dict</span><span class="p">(</span><span class="n">student</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">DBSession</span><span class="p">()</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span><span class="o">.</span>\
@@ -336,14 +338,14 @@
                    <span class="n">cls</span><span class="o">.</span><span class="n">is_deleted</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span>\
             <span class="n">update</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
 
-    <span class="nd">@classmethod</span>
+    <span class="o">@</span><span class="nb">classmethod</span>
     <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
         <span class="n">DBSession</span><span class="p">()</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span><span class="o">.</span>\
             <span class="nb">filter</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="nb">id</span> <span class="o">==</span> <span class="nb">id</span><span class="p">,</span>
                    <span class="n">cls</span><span class="o">.</span><span class="n">is_deleted</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span>\
             <span class="n">update</span><span class="p">({</span><span class="s">'is_deleted'</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
 
-    <span class="nd">@classmethod</span>
+    <span class="o">@</span><span class="nb">classmethod</span>
     <span class="k">def</span> <span class="nf">get_student_with_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">student_id</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">DBSession</span><span class="p">()</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span><span class="o">.</span>\
             <span class="nb">filter</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="nb">id</span> <span class="o">==</span> <span class="n">student_id</span><span class="p">,</span>
@@ -382,8 +384,8 @@
 
 <p>应尽量避免在mysql的一列中存储大字段类型的数据，但如果有需要使用的场景，也应注意在将文本型数据转换为相应数组或字典时，避免使用eval方法。这里以数组为例列出一种储存数组型数据的方式。</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># model/student_group.py</span>
-
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># model/student_group.py
+</span>
 <span class="k">class</span> <span class="nc">StudentGroupModel</span><span class="p">(</span><span class="n">DeclarativeBase</span><span class="p">):</span>
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">'student_group'</span>
@@ -395,15 +397,15 @@
     <span class="n">updated_at</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">DateTime</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="n">onupdate</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
     <span class="n">is_deleted</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">SmallInteger</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-    <span class="nd">@property</span>
+    <span class="o">@</span><span class="nb">property</span>
     <span class="k">def</span> <span class="nf">student_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_ids_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">','</span><span class="p">))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_ids_str</span> <span class="k">else</span> <span class="p">[]</span>
 
-    <span class="nd">@student_ids.setter</span>
+    <span class="o">@</span><span class="n">student_ids</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">student_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">student_ids</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">student_ids_str</span> <span class="o">=</span> <span class="s">","</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">student_ids</span><span class="p">))</span>
 
-    <span class="nd">@classmethod</span>
+    <span class="o">@</span><span class="nb">classmethod</span>
     <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">student_list</span><span class="p">):</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="n">student_list</span> <span class="o">=</span> <span class="s">","</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">student_list</span><span class="p">]))</span>
         <span class="n">DBSession</span><span class="p">()</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
@@ -412,7 +414,7 @@
 
 <h4 id="批量插入">批量插入</h4>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="nd">@classmethod</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="o">@</span><span class="nb">classmethod</span>
     <span class="k">def</span> <span class="nf">multi_insert</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">student_list</span><span class="p">):</span>
         <span class="n">param</span> <span class="o">=</span> <span class="p">[</span><span class="n">cls</span><span class="o">.</span><span class="n">convert_param_dict</span><span class="p">(</span><span class="n">student</span><span class="p">)</span> <span class="k">for</span> <span class="n">student</span> <span class="ow">in</span> <span class="n">student_list</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">DBSession</span><span class="p">()</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">__table__</span><span class="o">.</span><span class="n">insert</span><span class="p">(),</span> <span class="n">param</span><span class="p">)</span>
@@ -428,6 +430,51 @@
         <hr>
 
         
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
         
             
             
@@ -538,39 +585,6 @@
                 
                     
                 
-            
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-            
-        
-            
-            
-                
-                    
-                
-                    
-                
-            
-        
-            
-            
-                
-                    
-                
-                    
-                
-            
-        
-            
             
                 
                     

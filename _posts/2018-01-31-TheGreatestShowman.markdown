@@ -27,6 +27,6 @@ tags: [马戏之王]
 
 (End)
 
-  [1]: http://or9cryhof.bkt.clouddn.com/p2507867454.jpg
-  [2]: http://or9cryhof.bkt.clouddn.com/p2426964167.jpg
+  [1]: https://i.loli.net/2018/11/26/5bfc031101c41.jpg
+  [2]: https://i.loli.net/2018/11/26/5bfc03ac7f71f.png
 

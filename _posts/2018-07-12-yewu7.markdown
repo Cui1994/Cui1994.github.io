@@ -246,5 +246,5 @@ class RedisLocker(object):
 ```
 (End)
 
-  [1]: http://or9cryhof.bkt.clouddn.com/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81.png
+  [1]: https://i.loli.net/2018/11/26/5bfc04988e6f0.png
 
