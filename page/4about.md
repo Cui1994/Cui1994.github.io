@@ -12,8 +12,8 @@ type: page
 
 * 2017.1~2018.7 Hexo
 
-![](http://or9cryhof.bkt.clouddn.com/WX20180714-011707@2x_gaitubao_com_540x376.png)
+![](https://i.loli.net/2018/11/26/5bfc091dce55e.png)
 
 * 2018.7~? [HyG开源模板](https://github.com/Gaohaoyang/gaohaoyang.github.io)
 
-![](http://or9cryhof.bkt.clouddn.com/WX20180714-012238@2x_gaitubao_com_540x314.png)
+![](https://i.loli.net/2018/11/26/5bfc0933aefd1.png)
