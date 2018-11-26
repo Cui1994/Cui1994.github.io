@@ -8,7 +8,7 @@ tags: [Zookeeper, 学习实战]
 * content
 {:toc}
 
-![](https://i.loli.net/2018/11/26/5bfc06d761bff.png)
+![](https://i.loli.net/2018/11/26/5bfc089b99acb.png)
 
 
 

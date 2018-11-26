@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Linux基础（二）文件系统及文件I/O</title>
+    <meta name="description" content="理解Linux文件系统的关键一点在于一切皆文件的思想。Linux中，文件既包括普通数据文件，又包括如设备、管道、套接字、目录、符号链接等特殊文件。文件系统指的是常规文件和目录的组织集合，Linux支持多种文件系统，并提供虚拟文件系统（VFS）来隐藏不同文件系统的实现细节。Linux内核维护了三种与文件相关的数据结...">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2018/09/08/linux2/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>Linux基础（二）文件系统及文件I/O</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2018-09-08
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Linux" title="Category: Linux" rel="category">Linux</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#Linux" title="Tag: Linux" rel="tag">Linux</a-->
+        <a href="/tag/#Linux" title="Tag: Linux" rel="tag">Linux</a>&nbsp;
+    
+        <!--a href="/tag/#%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0" title="Tag: 读书笔记" rel="tag">读书笔记</a-->
+        <a href="/tag/#读书笔记" title="Tag: 读书笔记" rel="tag">读书笔记</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#文件io模型" id="markdown-toc-文件io模型">文件I/O模型</a>    <ul>
+      <li><a href="#文件描述符" id="markdown-toc-文件描述符">文件描述符</a></li>
+      <li><a href="#open的flags参数" id="markdown-toc-open的flags参数">open的flags参数</a></li>
+      <li><a href="#lseek的whence参数" id="markdown-toc-lseek的whence参数">lseek的whence参数</a></li>
+      <li><a href="#几种复制文件描述符的方式" id="markdown-toc-几种复制文件描述符的方式">几种复制文件描述符的方式</a></li>
+      <li><a href="#指定偏移量io" id="markdown-toc-指定偏移量io">指定偏移量I/O</a></li>
+    </ul>
+  </li>
+  <li><a href="#文件描述符打开的文件句柄和i-node表" id="markdown-toc-文件描述符打开的文件句柄和i-node表">文件描述符、打开的文件句柄和i-node表</a>    <ul>
+      <li><a href="#三个数据结构的引用关系" id="markdown-toc-三个数据结构的引用关系">三个数据结构的引用关系</a></li>
+      <li><a href="#目录与链接" id="markdown-toc-目录与链接">目录与链接</a></li>
+    </ul>
+  </li>
+  <li><a href="#文件io缓冲" id="markdown-toc-文件io缓冲">文件I/O缓冲</a>    <ul>
+      <li><a href="#stdio库的缓冲" id="markdown-toc-stdio库的缓冲">stdio库的缓冲</a></li>
+      <li><a href="#缓冲类型" id="markdown-toc-缓冲类型">缓冲类型</a></li>
+      <li><a href="#缓冲及刷新过程" id="markdown-toc-缓冲及刷新过程">缓冲及刷新过程</a></li>
+    </ul>
+  </li>
+</ul>
+
+<p>理解Linux文件系统的关键一点在于<strong>一切皆文件</strong>的思想。</p>
+
+<p>Linux中，文件既包括普通数据文件，又包括如设备、管道、套接字、目录、符号链接等特殊文件。</p>
+
+<p>文件系统指的是常规文件和目录的组织集合，Linux支持多种文件系统，并提供虚拟文件系统（VFS）来隐藏不同文件系统的实现细节。</p>
+
+<p>Linux内核维护了三种与文件相关的数据结构，也提供了一套通用的文件I/O模型对所有类型的文件进行操作。</p>
+
+<blockquote>
+  <p>该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
+书中的编程练习这里不做展示和说明。</p>
+</blockquote>
+
+<h2 id="文件io模型">文件I/O模型</h2>
+<p>Linux提供了一套通用的文件I/O模型进行文件操作，适用于所有类型的文件，这里先列出几个重要的api（伪码）</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># 打开文件
+</span><span class="n">fd</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">pathname</span><span class="p">,</span> <span class="n">flags</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+<span class="c1"># 读取文件到缓冲区
+</span><span class="n">numread</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="nb">buffer</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+<span class="c1"># 从缓冲区写入文件
+</span><span class="n">numwrite</span> <span class="o">=</span> <span class="n">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="nb">buffer</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+<span class="c1"># 关闭文件
+</span><span class="n">status</span> <span class="o">=</span> <span class="n">close</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="c1"># 设置文件偏移量
+</span><span class="n">curr_off</span> <span class="o">=</span> <span class="n">lseek</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">whence</span><span class="p">)</span>
+<span class="c1"># 文件控制操作，常见于非open方式打开的fd，如pipe()/socket()
+</span><span class="n">status</span> <span class="o">=</span> <span class="n">fcntl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="c1"># 复制文件描述符
+</span><span class="n">newfd</span> <span class="o">=</span> <span class="n">dup</span><span class="p">(</span><span class="n">oldfd</span><span class="p">)</span>
+<span class="n">status</span> <span class="o">=</span> <span class="n">dup2</span><span class="p">(</span><span class="n">oldfd</span><span class="p">,</span> <span class="n">newfd</span><span class="p">)</span>
+<span class="c1"># 在制定offset处I/O
+</span><span class="n">numread</span> <span class="o">=</span> <span class="n">pread</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="nb">buffer</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+<span class="n">numwrite</span> <span class="o">=</span> <span class="n">pwrite</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="nb">buffer</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+</code></pre></div></div>
+<p>几点说明：</p>
+
+<h3 id="文件描述符">文件描述符</h3>
+<p>本质上，内核只维护一种文件类型，即字节流序列。
+进程用一个很小的非负整数代指打开的文件，shell会始终打开三个文件描述符，所有shell启动的程序都会继承这三个描述符：</p>
+
+<ul>
+  <li>fd=1 标准输入（文件流stdin）</li>
+  <li>fd=2 标准输出（文件流stdout）</li>
+  <li>fd=0 标准错误（文件流stderr）</li>
+</ul>
+
+<h3 id="open的flags参数">open的flags参数</h3>
+<p>包括三部分内容：访问模式、创建标志和一打开文件的状态标志。常见如下：</p>
+
+<ul>
+  <li>O_RDONLY 只读模式</li>
+  <li>O_WRONLY 只写模式</li>
+  <li>O_RDWR 读写模式</li>
+  <li>O_CREAT 若文件不存在则创建，此时需指定mode参数为文件设置权限</li>
+  <li>O_SYNC 已同步方式写入文件（每次都要写入磁盘，效率极低）</li>
+  <li>O_APPEND 总在文件末尾添加数据（线程安全）</li>
+  <li>O_ASYNC 信号驱动I/O</li>
+  <li>O_NONBLOCK 非阻塞模式打开文件(open及后续的所有I/O操作全部为非阻塞)</li>
+</ul>
+
+<h3 id="lseek的whence参数">lseek的whence参数</h3>
+
+<ul>
+  <li>SEEK_SET 文件开始</li>
+  <li>SEEK_END 文件结尾的下一个字节</li>
+  <li>SEEK_CUR 当前位置</li>
+</ul>
+
+<p>注意，将文件偏移量置于文件开始为<code class="highlighter-rouge">lseek(fd, 0, SEEK_SET)</code>，而置于结尾字节则是<code class="highlighter-rouge">lseek(fd, -1, SEEK_END)</code></p>
+
+<h3 id="几种复制文件描述符的方式">几种复制文件描述符的方式</h3>
+
+<p>dup会返回<strong>编号值最低的未用描述符值</strong>作为新描述符的值，如果想指定新描述符值只能显示将其先关闭。</p>
+
+<p>如果newfd已经打开的情况下，dup2则会关闭newfd所指编号的文件描述符，并会忽略关闭时发生的任何错误。</p>
+
+<p><code class="highlighter-rouge">newfd = fcntl(oldfd, F_DUPFD, startfd)</code>则会返回大于startfd的标号值最低的为用描述符值作为新描述符的值，比较灵活。</p>
+
+<h3 id="指定偏移量io">指定偏移量I/O</h3>
+
+<p>pread/pwrite实际效果相当于先对fd进行lseek操作再进行I/O，不过重要的一点是前者的操作是原子性的，线程安全的。</p>
+
+<h2 id="文件描述符打开的文件句柄和i-node表">文件描述符、打开的文件句柄和i-node表</h2>
+
+<p>Linux内核维护着三种文件相关的数据结构</p>
+
+<ul>
+  <li>
+    <p><strong>文件描述符</strong>
+针对每个进程，内核维护的打开的文件描述符，包含对打开的文件句柄的引用。</p>
+  </li>
+  <li><strong>打开的文件句柄</strong>
+内核为所有打开的文件维护的系统级的描述表格，维护着如下信息：
+    <ul>
+      <li>文件偏移量</li>
+      <li>打开文件的flags信息</li>
+      <li>文件访问模式（读写模式）</li>
+      <li>对i-node表的引用</li>
+    </ul>
+  </li>
+  <li><strong>i-node表</strong>
+每个文件系统会为驻留在其上的所有文件维护一份i-node表，维护如下信息：
+    <ul>
+      <li>指向文件数据块的指针</li>
+      <li>指向文件所持有锁的列表的指针</li>
+      <li>文件类型和访问权限</li>
+      <li>文件属主和属组</li>
+      <li>指向文件的硬链接数量</li>
+      <li>文件大小</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="三个数据结构的引用关系">三个数据结构的引用关系</h3>
+<p><img src="http://or9cryhof.bkt.clouddn.com/WX20180908-153418@2x.png" alt="" /></p>
+
+<ul>
+  <li>
+    <p>多个文件描述符指向同一打开文件句柄的情况：
+同一进程内复制的文件描述符，和fork出的子进程所获得的文件描述符副本都会指向同一文件句柄。</p>
+  </li>
+  <li>
+    <p>多个文件句柄指向同一i-node节点：
+多次open打开同一文件会产生多个打开文件句柄，并都指向同一i-node节点。</p>
+  </li>
+</ul>
+
+<h3 id="目录与链接">目录与链接</h3>
+
+<p>i-node中维护者一个指针指向储存文件内容的数据块，目录作为一种特殊的文件，其数据块中又维护着当前目录下的文件名及对应i-node编号。</p>
+
+<p>注意：<strong>i-node中是不维护文件名信息的。</strong></p>
+
+<ul>
+  <li>
+    <p><strong>根目录</strong>
+i-node节点的起始编号为1，而文件系统根目录（/）总是储存在i-node条目2中。</p>
+  </li>
+  <li>
+    <p><strong>硬链接</strong>
+Shell中可以通过<code class="highlighter-rouge">ln</code>为已存在的文件创建新的硬链接，这样将有两个指向当前文件i-node节点的指针，该文件的硬链接数量也将变为2。</p>
+  </li>
+  <li>
+    <p><strong>符号链接（软连接）</strong>
+Shell中可以通过<code class="highlighter-rouge">ln-s</code>为已存在的文件创建软连接，它并不会引入新的指向i-node的指针，而是将文件名作为数据块的内容。</p>
+  </li>
+</ul>
+
+<p><img src="http://or9cryhof.bkt.clouddn.com/WX20180908-160939@2x.png" alt="" /></p>
+
+<h2 id="文件io缓冲">文件I/O缓冲</h2>
+
+<p>read和write系统调用在操作磁盘文件时并不会直接发起磁盘访问，而是在<strong>用户空间缓冲区</strong>与<strong>内核空间缓冲区</strong>之间不断复制数据。</p>
+
+<p>使用大块缓冲区缓冲数据将减少上述复制的次数，显著提高I/O性能。</p>
+
+<h3 id="stdio库的缓冲">stdio库的缓冲</h3>
+
+<p>使用stdio库函数(如printf)进行I/O可以免去自行处理对数据的缓冲，一般来说，库函数会将所有的输入输出缓存在stdio缓冲区（用户空间缓冲区）中，在适当时机通过系统调用将其复制到内核缓冲区。</p>
+
+<p>相关常见api如下：</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># 设置一个文件流的缓冲模式
+</span><span class="n">setvbuf</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+<span class="c1"># 刷新输出流输入流数据到内核缓冲区
+</span><span class="n">fflush</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+<span class="c1"># 将fd相关的缓冲数据和元数据刷新到磁盘
+</span><span class="n">fsync</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+<span class="c1"># 将所有内核缓冲区数据刷新到磁盘
+</span><span class="n">sync</span><span class="p">()</span>
+<span class="c1"># fd与文件流的相互转换
+</span><span class="n">fd</span> <span class="o">=</span> <span class="n">fileno</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+<span class="n">stream</span> <span class="o">=</span> <span class="n">fdopen</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="缓冲类型">缓冲类型</h3>
+<p>即setvbuf的mode参数</p>
+
+<ul>
+  <li>
+    <p><strong>INOBF 无缓冲</strong>
+所有的I/O库函数都会直接调用read或write，会忽略buf和size参数。</p>
+  </li>
+  <li>
+    <p><strong>INLBF 行缓冲</strong>
+对于输出流，在输出一个换行符之后缓冲数据。对于输入流，每次读取一行数据。
+代指终端的流默认为行缓冲（如printf函数）。</p>
+  </li>
+  <li>
+    <p><strong>INFBF 全缓冲</strong>
+单次进行read或write的大小与缓冲区相同。
+代指磁盘的流默认为全缓冲。</p>
+  </li>
+</ul>
+
+<h3 id="缓冲及刷新过程">缓冲及刷新过程</h3>
+
+<p><img src="http://or9cryhof.bkt.clouddn.com/WX20180908-174206@2x.png" alt="" /></p>
+
+<p>(End)</p>
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2018/07/16/linux/">Linux基础（一）内核及系统调用
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+        
+        
+            </ul>
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2018/07/16/linux/">Linux基础（一）内核及系统调用</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+        <p><strong>下一篇</strong> <a href="/2018/09/09/pkgen/">使用pkgen生成唯一id的问题</a></p>
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2018/09/08/linux2/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2018/09/08/linux2/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>

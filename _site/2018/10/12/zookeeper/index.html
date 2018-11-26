@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Zookeeper全攻略</title>
+    <meta name="description" content="">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2018/10/12/zookeeper/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>Zookeeper全攻略</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2018-10-12
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Zookeeper" title="Category: Zookeeper" rel="category">Zookeeper</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#Zookeeper" title="Tag: Zookeeper" rel="tag">Zookeeper</a-->
+        <a href="/tag/#Zookeeper" title="Tag: Zookeeper" rel="tag">Zookeeper</a>&nbsp;
+    
+        <!--a href="/tag/#%E5%AD%A6%E4%B9%A0%E5%AE%9E%E6%88%98" title="Tag: 学习实战" rel="tag">学习实战</a-->
+        <a href="/tag/#学习实战" title="Tag: 学习实战" rel="tag">学习实战</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#概述" id="markdown-toc-概述">概述</a>    <ul>
+      <li><a href="#特点" id="markdown-toc-特点">特点</a></li>
+      <li><a href="#数据结构" id="markdown-toc-数据结构">数据结构</a></li>
+      <li><a href="#应用场景" id="markdown-toc-应用场景">应用场景</a></li>
+    </ul>
+  </li>
+  <li><a href="#内部原理" id="markdown-toc-内部原理">内部原理</a>    <ul>
+      <li><a href="#选举机制" id="markdown-toc-选举机制">选举机制</a></li>
+      <li><a href="#节点类型" id="markdown-toc-节点类型">节点类型</a></li>
+      <li><a href="#监听器" id="markdown-toc-监听器">监听器</a></li>
+      <li><a href="#写数据的流程" id="markdown-toc-写数据的流程">写数据的流程</a></li>
+    </ul>
+  </li>
+  <li><a href="#安装部署" id="markdown-toc-安装部署">安装部署</a>    <ul>
+      <li><a href="#单机模式部署" id="markdown-toc-单机模式部署">单机模式部署</a>        <ul>
+          <li><a href="#下载" id="markdown-toc-下载">下载</a></li>
+        </ul>
+      </li>
+      <li><a href="#集群模式部署" id="markdown-toc-集群模式部署">集群模式部署</a>        <ul>
+          <li><a href="#配置" id="markdown-toc-配置">配置</a></li>
+          <li><a href="#启动服务器" id="markdown-toc-启动服务器">启动服务器</a></li>
+          <li><a href="#查看服务器状态" id="markdown-toc-查看服务器状态">查看服务器状态</a></li>
+          <li><a href="#客户端连接" id="markdown-toc-客户端连接">客户端连接</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><a href="#demo---动态获取集群服务器host列表" id="markdown-toc-demo---动态获取集群服务器host列表">demo - 动态获取集群服务器host列表</a>    <ul>
+      <li><a href="#添加pom依赖" id="markdown-toc-添加pom依赖">添加pom依赖</a></li>
+      <li><a href="#服务器注册" id="markdown-toc-服务器注册">服务器注册</a></li>
+      <li><a href="#客户端监听" id="markdown-toc-客户端监听">客户端监听</a></li>
+    </ul>
+  </li>
+</ul>
+
+<p><img src="http://or9cryhof.bkt.clouddn.com/images.jpeg" alt="" /></p>
+
+<h2 id="概述">概述</h2>
+
+<p>Zookeeper是apache的一款开源项目，是一款基于观察者设计模式的分布式服务管理框架，负责存储和管理大家都关心的数据，接受观察者的注册。一旦数据发生变化，Zookeeper负责通知已经注册的观察者做出相应的反应。</p>
+
+<p>简单来说，<strong>Zookeeper=文件系统+通知机制</strong>。</p>
+
+<h3 id="特点">特点</h3>
+
+<ol>
+  <li>一个Leader，多个Follower组成的集群。</li>
+  <li>只要有半数以上的节点存货，Zookeeeper集群就能正常提供服务。</li>
+  <li>全局数据一致，么个server都保存相同的数据副本，client不管连接到哪个server，数据都是一致的。</li>
+  <li>数据更新具有原子性。</li>
+  <li>实时性，在一定时间范围内，client总能读到最新的数据。</li>
+</ol>
+
+<h3 id="数据结构">数据结构</h3>
+
+<p>类Unix文件系统的结构类似，整体为一棵树，每个节点为一个ZNode，每个ZNode存储1MB数据。</p>
+
+<p><img src="http://or9cryhof.bkt.clouddn.com/zookeeper-data-model1.png" alt="" /></p>
+
+<h3 id="应用场景">应用场景</h3>
+
+<ul>
+  <li>统一命名服务 隐藏服务ip</li>
+  <li>统一配置管理</li>
+  <li>统一集群管理</li>
+  <li>服务器节点动态上线下</li>
+  <li>软负载均衡</li>
+</ul>
+
+<h2 id="内部原理">内部原理</h2>
+
+<h3 id="选举机制">选举机制</h3>
+
+<p>由于半数机制的存在，所以Zookeeper适合安装奇数台服务器。</p>
+
+<p>Zookeeper不能通过配置选定Master和Slaver，工作时只有一个节点为Leader，Leader和Flollower是通过内部选举机制临时产生的。</p>
+
+<p>选举权重一般由<strong>服务器ID</strong>和<strong>数据ID</strong>决定。</p>
+
+<p><strong>选举状态</strong>：</p>
+<ul>
+  <li>LOOKING，竞选状态。</li>
+  <li>FOLLOWING，随从状态，同步leader状态，参与投票。</li>
+  <li>OBSERVING，观察状态,同步leader状态，不参与投票。</li>
+  <li>LEADING，领导者状态。</li>
+</ul>
+
+<p><strong>5台服务器依次启动时的竞选流程</strong>：</p>
+<ol>
+  <li>服务器1启动，给自己投票，然后发投票信息，由于其它机器还没有启动所以它收不到反馈信息，服务器1的状态一直属于Looking。</li>
+  <li>服务器2启动，给自己投票，同时与之前启动的服务器1交换结果，由于服务器2的编号大所以服务器2胜出，但此时投票数没有大于半数，所以两个服务器的状态依然是LOOKING。</li>
+  <li>服务器3启动，给自己投票，同时与之前启动的服务器1,2交换信息，由于服务器3的编号最大所以服务器3胜出，此时投票数正好大于半数，所以服务器3成为领导者，服务器1,2成为小弟。</li>
+  <li>服务器4启动，给自己投票，同时与之前启动的服务器1,2,3交换信息，尽管服务器4的编号大，但之前服务器3已经胜出，所以服务器4只能成为小弟。</li>
+  <li>服务器5启动，后面的逻辑同服务器4成为小弟。</li>
+</ol>
+
+<p><img src="http://or9cryhof.bkt.clouddn.com/fig01.png" alt="" /></p>
+
+<h3 id="节点类型">节点类型</h3>
+
+<ul>
+  <li><strong>持久(PERSISTENT)</strong>: CS断开连接之后，创建的节点不删除</li>
+  <li><strong>临时(Ephemeral)</strong>: CS断开连接之后，创建的节点自己删除</li>
+  <li><strong>持久顺序编号(PERSISTENT_SEQUENTIAL)</strong>: 每次都会创建的节点名称后悔附加一个单调递增的计数值，由父节点维护</li>
+  <li><strong>临时顺序编号(EPHEMERAL_SEQUENTIAL)</strong>: 每次都会创建的节点名称后悔附加一个单调递增的计数值，由父节点维护，CS断开连接后自动删除</li>
+</ul>
+
+<h3 id="监听器">监听器</h3>
+
+<ol>
+  <li>首先要有一个main线程。</li>
+  <li>在main线程中创建Zookeeper客户端，此时会创建两个线程：负责连接通信的connect线程，负责监听的listener线程。</li>
+  <li>在connect线程中发送注册监听事件给Zookeeper服务器。（格式为Client:ip:port:/path）</li>
+  <li>Zookeeper将监听事件添加到列表中。</li>
+  <li>当Zookeeper监听到有数据或者路径变化，就会发送消息给listener线程。</li>
+  <li>listen线程调用自己的process()方法进行处理。</li>
+</ol>
+
+<p>常见的监听事件主要有：</p>
+
+<ul>
+  <li>监听数据变化: <code class="highlighter-rouge">get path watch</code></li>
+  <li>监听子节点变化: <code class="highlighter-rouge">ls path watch</code></li>
+</ul>
+
+<h3 id="写数据的流程">写数据的流程</h3>
+
+<ol>
+  <li>client向Zookeeper的Server1写数据，发送一个写请求。</li>
+  <li>如果Server不是Leader，Server1会将收到的请求转发给Leader，Leader会将写请求广播到各个Server，各个Server写成功后通知Leader。</li>
+  <li>Leader收到半数以上Server写成功通知，就认为数据写成功，Leader会告诉Server1数据写成功。</li>
+  <li>Server1通知Client写成功，整个写操作成功。</li>
+</ol>
+
+<h2 id="安装部署">安装部署</h2>
+
+<h3 id="单机模式部署">单机模式部署</h3>
+
+<h4 id="下载">下载</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>https://mirrors.tuna.tsinghua.edu.cn/apache/zookeeper/zookeeper-3.4.10/
+</code></pre></div></div>
+
+<p>将<code class="highlighter-rouge">conf/zoo_sample.cfg</code>修改为<code class="highlighter-rouge">conf/zoo.cfg</code>
+并将<code class="highlighter-rouge">zoo.cfg</code>中的dataDir目录进行修改（原本在/tmp目录下）</p>
+
+<p>各参数含义</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#tickTime: 心跳时间，单位ms
+#initLimit: LF初始通讯时限，单位：心跳帧
+#syncLimit: LF同步通讯时限
+#dataDir: 数据目录
+</code></pre></div></div>
+
+<p>启动Server</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bin/zkServer.sh start
+</code></pre></div></div>
+
+<p>启动Client</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bin/zkCli.sh
+</code></pre></div></div>
+
+<h3 id="集群模式部署">集群模式部署</h3>
+
+<p>有两种方式，一种为在多个服务器或hadoop集群上进行部署，第二种方式为在一台机器上部署多个zk进程，这里选择第二种。</p>
+
+<h4 id="配置">配置</h4>
+
+<p>在<code class="highlighter-rouge">conf</code>目录下分别创建三个配置文件<code class="highlighter-rouge">z1.cfg</code>,<code class="highlighter-rouge">z2.cfg</code>,<code class="highlighter-rouge">z3.cfg</code></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># zx.cfg
+    tickTime=2000
+    initLimit=10
+    syncLimit=2
+    dataDir=/usr/myenv/zookeeper-3.4.8/zx/data
+    clientPort=218x
+    # server.x中的“x”表示ZooKeeper Server进程的标识
+    server.1=127.0.0.1:2222:2225
+    server.2=127.0.0.1:3333:3335
+    server.3=127.0.0.1:4444:4445
+</code></pre></div></div>
+
+<p>其中<code class="highlighter-rouge">server.A=B:C:D</code>为服务器配置：</p>
+
+<ul>
+  <li>A为服务器编号</li>
+  <li>B为服务器ip</li>
+  <li>C为与服务器Leader进行数据同步的端口号</li>
+  <li>D为选举Leader时执行选举通讯的端口号</li>
+</ul>
+
+<p>其余配置与单机部署含义相同，不过需要注意在同一机器上部署多个进程时不能共用一个<code class="highlighter-rouge">dataDir</code>和<code class="highlighter-rouge">clientPort</code>。</p>
+
+<p>在相应的数据目录下分别创建<code class="highlighter-rouge">myid</code>文件并储存相应的服务器编号。</p>
+
+<h4 id="启动服务器">启动服务器</h4>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bin/zkServer.sh start conf/z1.cfg
+bin/zkServer.sh start conf/z2.cfg
+bin/zkServer.sh start conf/z3.cfg
+</code></pre></div></div>
+
+<h4 id="查看服务器状态">查看服务器状态</h4>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  zookeeper-3.4.10 bin/zkServer.sh status conf/z1.cfg
+ZooKeeper JMX enabled by default
+Using config: conf/z1.cfg
+Mode: follower
+➜  zookeeper-3.4.10 bin/zkServer.sh status conf/z2.cfg
+ZooKeeper JMX enabled by default
+Using config: conf/z2.cfg
+Mode: leader
+➜  zookeeper-3.4.10 bin/zkServer.sh status conf/z3.cfg
+ZooKeeper JMX enabled by default
+Using config: conf/z3.cfg
+Mode: follower
+</code></pre></div></div>
+
+<h4 id="客户端连接">客户端连接</h4>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bin/zkCli.sh -server 127.0.0.1:2181,127.0.0.1:2182,127.0.0.1:2183
+</code></pre></div></div>
+
+<h2 id="demo---动态获取集群服务器host列表">demo - 动态获取集群服务器host列表</h2>
+
+<p>Zookeeper有一套简单灵活的客户端api，可以借助这些api注册监听Zookeeper事件并获取响应节点数据以实现不同功能。</p>
+
+<p>目前常用的场景是动态获取集群中的服务器host以实现软负载均衡。</p>
+
+<h3 id="添加pom依赖">添加pom依赖</h3>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&lt;</span><span class="n">dependency</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="n">groupId</span><span class="o">&gt;</span><span class="n">org</span><span class="o">.</span><span class="na">apache</span><span class="o">.</span><span class="na">zookeeper</span><span class="o">&lt;/</span><span class="n">groupId</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="n">artifactId</span><span class="o">&gt;</span><span class="n">zookeeper</span><span class="o">&lt;/</span><span class="n">artifactId</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="n">version</span><span class="o">&gt;</span><span class="mf">3.4</span><span class="o">.</span><span class="mi">10</span><span class="o">&lt;/</span><span class="n">version</span><span class="o">&gt;</span>
+<span class="o">&lt;/</span><span class="n">dependency</span><span class="o">&gt;</span>
+</code></pre></div></div>
+
+<h3 id="服务器注册">服务器注册</h3>
+
+<p>每个服务器启动时需要连接Zookeeper并在<code class="highlighter-rouge">/servers</code>节点下新增临时顺序编号节点，并写入自己的host，当服务器下线时该节点自动删除。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">org.apache.zookeeper.*</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">java.io.IOException</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">TargetServer</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="n">ZooKeeper</span> <span class="n">zkClient</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">connect</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="n">String</span> <span class="n">connectString</span> <span class="o">=</span> <span class="s">"127.0.0.1:2181,127.0.0.1:2182,127.0.0.1:2183"</span><span class="o">;</span>
+        <span class="kt">int</span> <span class="n">sessionTimeout</span> <span class="o">=</span> <span class="mi">2000</span><span class="o">;</span>
+
+        <span class="n">zkClient</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ZooKeeper</span><span class="o">(</span><span class="n">connectString</span><span class="o">,</span> <span class="n">sessionTimeout</span><span class="o">,</span> <span class="k">new</span> <span class="n">Watcher</span><span class="o">()</span> <span class="o">{</span>
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">process</span><span class="o">(</span><span class="n">WatchedEvent</span> <span class="n">watchedEvent</span><span class="o">)</span> <span class="o">{</span>
+
+            <span class="o">}</span>
+        <span class="o">});</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">register</span><span class="o">(</span><span class="n">String</span> <span class="n">hostname</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">KeeperException</span><span class="o">,</span> <span class="n">InterruptedException</span> <span class="o">{</span>
+
+        <span class="n">String</span> <span class="n">path</span> <span class="o">=</span> <span class="n">zkClient</span><span class="o">.</span><span class="na">create</span><span class="o">(</span><span class="s">"/servers/server"</span><span class="o">,</span> <span class="n">hostname</span><span class="o">.</span><span class="na">getBytes</span><span class="o">(),</span> <span class="n">ZooDefs</span><span class="o">.</span><span class="na">Ids</span><span class="o">.</span><span class="na">OPEN_ACL_UNSAFE</span><span class="o">,</span> <span class="n">CreateMode</span><span class="o">.</span><span class="na">EPHEMERAL_SEQUENTIAL</span><span class="o">);</span>
+
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">hostname</span> <span class="o">+</span> <span class="s">" register on zookeeper success!"</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">InterruptedException</span> <span class="o">{</span>
+
+        <span class="n">Thread</span><span class="o">.</span><span class="na">sleep</span><span class="o">(</span><span class="n">Long</span><span class="o">.</span><span class="na">MAX_VALUE</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">,</span> <span class="n">KeeperException</span><span class="o">,</span> <span class="n">InterruptedException</span> <span class="o">{</span>
+
+        <span class="n">TargetServer</span> <span class="n">server</span> <span class="o">=</span> <span class="k">new</span> <span class="n">TargetServer</span><span class="o">();</span>
+        <span class="n">server</span><span class="o">.</span><span class="na">connect</span><span class="o">();</span>
+        <span class="n">server</span><span class="o">.</span><span class="na">register</span><span class="o">(</span><span class="n">args</span><span class="o">[</span><span class="mi">0</span><span class="o">]);</span>
+        <span class="n">server</span><span class="o">.</span><span class="na">run</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<h3 id="客户端监听">客户端监听</h3>
+
+<p>客户端启动时需连接Zookeeper并获取<code class="highlighter-rouge">/servers</code>节点下的可用节点，拿到host列表并注册监听，当host有变动时更新自己的host列表。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">org.apache.zookeeper.KeeperException</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.zookeeper.WatchedEvent</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.zookeeper.Watcher</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.zookeeper.ZooKeeper</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">java.io.IOException</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.ArrayList</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">ConnectClient</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="n">ZooKeeper</span> <span class="n">zkClient</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">connect</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="n">String</span> <span class="n">connectString</span> <span class="o">=</span> <span class="s">"127.0.0.1:2181,127.0.0.1:2182,127.0.0.1:2183"</span><span class="o">;</span>
+        <span class="kt">int</span> <span class="n">sessionTimeout</span> <span class="o">=</span> <span class="mi">2000</span><span class="o">;</span>
+
+        <span class="n">zkClient</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ZooKeeper</span><span class="o">(</span><span class="n">connectString</span><span class="o">,</span> <span class="n">sessionTimeout</span><span class="o">,</span> <span class="k">new</span> <span class="n">Watcher</span><span class="o">()</span> <span class="o">{</span>
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">process</span><span class="o">(</span><span class="n">WatchedEvent</span> <span class="n">watchedEvent</span><span class="o">)</span> <span class="o">{</span>
+                <span class="k">try</span> <span class="o">{</span>
+                    <span class="n">getChildren</span><span class="o">();</span>
+                <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">KeeperException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+                <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">InterruptedException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+        <span class="o">});</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">getChildren</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">KeeperException</span><span class="o">,</span> <span class="n">InterruptedException</span> <span class="o">{</span>
+
+        <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">children</span> <span class="o">=</span> <span class="n">zkClient</span><span class="o">.</span><span class="na">getChildren</span><span class="o">(</span><span class="s">"/servers"</span><span class="o">,</span> <span class="kc">true</span><span class="o">);</span>
+
+        <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">hosts</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;();</span>
+
+        <span class="k">for</span> <span class="o">(</span><span class="n">String</span> <span class="n">child</span> <span class="o">:</span> <span class="n">children</span><span class="o">)</span> <span class="o">{</span>
+            <span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span> <span class="o">=</span> <span class="n">zkClient</span><span class="o">.</span><span class="na">getData</span><span class="o">(</span><span class="s">"/servers/"</span> <span class="o">+</span> <span class="n">child</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+            <span class="n">hosts</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">data</span><span class="o">));</span>
+        <span class="o">}</span>
+
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">hosts</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">InterruptedException</span> <span class="o">{</span>
+        <span class="n">Thread</span><span class="o">.</span><span class="na">sleep</span><span class="o">(</span><span class="n">Long</span><span class="o">.</span><span class="na">MAX_VALUE</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">,</span> <span class="n">KeeperException</span><span class="o">,</span> <span class="n">InterruptedException</span> <span class="o">{</span>
+        <span class="n">ConnectClient</span> <span class="n">client</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ConnectClient</span><span class="o">();</span>
+        <span class="n">client</span><span class="o">.</span><span class="na">connect</span><span class="o">();</span>
+        <span class="n">client</span><span class="o">.</span><span class="na">getChildren</span><span class="o">();</span>
+        <span class="n">client</span><span class="o">.</span><span class="na">run</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>(End)</p>
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+        
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2018/09/09/pkgen/">使用pkgen生成唯一id的问题</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2018/10/12/zookeeper/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2018/10/12/zookeeper/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>
