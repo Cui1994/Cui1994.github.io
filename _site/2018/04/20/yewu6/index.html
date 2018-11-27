@@ -177,7 +177,7 @@
 
 <p>本篇文章将介绍实际业务中的查询场景。一般来说，这部分要做的只是从数据层调用查询方法获取数据并返回给api层。但在业务量不断上涨的过程中，可能会出现百万级以上的大规模数据查询场景，也可能会存在基础信息（用户账户信息等）被多个接口同时调用查询的场景，给DB造成很大压力。这时就需要考虑引入协程和缓存等方式来降低数据库IO。除此之外，还将介绍一些查询中经常碰到的一些场景的处理方法。</p>
 
-<p><img src="http://or9cryhof.bkt.clouddn.com/6a00d8347d063969e201bb091e1152970d-800wi.png" alt="此处输入图片的描述" /></p>
+<p><img src="https://i.loli.net/2018/11/26/5bfc04705c3ce.png" alt="此处输入图片的描述" /></p>
 
 <h2 id="一般场景">一般场景</h2>
 
@@ -231,7 +231,7 @@
 
         <span class="k">if</span> <span class="n">count</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">query_</span><span class="o">.</span><span class="n">scalar</span><span class="p">()</span>
-        
+
         <span class="k">if</span> <span class="n">condition</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'page'</span><span class="p">)</span> <span class="ow">and</span> <span class="n">condition</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'page_size'</span><span class="p">):</span>
             <span class="n">query_</span> <span class="o">=</span> <span class="n">query_</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="nb">id</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
             <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">condition</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'page'</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">condition</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'page_size'</span><span class="p">)</span>
@@ -245,7 +245,7 @@
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># query/student.py
 </span>
 <span class="k">class</span> <span class="nc">StudentQuery</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-	
+
 	<span class="c1"># ...
 </span>
     <span class="k">def</span> <span class="nf">_extend_journals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">student_list</span><span class="p">):</span>
@@ -286,10 +286,10 @@
     <span class="k">def</span> <span class="nf">get_all_student_id_with_school_id_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">school_id_list</span><span class="p">):</span>
     	<span class="c1"># 这里分块大小需根据DB数据规模而定，或做成可配，以后会讲到配置可视化问题。
 </span>        <span class="n">block_size</span> <span class="o">=</span> <span class="mi">5000</span>
-        
+
         <span class="k">def</span> <span class="nf">sync_get_all_student_with_school_id_list</span><span class="p">(</span><span class="n">block_school_id_list</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">student</span><span class="o">.</span><span class="n">get_all_student_id_with_school_id_list</span><span class="p">(</span><span class="n">block_school_id_list</span><span class="p">)</span>
-        
+
         <span class="n">jobs</span> <span class="o">=</span> <span class="p">[</span><span class="n">gevent</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">sync_get_all_student_with_school_id_list</span><span class="p">,</span> <span class="n">school_id_list</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="n">block_size</span><span class="p">])</span>
                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">school_id_list</span><span class="p">),</span> <span class="n">block_size</span><span class="p">)]</span>
         <span class="n">gevent</span><span class="o">.</span><span class="n">joinall</span><span class="p">(</span><span class="n">jobs</span><span class="p">)</span>
@@ -386,15 +386,6 @@
                     
                 
             
-        
-            
-            
-                
-                    
-                
-                    
-                
-            
                 
                     
                 
@@ -446,6 +437,36 @@
                     
                 
             
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
                 
                     
                 
@@ -505,15 +526,6 @@
                 
                     
                 
-            
-                
-                    
-                
-                    
-                
-            
-        
-            
             
                 
                     

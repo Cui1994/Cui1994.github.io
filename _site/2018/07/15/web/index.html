@@ -272,7 +272,7 @@
 
 <p>进程读取磁盘中数据的一般过程如下：</p>
 
-<p><img src="http://or9cryhof.bkt.clouddn.com/%E8%AF%B7%E6%B1%82%E5%88%86%E9%85%8D%E5%86%85%E5%AD%98.png" alt="" /></p>
+<p><img src="https://i.loli.net/2018/11/26/5bfc04d642c2c.png" alt="" /></p>
 
 <p>磁盘到内存的读写速度是很慢的：</p>
 
@@ -318,7 +318,7 @@
 
 <p>与应用程序的简单横向扩展不同，数据库的横向扩展并不能通过增加服务器数量的方式来提高处理能力，因为单纯将数据复制，不能缓存到内存的部分依然不能缓存，这是需要考虑局部的横向扩展，这里以Mysql为例做简单介绍。</p>
 
-<p><img src="http://or9cryhof.bkt.clouddn.com/mysql.png" alt="" /></p>
+<p><img src="https://i.loli.net/2018/11/26/5bfc04f418444.png" alt="" /></p>
 
 <h5 id="分割">分割</h5>
 
@@ -332,7 +332,7 @@
 
 <p>当数据吞吐量远超过RDBMS的能力，即无论采取什么方式都无法优化大数据量读取或优化起来成本较高时，可以考虑在数据库服务器和上层服务之间架设索引服务器（如elasticsearch），定时同步数据库数据与索引服务器数据，上层在读取数据时可以直接从索引服务器中读取。</p>
 
-<p><img src="http://or9cryhof.bkt.clouddn.com/%E7%B4%A2%E5%BC%95%E6%9C%8D%E5%8A%A1%E5%99%A8.png" alt="" /></p>
+<p><img src="https://i.loli.net/2018/11/26/5bfc051f1ebcd.png" alt="" /></p>
 
 <h3 id="系统负载调优">系统负载调优</h3>
 
@@ -340,7 +340,7 @@
 
 <p>系统调优的核心点在于发现负载来源于CPU还是I/O，思路基本如下图。</p>
 
-<p><img src="http://or9cryhof.bkt.clouddn.com/%E7%B3%BB%E7%BB%9F%E8%B0%83%E4%BC%98.png" alt="" /></p>
+<p><img src="https://i.loli.net/2018/11/26/5bfc05323fbf6.png" alt="" /></p>
 
 <h2 id="冗余">冗余</h2>
 
@@ -409,45 +409,21 @@
                     
                 
             
-        
-            
-            
                 
                     
                 
                     
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-                    
-                
-                    
-                
-            
-        
-            
-            
-                
-                    
-                
-                    
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2018/11/27/sqlalchemy/">你真的了解SQLAlchemy吗
+                            
+                            </a>
+                        </li>
+                        
+                        
                     
                 
                     
@@ -550,6 +526,75 @@
         
             
             
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
         
             
             
@@ -584,19 +629,8 @@
                 
             
         
-            
-            
-                
-                    
-                
-                    
-                
-                    
-                
-                    
-                
-            
         
+            </ul>
         
 
         <div class="post-recent">
@@ -656,6 +690,8 @@
                     Content
                 </div>
                 <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
                     
                     <li><a href="#comments">Comments</a></li>
                 </ul>

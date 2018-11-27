@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>你真的了解SQLAlchemy吗</title>
+    <meta name="description" content="">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2018/11/27/sqlalchemy/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>你真的了解SQLAlchemy吗</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2018-11-27
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Python" title="Category: Python" rel="category">Python</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#Python" title="Tag: Python" rel="tag">Python</a-->
+        <a href="/tag/#Python" title="Tag: Python" rel="tag">Python</a>&nbsp;
+    
+        <!--a href="/tag/#SQLAlchemy" title="Tag: SQLAlchemy" rel="tag">SQLAlchemy</a-->
+        <a href="/tag/#SQLAlchemy" title="Tag: SQLAlchemy" rel="tag">SQLAlchemy</a>&nbsp;
+    
+        <!--a href="/tag/#MySQL" title="Tag: MySQL" rel="tag">MySQL</a-->
+        <a href="/tag/#MySQL" title="Tag: MySQL" rel="tag">MySQL</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#连接" id="markdown-toc-连接">连接</a>    <ul>
+      <li><a href="#延时加载" id="markdown-toc-延时加载">延时加载</a></li>
+      <li><a href="#连接池" id="markdown-toc-连接池">连接池</a></li>
+    </ul>
+  </li>
+  <li><a href="#session" id="markdown-toc-session">Session</a>    <ul>
+      <li><a href="#session状态" id="markdown-toc-session状态">Session状态</a></li>
+      <li><a href="#flush与add的区别" id="markdown-toc-flush与add的区别">flush与add的区别</a></li>
+      <li><a href="#expire_on_commit" id="markdown-toc-expire_on_commit">expire_on_commit</a></li>
+    </ul>
+  </li>
+</ul>
+
+<p>SQLAlchemy作为一款强大而又实用的ORM框架，越来越频繁的出现在各类Python项目中。如果你是一名Python开发工程师，肯定可以熟练的写出SQLAlchemy的查询语句来满足自己的业务需求。然而，SQLAlchemy背后的知识你又了解多少呢？它是什么时候与数据库建立连接的呢？又是怎样的连接方式呢？SQLAlchemy中的<code class="highlighter-rouge">Session</code>与数据库的<code class="highlighter-rouge">Transaction</code>是一回事吗？如何优雅地管理SQLAlchemy的连接与事务呢？本文将结合<a href="https://docs.sqlalchemy.org/en/latest/orm/tutorial.html">SQLAlchemy文档</a>解答这些问题。</p>
+
+<p>为了方便展示，我在本地MySQL中创建了一张<code class="highlighter-rouge">student</code>表，同时打开MySQL的<code class="highlighter-rouge">general-log</code>来追踪MySQL的行为。</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="nv">`student`</span> <span class="p">(</span>
+    <span class="n">id</span> <span class="n">BIGINT</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="n">AUTO_INCREMENT</span> <span class="k">COMMENT</span> <span class="s1">'自增主键'</span><span class="p">,</span>
+    <span class="n">name</span> <span class="n">STRING</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> <span class="s1">''</span> <span class="k">COMMENT</span> <span class="s1">'姓名'</span><span class="p">,</span>
+    <span class="k">primary</span> <span class="k">key</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
+<span class="p">)</span><span class="n">ENGINE</span><span class="o">=</span><span class="n">InnoDB</span> <span class="k">DEFAULT</span> <span class="n">CHARSET</span><span class="o">=</span><span class="n">utf8</span> <span class="k">COMMENT</span> <span class="s1">'学生表'</span><span class="p">;</span>
+
+<span class="k">set</span> <span class="k">global</span> <span class="n">general_log</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>同时在iPython中创建我们的ORM对象。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">DeclarativeBase</span> <span class="o">=</span> <span class="n">declarative_base</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">StudentModel</span><span class="p">(</span><span class="n">DeclarativeBase</span><span class="p">):</span>
+
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">'student'</span>
+
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s">u''</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="连接">连接</h2>
+
+<h3 id="延时加载">延时加载</h3>
+
+<p>SQAlchemy通过<code class="highlighter-rouge">create_engine</code>创建<code class="highlighter-rouge">Engine</code>对象来实现数据库连接.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># DB_CONNECT_STRING = 'mysql+pymysql://root:1234@127.0.0.1/test?charset=utf8'
+</span><span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="n">DB_CONNECT_STRING</span><span class="p">,</span> <span class="n">pool_size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">max_overflow</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pool_recycle</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">echo</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</code></pre></div></div>
+<p>这里设置<code class="highlighter-rouge">echo=True</code>来显示所执行的SQL日志。</p>
+
+<p>执行<code class="highlighter-rouge">create_engine</code>后<code class="highlighter-rouge">general-log</code>和<code class="highlighter-rouge">stdout</code>并没有显示任何信息，因为SQLAlchemy到数据库的连接是延时加载的，只有真正需要建立连接时才会创建。</p>
+
+<blockquote>
+  <p>The Engine, when first returned by create_engine(), has not actually tried to connect to the database yet; that happens only the first time it is asked to perform a task against the database.</p>
+</blockquote>
+
+<p>调用<code class="highlighter-rouge">connect</code>方法建立连接：</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">connection</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>此时<code class="highlighter-rouge">general-log</code>显示如下信息，表示真正建立了到数据库的连接，连接线程ID为<code class="highlighter-rouge">22</code>，除此之外，SQAlchemy会默认将数据库的<code class="highlighter-rouge">autocommit</code>设置为<code class="highlighter-rouge">0</code>，在查询时会隐式开始<code class="highlighter-rouge">Transaction</code>。</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>2018-11-27T13:52:48.695968Z    22 Connect   root@localhost on test using TCP/IP
+2018-11-27T13:52:48.701437Z    22 Query     SET AUTOCOMMIT = 0
+</code></pre></div></div>
+
+<h3 id="连接池">连接池</h3>
+
+<p><code class="highlighter-rouge">Engine</code>对象维护着一个连接池<code class="highlighter-rouge">pool</code>，如果没有通过<code class="highlighter-rouge">poolclass=NullPool</code>来禁用连接池，在连接关闭后会被暂存在<code class="highlighter-rouge">pool</code>中，下次创建连接时会直接从<code class="highlighter-rouge">pool</code>中获取连接，如果从连接池中拿到的连接距离创建时间超过<code class="highlighter-rouge">pool_recycle</code>，<code class="highlighter-rouge">Engine</code>将会将此连接释放并创建新的连接。</p>
+
+<p>在<code class="highlighter-rouge">pool_recycle</code>时间内调用<code class="highlighter-rouge">close</code>关闭连接，同时创建一个新连接：</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="n">connection2</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">general-log</code>并没有新日志显示，查看MySQL的连接发现并没有新连接产生。</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mysql&gt; show processlist;
++----+------+-----------------+------+---------+------+----------+------------------+
+| Id | User | Host            | db   | Command | Time | State    | Info             |
++----+------+-----------------+------+---------+------+----------+------------------+
+| 12 | root | localhost       | NULL | Query   |    0 | starting | show processlist |
+| 22 | root | localhost:64797 | test | Sleep   |   11 |          | NULL             |
++----+------+-----------------+------+---------+------+----------+------------------+
+2 rows in set (0.00 sec)
+</code></pre></div></div>
+
+<p>而如果在<code class="highlighter-rouge">pool_recycle</code>之外执行上面的语句，<code class="highlighter-rouge">general-log</code>则会展示老连接释放，新连接创建的过程。</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>2018-11-27T13:53:14.045708Z    22 Query     ROLLBACK
+2018-11-27T14:05:03.360576Z    22 Quit
+2018-11-27T14:05:03.367828Z    23 Connect   root@localhost on test using TCP/IP
+2018-11-27T14:05:03.372500Z    23 Query     SET AUTOCOMMIT = 0
+</code></pre></div></div>
+
+<h2 id="session">Session</h2>
+
+<p>调用<code class="highlighter-rouge">sessionmaker</code>方法绑定<code class="highlighter-rouge">Engine</code>对象创建<code class="highlighter-rouge">Session Factory</code>，实例化后产生<code class="highlighter-rouge">Session</code>对象。</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">DBSession</span> <span class="o">=</span> <span class="n">sessionmaker</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="n">engine</span><span class="p">,</span> <span class="n">expire_on_commit</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">session</span> <span class="o">=</span> <span class="n">DBSession</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h3 id="session状态">Session状态</h3>
+
+<p><code class="highlighter-rouge">Session</code>有两个状态：<code class="highlighter-rouge">begin</code>和<code class="highlighter-rouge">transactional</code>。
+区别在于<code class="highlighter-rouge">Session</code>有没有真正建立到数据库的连接，即绑定的<code class="highlighter-rouge">Engine</code>对象是否通过调用<code class="highlighter-rouge">connect</code>方法变为<code class="highlighter-rouge">Connection</code>对象。</p>
+
+<ul>
+  <li>如果<code class="highlighter-rouge">autocommit</code>为默认值<code class="highlighter-rouge">False</code>，<code class="highlighter-rouge">Session</code>在实例化之后即处于<code class="highlighter-rouge">begin</code>状态。如果<code class="highlighter-rouge">autocommit</code>值为<code class="highlighter-rouge">True</code>，则需要显式调用<code class="highlighter-rouge">session.begin()</code>方法来开启事务。</li>
+  <li>当调用<code class="highlighter-rouge">query</code>、<code class="highlighter-rouge">execute</code>、<code class="highlighter-rouge">flush</code>方法后，将创建到数据库的连接，<code class="highlighter-rouge">Engine</code>变为<code class="highlighter-rouge">Connection</code>对象，<code class="highlighter-rouge">Session</code>进入<code class="highlighter-rouge">transactional</code>状态。</li>
+  <li>之后继续调用<code class="highlighter-rouge">commit</code>或<code class="highlighter-rouge">rollback</code>方法后，连接关闭放入连接池，<code class="highlighter-rouge">Connection</code>对象变为<code class="highlighter-rouge">Engine</code>对象，<code class="highlighter-rouge">Session</code>也重新回到<code class="highlighter-rouge">begin</code>状态。</li>
+</ul>
+
+<blockquote>
+  <p>When the transactional state is completed after a rollback or commit, the Session releases all Transaction and Connection resources, and goes back to the “begin” state, which will again invoke new Connection and Transaction objects as new requests to emit SQL statements are received.</p>
+</blockquote>
+
+<p>实例化一个ORM对象，依次调用<code class="highlighter-rouge">add</code>、<code class="highlighter-rouge">flush</code>和<code class="highlighter-rouge">rollback</code>方法，<code class="highlighter-rouge">stdout</code>显示了隐式开启<code class="highlighter-rouge">Transaction</code>的步骤：</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">a</span> <span class="o">=</span> <span class="n">StudentModel</span><span class="p">()</span>
+<span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="n">session</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+<span class="c1"># 2018-11-27 23:04:02,579 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+# 2018-11-27 23:04:02,579 INFO sqlalchemy.engine.base.Engine INSERT INTO student (id, name) VALUES (%s, %s)
+# 2018-11-27 23:04:02,579 INFO sqlalchemy.engine.base.Engine (2, u'')
+</span>
+<span class="n">session</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+<span class="c1"># 2018-11-27 23:04:14,036 INFO sqlalchemy.engine.base.Engine ROLLBACK
+</span></code></pre></div></div>
+
+<p><code class="highlighter-rouge">general-log</code>也显示在<code class="highlighter-rouge">flush</code>之后建立了连接并执行了查询语句，之后进行了回滚。</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>2018-11-27T15:04:02.573576Z    32 Connect   root@localhost on test using TCP/IP
+2018-11-27T15:04:02.573872Z    32 Query     SET AUTOCOMMIT = 0
+2018-11-27T15:04:02.580709Z    32 Query     INSERT INTO student (id, name) VALUES (2, '')
+2018-11-27T15:04:14.036762Z    32 Query     ROLLBACK
+2018-11-27T15:04:14.042584Z    32 Query     ROLLBACK
+</code></pre></div></div>
+
+<p>保留上面的<code class="highlighter-rouge">session</code>在1分钟后重复执行上面的步骤，<code class="highlighter-rouge">general-log</code>显示了老连接释放和新连接的建立过程。</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>2018-11-27T15:10:43.755010Z    32 Quit
+2018-11-27T15:10:43.762052Z    33 Connect   root@localhost on test using TCP/IP
+2018-11-27T15:10:43.763616Z    33 Query     SET AUTOCOMMIT = 0
+2018-11-27T15:10:43.764588Z    33 Query     INSERT INTO student (id, name) VALUES (2, '')
+2018-11-27T15:11:11.283859Z    33 Query     ROLLBACK
+2018-11-27T15:11:11.289628Z    33 Query     ROLLBACK
+</code></pre></div></div>
+
+<h3 id="flush与add的区别">flush与add的区别</h3>
+
+<p>通过上面的展示也可以发现，<code class="highlighter-rouge">add</code>实际上不会真正发送请求到数据库，这里所做的任何修改其他事务都是不可见的。
+而<code class="highlighter-rouge">flush</code>则会发送请求到数据库，而此时的变更对其他事务是否可见取决于数据库的隔离机制。</p>
+
+<h3 id="expire_on_commit">expire_on_commit</h3>
+
+<p><code class="highlighter-rouge">expire_on_commit</code>可以用来更改SQLAlchemy的对象刷新机制，默认值为<code class="highlighter-rouge">True</code>即在<code class="highlighter-rouge">session</code>调用<code class="highlighter-rouge">commit</code>之后会主动刷新同一个<code class="highlighter-rouge">session</code>在<code class="highlighter-rouge">commit</code>之前查询得到的ORM对象属性，方法是重新调用之前的查询语句。</p>
+
+<p>将<code class="highlighter-rouge">expire_on_commit</code>设置为<code class="highlighter-rouge">True</code>后重新执行代码，发现在获取b属性时又执行了一次查询。</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">b</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">StudentModel</span><span class="p">)</span><span class="o">.</span><span class="nb">filter</span><span class="p">(</span><span class="n">StudentModel</span><span class="o">.</span><span class="nb">id</span><span class="o">==</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+<span class="c1"># 2018-11-27 23:52:03,584 INFO sqlalchemy.engine.base.Engine SELECT student.id AS student_id, student.name AS student_name
+# FROM student
+# WHERE student.id = %s
+#  LIMIT %s
+# 2018-11-27 23:52:03,585 INFO sqlalchemy.engine.base.Engine (2, 1)
+</span>
+<span class="n">b</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">u'test'</span>
+<span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="n">session</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+<span class="c1"># 2018-11-27 23:52:31,789 INFO sqlalchemy.engine.base.Engine UPDATE student SET name=%s WHERE student.id = %s
+# 2018-11-27 23:52:31,789 INFO sqlalchemy.engine.base.Engine (u'test', 2)
+</span>
+<span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+<span class="c1"># 2018-11-27 23:53:06,424 INFO sqlalchemy.engine.base.Engine COMMIT
+</span>
+<span class="n">b</span><span class="o">.</span><span class="n">name</span>
+<span class="c1"># 2018-11-27 23:54:34,431 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+# 2018-11-27 23:54:34,431 INFO sqlalchemy.engine.base.Engine SELECT student.id AS student_id, student.name AS student_name
+# FROM student
+# WHERE student.id = %s
+# 2018-11-27 23:54:34,431 INFO sqlalchemy.engine.base.Engine (2,)
+</span></code></pre></div></div>
+<p>虽然这样可以保持数据同步，但实际应用中一般将这个值设置为<code class="highlighter-rouge">Flase</code>，避免内存中的数据属性被更改。</p>
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2018/09/09/pkgen/">使用pkgen生成唯一id的问题
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2018/07/15/web/">大规模Web服务的一般性痛点与解决方案
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+        
+            </ul>
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2018/10/12/zookeeper/">Zookeeper全攻略</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2018/11/27/sqlalchemy/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2018/11/27/sqlalchemy/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>
