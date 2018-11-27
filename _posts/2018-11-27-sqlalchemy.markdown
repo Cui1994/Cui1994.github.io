@@ -153,7 +153,7 @@ session.rollback()
 
 ### expire_on_commit
 
-`expire_on_commit`可以用来更改SQLAlchemy的对象刷新机制，默认值为`True`即在`session`调用`commit`之后会主动刷新同一个`session`在`commit`之前查询得到的ORM对象属性，方法是重新调用之前的查询语句。
+`expire_on_commit`可以用来更改SQLAlchemy的对象刷新机制，默认值为`True`即在`session`调用`commit`之后会主动将同一个`session`在`commit`之前查询得到的ORM对象的`_sa_instance_state.expire`属性设置为`Flase`，再次读取该对象属性时将重载这个对象，方法是重新调用之前的查询语句。
 
 将`expire_on_commit`设置为`True`后重新执行代码，发现在获取b属性时又执行了一次查询。
 ```python
@@ -172,6 +172,21 @@ session.flush()
 
 session.commit()
 # 2018-11-27 23:53:06,424 INFO sqlalchemy.engine.base.Engine COMMIT
+
+b._sa_instance_state.__dict__
+# {'_instance_dict': <weakref at 0x1028c6f70; to 'WeakInstanceDict' at 0x1036b6050>,
+#  '_strong_obj': None,
+#  'callables': {'id': <sqlalchemy.orm.state.InstanceState at 0x103743990>,
+#   'name': <sqlalchemy.orm.state.InstanceState at 0x103743990>},
+#  'class_': __main__.StudentModel,
+#  'committed_state': {},
+#  'expired': True,
+#  'key': (__main__.StudentModel, (2,)),
+#  'manager': <ClassManager of <class '__main__.StudentModel'> at 1036b64f0>,
+#  'modified': False,
+#  'obj': <weakref at 0x1037016d8; to 'StudentModel' at 0x103743850>,
+#  'runid': 2,
+#  'session_id': 1}
 
 b.name
 # 2018-11-27 23:54:34,431 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
