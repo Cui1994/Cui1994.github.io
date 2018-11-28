@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>你真的了解SQLAlchemy吗</title>
-    <meta name="description" content="">
+    <meta name="description" content="SQLAlchemy作为一款强大而又实用的ORM框架，越来越频繁的出现在各类Python项目中。如果你是一名Python开发工程师，肯定可以熟练的写出SQLAlchemy的查询语句来满足自己的业务需求。然而，SQLAlchemy背后的知识你又了解多少呢？它是什么时候与数据库建立连接的呢？又是怎样的连接方式呢？SQ...">
 
     <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
     <link rel="icon" href="/favicon.ico?" type="image/x-icon">
@@ -183,7 +183,16 @@
       <li><a href="#expire_on_commit" id="markdown-toc-expire_on_commit">expire_on_commit</a></li>
     </ul>
   </li>
+  <li><a href="#实战qa" id="markdown-toc-实战qa">实战Q&amp;A</a>    <ul>
+      <li><a href="#q1是否应该启用连接池如何配置连接池" id="markdown-toc-q1是否应该启用连接池如何配置连接池">Q1.是否应该启用连接池，如何配置连接池</a></li>
+      <li><a href="#q2如何在应用中管理session" id="markdown-toc-q2如何在应用中管理session">Q2.如何在应用中管理Session</a></li>
+      <li><a href="#q3session与transaction是一回事吗" id="markdown-toc-q3session与transaction是一回事吗">Q3.Session与Transaction是一回事吗</a></li>
+    </ul>
+  </li>
+  <li><a href="#写在后面" id="markdown-toc-写在后面">写在后面</a></li>
 </ul>
+
+<p><img src="https://agint.me/PictureApi/pic.php" alt="" /></p>
 
 <p>SQLAlchemy作为一款强大而又实用的ORM框架，越来越频繁的出现在各类Python项目中。如果你是一名Python开发工程师，肯定可以熟练的写出SQLAlchemy的查询语句来满足自己的业务需求。然而，SQLAlchemy背后的知识你又了解多少呢？它是什么时候与数据库建立连接的呢？又是怎样的连接方式呢？SQLAlchemy中的<code class="highlighter-rouge">Session</code>与数据库的<code class="highlighter-rouge">Transaction</code>是一回事吗？如何优雅地管理SQLAlchemy的连接与事务呢？本文将结合<a href="https://docs.sqlalchemy.org/en/latest/orm/tutorial.html">SQLAlchemy文档</a>解答这些问题。</p>
 
@@ -211,13 +220,13 @@
 
 <h2 id="连接">连接</h2>
 
-<h3 id="延时加载">延时加载</h3>
-
 <p>SQAlchemy通过<code class="highlighter-rouge">create_engine</code>创建<code class="highlighter-rouge">Engine</code>对象来实现数据库连接.</p>
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># DB_CONNECT_STRING = 'mysql+pymysql://root:1234@127.0.0.1/test?charset=utf8'
 </span><span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="n">DB_CONNECT_STRING</span><span class="p">,</span> <span class="n">pool_size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">max_overflow</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pool_recycle</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">echo</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 </code></pre></div></div>
 <p>这里设置<code class="highlighter-rouge">echo=True</code>来显示所执行的SQL日志。</p>
+
+<h3 id="延时加载">延时加载</h3>
 
 <p>执行<code class="highlighter-rouge">create_engine</code>后<code class="highlighter-rouge">general-log</code>和<code class="highlighter-rouge">stdout</code>并没有显示任何信息，因为SQLAlchemy到数据库的连接是延时加载的，只有真正需要建立连接时才会创建。</p>
 
@@ -316,11 +325,11 @@
 <h3 id="flush与add的区别">flush与add的区别</h3>
 
 <p>通过上面的展示也可以发现，<code class="highlighter-rouge">add</code>实际上不会真正发送请求到数据库，这里所做的任何修改其他事务都是不可见的。
-而<code class="highlighter-rouge">flush</code>则会发送请求到数据库，而此时的变更对其他事务是否可见取决于数据库的隔离机制。</p>
+而<code class="highlighter-rouge">flush</code>则会发送请求到数据库，而此时的变更属于未提交变更，对其他事务是否可见取决于数据库的隔离机制。</p>
 
 <h3 id="expire_on_commit">expire_on_commit</h3>
 
-<p><code class="highlighter-rouge">expire_on_commit</code>可以用来更改SQLAlchemy的对象刷新机制，默认值为<code class="highlighter-rouge">True</code>即在<code class="highlighter-rouge">session</code>调用<code class="highlighter-rouge">commit</code>之后会主动刷新同一个<code class="highlighter-rouge">session</code>在<code class="highlighter-rouge">commit</code>之前查询得到的ORM对象属性，方法是重新调用之前的查询语句。</p>
+<p><code class="highlighter-rouge">expire_on_commit</code>可以用来更改SQLAlchemy的对象刷新机制，默认值为<code class="highlighter-rouge">True</code>即在<code class="highlighter-rouge">session</code>调用<code class="highlighter-rouge">commit</code>之后会主动将同一个<code class="highlighter-rouge">session</code>在<code class="highlighter-rouge">commit</code>之前查询得到的ORM对象的<code class="highlighter-rouge">_sa_instance_state.expire</code>属性设置为<code class="highlighter-rouge">Flase</code>，再次读取该对象属性时将重载这个对象，方法是重新调用之前的查询语句。</p>
 
 <p>将<code class="highlighter-rouge">expire_on_commit</code>设置为<code class="highlighter-rouge">True</code>后重新执行代码，发现在获取b属性时又执行了一次查询。</p>
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">b</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">StudentModel</span><span class="p">)</span><span class="o">.</span><span class="nb">filter</span><span class="p">(</span><span class="n">StudentModel</span><span class="o">.</span><span class="nb">id</span><span class="o">==</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
@@ -339,6 +348,21 @@
 <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
 <span class="c1"># 2018-11-27 23:53:06,424 INFO sqlalchemy.engine.base.Engine COMMIT
 </span>
+<span class="n">b</span><span class="o">.</span><span class="n">_sa_instance_state</span><span class="o">.</span><span class="n">__dict__</span>
+<span class="c1"># {'_instance_dict': &lt;weakref at 0x1028c6f70; to 'WeakInstanceDict' at 0x1036b6050&gt;,
+#  '_strong_obj': None,
+#  'callables': {'id': &lt;sqlalchemy.orm.state.InstanceState at 0x103743990&gt;,
+#   'name': &lt;sqlalchemy.orm.state.InstanceState at 0x103743990&gt;},
+#  'class_': __main__.StudentModel,
+#  'committed_state': {},
+#  'expired': True,
+#  'key': (__main__.StudentModel, (2,)),
+#  'manager': &lt;ClassManager of &lt;class '__main__.StudentModel'&gt; at 1036b64f0&gt;,
+#  'modified': False,
+#  'obj': &lt;weakref at 0x1037016d8; to 'StudentModel' at 0x103743850&gt;,
+#  'runid': 2,
+#  'session_id': 1}
+</span>
 <span class="n">b</span><span class="o">.</span><span class="n">name</span>
 <span class="c1"># 2018-11-27 23:54:34,431 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
 # 2018-11-27 23:54:34,431 INFO sqlalchemy.engine.base.Engine SELECT student.id AS student_id, student.name AS student_name
@@ -347,6 +371,115 @@
 # 2018-11-27 23:54:34,431 INFO sqlalchemy.engine.base.Engine (2,)
 </span></code></pre></div></div>
 <p>虽然这样可以保持数据同步，但实际应用中一般将这个值设置为<code class="highlighter-rouge">Flase</code>，避免内存中的数据属性被更改。</p>
+
+<h2 id="实战qa">实战Q&amp;A</h2>
+
+<p>有了上面的理论基础，下面从实际应用出发，思考一些项目中的常见问题。</p>
+
+<h3 id="q1是否应该启用连接池如何配置连接池">Q1.是否应该启用连接池，如何配置连接池</h3>
+
+<p>首先，MySQL建立连接是非常复杂的过程，我们需要启用连接池来保持与MySQL的长连接，以减少建立连接的次数。</p>
+
+<p>那连接池是否越大越好呢，甚至所有连接都使用长连接？答案也是否定的，因为MySQL在执行过程中使用的临时内存是存放在连接对象中的，如果保持大量长连接会导致MySQL的内存快速增长，以致于被系统强行杀掉（OOM）异常重启。因此需要结合业务的TPS来配置连接池大小，来保证与MySQL的活跃连接维持在<code class="highlighter-rouge">pool_size</code>+<code class="highlighter-rouge">max_overflow</code>内。</p>
+
+<p>至于连接池的连接回收时间，先来看一个使用MySQL时的常见报错，在查询时与MySQL断开了连接：</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">OperationalError</span><span class="p">:</span> <span class="p">(</span><span class="n">OperationalError</span><span class="p">)</span> <span class="p">(</span><span class="mi">2013</span><span class="p">,</span> <span class="s">"Lost connection to MySQL server during query (error(54, 'Connection reset by peer'))"</span><span class="p">)</span> <span class="s">'SELECT student.id AS student_id, student.name AS student_name </span><span class="se">\n</span><span class="s">FROM student </span><span class="se">\n</span><span class="s">WHERE student.id = </span><span class="si">%</span><span class="s">s </span><span class="se">\n</span><span class="s"> LIMIT </span><span class="si">%</span><span class="s">s'</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>这个错误是由MySQL连接器抛出的，原因一般有两个：</p>
+<ul>
+  <li>所连接的MySQL服务真的发生了重启操作，这种问题无法避免。</li>
+  <li>MySQL连接器会主动关闭空闲（Sleep）时间达到<code class="highlighter-rouge">wait_timeout</code>时间的连接，这个超时时间的默认值为<code class="highlighter-rouge">8小时</code>。</li>
+</ul>
+
+<p>SQLAlchemy在捕获到MySQL连接器的抛错后会主动清空连接池里的连接，如果需要进行查询需要重新建立连接。因此，你的连接池<code class="highlighter-rouge">pool_recycle</code>参数至少要小于MySQL的<code class="highlighter-rouge">wait_timeout</code>时间，以避免连接池中存在被MySQL连接器主动断开的连接。当然也不能太小，使连接池失去意义。一般的建议值为30分钟之内。</p>
+
+<h3 id="q2如何在应用中管理session">Q2.如何在应用中管理Session</h3>
+
+<p>关于这点，<a href="https://docs.sqlalchemy.org/en/latest/orm/session_basics.html#when-do-i-construct-a-session-when-do-i-commit-it-and-when-do-i-close-it">SQLAlchemy官方文档</a>中给出了合理的方案，但需要注意一些细节。</p>
+
+<blockquote>
+  <ol>
+    <li>As a general rule, keep the lifecycle of the session separate and external from functions and objects that access and/or manipulate database data. This will greatly help with achieving a predictable and consistent transactional scope.</li>
+    <li>Make sure you have a clear notion of where transactions begin and end, and keep transactions short, meaning, they end at the series of a sequence of operations, instead of being held open indefinitely.</li>
+  </ol>
+</blockquote>
+
+<p>一般来说，你需要在访问数据库的时候创建<code class="highlighter-rouge">Session</code>，开启<code class="highlighter-rouge">Transaction</code>同时执行查询语句，在所有查询语句执行结束之后关闭<code class="highlighter-rouge">Transaction</code>和<code class="highlighter-rouge">Session</code>。任何时候，只要一个<code class="highlighter-rouge">Session</code>被创建并建立数据库连接，则它必须被关闭从而将数据库连接释放到连接池中，否则连接将永远不会释放直到达到数据库连接的超时时间。</p>
+
+<p>对于Web应用来说，由于一个请求的处理时间足够短，可以更简单地将<code class="highlighter-rouge">Session</code>的生命周期同请求的生命周期保持一致，即如果一个请求需要访问数据库，则创建<code class="highlighter-rouge">Session</code>，处理完这个请求则关闭<code class="highlighter-rouge">Session</code>。</p>
+
+<p>由于<code class="highlighter-rouge">Session</code>是必须被关闭的，为了方便的管理<code class="highlighter-rouge">Session</code>，保证一个请求内只有一个<code class="highlighter-rouge">Session</code>是更好的选择，你可以将创建的<code class="highlighter-rouge">Session</code>作为全局变量使用，或者更方便地，使用<code class="highlighter-rouge">scoped_session</code>，保证同一个线程内实例化的<code class="highlighter-rouge">Session</code>都为同一个对象。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">session_factory</span> <span class="o">=</span> <span class="n">sessionmaker</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="n">engine</span><span class="p">,</span> <span class="n">expire_on_commit</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">DBSession</span> <span class="o">=</span> <span class="n">scoped_session</span><span class="p">(</span><span class="n">session_factory</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>这样，在请求结束时，你只需要关闭一个<code class="highlighter-rouge">Session</code>即可。例如你可以在<code class="highlighter-rouge">Flask</code>应用中的<code class="highlighter-rouge">after_request</code>函数中加入一行代码调用<code class="highlighter-rouge">Session Factory</code>的<code class="highlighter-rouge">remove</code>方法，就可以保证请求中的<code class="highlighter-rouge">Session</code>对象被关闭，它会调用<code class="highlighter-rouge">Session</code>的<code class="highlighter-rouge">close</code>方法，将数据库连接放回连接池并将未<code class="highlighter-rouge">commit</code>的<code class="highlighter-rouge">Transaction</code>回滚。</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">DBSession</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+</code></pre></div></div>
+<blockquote>
+  <p>The scoped_session.remove() method first calls Session.close() on the current Session, which has the effect of releasing any connection/transactional resources owned by the Session first, then discarding the Session itself. “Releasing” here means that connections are returned to their connection pool and any transactional state is rolled back, ultimately using the rollback() method of the underlying DBAPI connection.</p>
+</blockquote>
+
+<p>需要注意的是，<code class="highlighter-rouge">scoped_session</code>对在同一个线程的判断方式为<code class="highlighter-rouge">thrending.local()</code>，当使用多线程处理某个查询语句时，正确的使用方法是在当前线程中实例化一个<code class="highlighter-rouge">Session</code>并将其传入多线程函数中，否则其他线程中的<code class="highlighter-rouge">Session</code>将无法被关闭，数据库连接和<code class="highlighter-rouge">Transaction</code>也将一直不会被释放。</p>
+
+<p>不同于<code class="highlighter-rouge">close</code>方法，写请求的<code class="highlighter-rouge">commit</code>则不是一定要执行的，个人不推荐和<code class="highlighter-rouge">remove</code>方法一样放在请求结束，而是自定义上下文或用装饰器来进行<code class="highlighter-rouge">commit</code>，保证需要执行<code class="highlighter-rouge">commit</code>的查询被<code class="highlighter-rouge">commit</code>。下面的代码是我个人推荐的写法：</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">RoutingSession</span><span class="p">(</span><span class="n">Session</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RoutingSession</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">exc_val</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exc_val</span><span class="p">,</span> <span class="n">SQLAlchemyError</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">SQLAlchemyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">gen_commit_deco</span><span class="p">(</span><span class="n">session_factory</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">decorated</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+        <span class="o">@</span><span class="n">functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">session_factory</span><span class="p">():</span>
+                    <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">SQLAlchemyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span>
+        <span class="k">return</span> <span class="n">wrapper</span>
+    <span class="k">return</span> <span class="n">decorated</span>
+
+<span class="n">session_factory</span> <span class="o">=</span> <span class="n">sessionmaker</span><span class="p">(</span><span class="n">class_</span><span class="o">=</span><span class="n">RoutingSession</span><span class="p">,</span> <span class="n">bind</span><span class="o">=</span><span class="n">engine</span><span class="p">,</span> <span class="n">expire_on_commit</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">auto_commit</span> <span class="o">=</span> <span class="n">gen_commit_deco</span><span class="p">(</span><span class="n">DBSession</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="q3session与transaction是一回事吗">Q3.Session与Transaction是一回事吗</h3>
+
+<p>回到开篇的问题，<code class="highlighter-rouge">Session</code>与数据库的<code class="highlighter-rouge">Transaction</code>能画等号吗？</p>
+
+<p>答案是否定的，只有<code class="highlighter-rouge">transactional</code>状态下的<code class="highlighter-rouge">Session</code>对象才相当于数据库的<code class="highlighter-rouge">Transaction</code>，除此之外，当<code class="highlighter-rouge">Session</code>执行<code class="highlighter-rouge">commit</code>或<code class="highlighter-rouge">rollback</code>方法后，与其对应的数据库<code class="highlighter-rouge">Transaction</code>也就结束了，之后这个<code class="highlighter-rouge">Session</code>再次执行<code class="highlighter-rouge">query</code>或<code class="highlighter-rouge">flush</code>方法，又会有一个新的数据库<code class="highlighter-rouge">Transaction</code>与其绑定，所以一个<code class="highlighter-rouge">Session</code>是可以对应不同的数据库<code class="highlighter-rouge">Transaction</code>的。</p>
+
+<p>对于每一个<code class="highlighter-rouge">Transaction</code>，数据库都会记录它的回滚日志<code class="highlighter-rouge">undo log</code>来记录当前事务内数据库的某条记录的值<code class="highlighter-rouge">read-view</code>，<code class="highlighter-rouge">undo log</code>会一直保留，直到数据库中没有比它更老版本的<code class="highlighter-rouge">read-view</code>，因此<code class="highlighter-rouge">Transaction</code>的生命周期不能太长，否则数据库会浪费大量空间储存回滚日志。对于普通Web请求，可以用<code class="highlighter-rouge">Q2</code>中的方法来管理<code class="highlighter-rouge">Session</code>，但如果你在耗时较大的脚本或定时任务中用到<code class="highlighter-rouge">Session</code>，推荐将<code class="highlighter-rouge">Session</code>的生命周期控制在尽可能少的函数块内，以数据库避免长事务的产生。</p>
+
+<p>可以用下面的命令判断数据库中存在的长事务：</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">information_schema</span><span class="p">.</span><span class="n">innodb_trx</span> <span class="k">where</span> <span class="n">TIME_TO_SEC</span><span class="p">(</span><span class="n">timediff</span><span class="p">(</span><span class="n">now</span><span class="p">(),</span><span class="n">trx_started</span><span class="p">))</span><span class="o">&gt;</span><span class="mi">60</span>
+</code></pre></div></div>
+
+<h2 id="写在后面">写在后面</h2>
+
+<p>SQLAlchemy对于每一位Python开发者来说都是宝藏，不但在于其强大且实用，其源码所蕴含的<code class="highlighter-rouge">unit work</code>思想和各类设计模式更是绝佳的教材。这里给自己挖个坑，下一篇SQLAlchemy博客将会从源码角度进行架构剖析。</p>
+
+<p>(End)</p>
+
 
         </article>
         <hr>
