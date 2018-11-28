@@ -5,14 +5,14 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Wed, 28 Nov 2018 22:22:09 +0800</pubDate>
-    <lastBuildDate>Wed, 28 Nov 2018 22:22:09 +0800</lastBuildDate>
+    <pubDate>Wed, 28 Nov 2018 22:46:05 +0800</pubDate>
+    <lastBuildDate>Wed, 28 Nov 2018 22:46:05 +0800</lastBuildDate>
     <generator>Jekyll v3.8.4</generator>
     
       <item>
         <title>你真的了解SQLAlchemy吗</title>
         <description>
-&lt;img src=&quot;https://agint.me/PictureApi/pic.php&quot; alt=&quot;&quot; /&gt;
+&lt;img src=&quot;https://picsum.photos/800/300/?random&quot; alt=&quot;&quot; /&gt;
 
 SQLAlchemy作为一款强大而又实用的ORM框架，越来越频繁的出现在各类Python项目中。如果你是一名Python开发工程师，肯定可以熟练的写出SQLAlchemy的查询语句来满足自己的业务需求。然而，SQLAlchemy背后的知识你又了解多少呢？它是什么时候与数据库建立连接的呢？又是怎样的连接方式呢？SQLAlchemy中的&lt;code class=&quot;highlighter-rouge&quot;&gt;Session&lt;/code&gt;与数据库的&lt;code class=&quot;highlighter-rouge&quot;&gt;Transaction&lt;/code&gt;是一回事吗？如何优雅地管理SQLAlchemy的连接与事务呢？本文将结合&lt;a href=&quot;https://docs.sqlalchemy.org/en/latest/orm/tutorial.html&quot;&gt;SQLAlchemy文档&lt;/a&gt;解答这些问题。
 
