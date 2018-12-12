@@ -5,9 +5,33 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Wed, 28 Nov 2018 22:46:05 +0800</pubDate>
-    <lastBuildDate>Wed, 28 Nov 2018 22:46:05 +0800</lastBuildDate>
+    <pubDate>Wed, 12 Dec 2018 21:30:54 +0800</pubDate>
+    <lastBuildDate>Wed, 12 Dec 2018 21:30:54 +0800</lastBuildDate>
     <generator>Jekyll v3.8.4</generator>
+    
+      <item>
+        <title>Linux基础（三）进程</title>
+        <description>
+&lt;img src=&quot;https://i.loli.net/2018/12/12/5c110d5c1ea0c.jpeg&quot; alt=&quot;&quot; /&gt;
+
+&lt;blockquote&gt;
+  该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
+书中的编程练习这里不做展示和说明。
+&lt;/blockquote&gt;
+
+</description>
+        <pubDate>Tue, 11 Dec 2018 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2018/12/11/linux3/</link>
+        <guid isPermaLink="true">http://localhost:4000/2018/12/11/linux3/</guid>
+        
+        <category>Linux</category>
+        
+        <category>读书笔记</category>
+        
+        
+        <category>Linux</category>
+        
+      </item>
     
       <item>
         <title>你真的了解SQLAlchemy吗</title>
@@ -233,22 +257,6 @@ api层的代码应简单清晰，甚至你的每个路由对应的函数都“�
         <category>Flask</category>
         
         <category>降级策略</category>
-        
-        
-        <category>Python Web</category>
-        
-      </item>
-    
-      <item>
-        <title>Python Web 基础向（四） 浅谈数据层</title>
-        <description>数据层一般会给人带来一些困扰，在于其定位不准确。聚合Model的工作也可以放在逻辑层做，但会导致逻辑层变重，经常出现大段晦涩代码。因此我的建议是保留Model聚合层，尽管会导致工作量的略微增加，但却可以使代码逻辑更加清晰，即每一层都只做自己该做的事。
-
-&lt;img src=&quot;https://i.loli.net/2018/11/26/5bfc03f48a354.jpg&quot; alt=&quot;&quot; /&gt;
-
-</description>
-        <pubDate>Sat, 24 Feb 2018 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2018/02/24/yewu4/</link>
-        <guid isPermaLink="true">http://localhost:4000/2018/02/24/yewu4/</guid>
         
         
         <category>Python Web</category>

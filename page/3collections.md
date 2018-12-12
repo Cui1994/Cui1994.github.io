@@ -37,6 +37,8 @@ type: page
 
 * [vim配置 k-vim](https://github.com/wklken/k-vim)
 
+* [Simple图床](https://sm.ms/)
+
 
 ## 问题
 
