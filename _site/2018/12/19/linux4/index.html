@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Linux基础（三）进程</title>
+    <title>Linux基础（四）线程</title>
     <meta name="description" content="  该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。书中的编程练习这里不做展示和说明。">
 
     <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
     <link rel="stylesheet" href="/css/main.css ">
-    <link rel="canonical" href="http://localhost:4000/2018/12/11/linux3/">
+    <link rel="canonical" href="http://localhost:4000/2018/12/19/linux4/">
     <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
 
 
@@ -112,11 +112,11 @@
 
         <div class="page clearfix" post>
     <div class="left">
-        <h1>Linux基础（三）进程</h1>
+        <h1>Linux基础（四）线程</h1>
         <div class="label">
 
             <div class="label-card">
-                <i class="fa fa-calendar"></i>2018-12-11
+                <i class="fa fa-calendar"></i>2018-12-19
             </div>
 
             <div class="label-card">
@@ -170,23 +170,29 @@
         <article itemscope itemtype="http://schema.org/BlogPosting">
         <ul id="markdown-toc">
   <li><a href="#概念" id="markdown-toc-概念">概念</a></li>
-  <li><a href="#进程内存布局" id="markdown-toc-进程内存布局">进程内存布局</a>    <ul>
-      <li><a href="#虚拟内存管理" id="markdown-toc-虚拟内存管理">虚拟内存管理</a></li>
-      <li><a href="#页表" id="markdown-toc-页表">页表</a></li>
-      <li><a href="#进程内存结构" id="markdown-toc-进程内存结构">进程内存结构</a></li>
-    </ul>
-  </li>
-  <li><a href="#进程行为" id="markdown-toc-进程行为">进程行为</a>    <ul>
+  <li><a href="#线程行为" id="markdown-toc-线程行为">线程行为</a>    <ul>
       <li><a href="#创建" id="markdown-toc-创建">创建</a></li>
       <li><a href="#终止" id="markdown-toc-终止">终止</a></li>
-      <li><a href="#等待子进程终止" id="markdown-toc-等待子进程终止">等待子进程终止</a></li>
-      <li><a href="#执行新程序" id="markdown-toc-执行新程序">执行新程序</a></li>
+      <li><a href="#连接" id="markdown-toc-连接">连接</a></li>
+      <li><a href="#分离" id="markdown-toc-分离">分离</a></li>
+      <li><a href="#取消" id="markdown-toc-取消">取消</a></li>
     </ul>
   </li>
-  <li><a href="#sigchild信号" id="markdown-toc-sigchild信号">SIGCHILD信号</a></li>
+  <li><a href="#进程与线程" id="markdown-toc-进程与线程">进程与线程</a>    <ul>
+      <li><a href="#优劣势" id="markdown-toc-优劣势">优劣势</a></li>
+      <li><a href="#在线程中执行进程方法" id="markdown-toc-在线程中执行进程方法">在线程中执行进程方法</a></li>
+    </ul>
+  </li>
+  <li><a href="#线程安全" id="markdown-toc-线程安全">线程安全</a></li>
+  <li><a href="#线程实现模型" id="markdown-toc-线程实现模型">线程实现模型</a>    <ul>
+      <li><a href="#多对一用户级线程" id="markdown-toc-多对一用户级线程">多对一：用户级线程</a></li>
+      <li><a href="#一对一内核级线程" id="markdown-toc-一对一内核级线程">一对一：内核级线程</a></li>
+      <li><a href="#多对多两级模型" id="markdown-toc-多对多两级模型">多对多：两级模型</a></li>
+    </ul>
+  </li>
 </ul>
 
-<p><img src="https://i.loli.net/2018/12/12/5c110d5c1ea0c.jpeg" alt="" /></p>
+<p><img src="https://picsum.photos/800/300/?image=574" alt="" /></p>
 
 <blockquote>
   <p>该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
@@ -195,110 +201,127 @@
 
 <h2 id="概念">概念</h2>
 
-<p><strong>进程</strong>是可执行程序的一个实例，由一系列用户控件和内核数据结构组成。</p>
+<p><strong>线程</strong>：允许应用程序并发执行多个任务的一种机制，一个进程可以执行多个线程，这些线程执行相同的程序，共享一份全局内存，包括初始化数据段、未初始化数据段以及堆内存段。进程启动时有且只有单个线程，称为初始(initial)线程或者主(main)线程。</p>
 
-<p><strong>进程号</strong>: 由内核维护的进程标识，是一个正整数，init进程号永远为1，其余进程号与进程无绑定关系。</p>
+<p><strong>线程ID</strong>：线程的唯一标识（C语言中定义为<code class="highlighter-rouge">pthread_t</code>），在Linux中，线程ID在所有进程中都是唯一的。</p>
 
-<blockquote>
-  <p>进程号有最大值，储存在<code class="highlighter-rouge">/proc/sys/kernel/pid_max</code>文件中，32位机最大值为32767。</p>
-</blockquote>
-
-<h2 id="进程内存布局">进程内存布局</h2>
-<h3 id="虚拟内存管理">虚拟内存管理</h3>
-
-<p>计算机为每个进程维护了一片连续的、私有的地址空间，让进城有了独享内存的错觉。CPU获取内存时，通过<strong>内存管理单元(MMU)</strong>进行虚拟寻址，将虚拟地址翻译成物理地址。</p>
-
-<p>虚拟内存将其地址空间划分为大小固定的<strong>虚拟页</strong>，每个虚拟页的大小为2的n次方字节。同样的，物理内存也被划分为大小相同的<strong>物理页</strong>。</p>
-
-<h3 id="页表">页表</h3>
-
-<p>为了支持虚拟内存。内核为每个进程维护一张页表，页表结构如下图。</p>
-
-<p><img src="https://i.loli.net/2018/12/12/5c0fe2312e1d6.png" alt="" /></p>
-
-<p>页表是一个<strong>页表条目(PTE)</strong>的数组，每个页表条目由一个<strong>有效位</strong>和一个n位<strong>地址字段</strong>组成。</p>
-
+<p>多个线程共享的主要属性有：</p>
 <ul>
-  <li>如果有效位为1，表示虚拟页被缓存在物理页中，后面的地址字段指向物理页的地址。</li>
-  <li>如果有效位为0，若地址字段为null，则表明该虚拟页尚未被使用，否则，地址字段的地址指向磁盘中的地址，表示虚拟页未被缓存。</li>
+  <li>进程ID</li>
+  <li>控制终端</li>
+  <li>打开的文件描述符</li>
+  <li>信号处置</li>
 </ul>
 
-<p>在CPU进行虚拟寻址时会发生下面两种情况：</p>
-
+<p>线程独占的属性有：</p>
 <ul>
-  <li><strong>页命中</strong>: 虚拟页的有效位为1，直接从地址字段指向的物理页中读取数据。</li>
-  <li><strong>缺页</strong>: 虚拟页的有效位为0，这时将触发<code class="highlighter-rouge">缺页异常</code>，内核中的缺页异常处理程序将选择一个物理页为牺牲页，读出地址字段指向的磁盘空间读取数据，并缓存在牺牲页的地址中。</li>
+  <li>线程id</li>
+  <li>CPU亲和力</li>
+  <li>栈</li>
 </ul>
 
-<h3 id="进程内存结构">进程内存结构</h3>
-
-<p>进程分配的内存有很多部分，用<strong>段</strong>来表示虚拟内存的逻辑划分，包括文本段、数据段、栈和堆，布局如下图：</p>
-
-<p><img src="https://i.loli.net/2018/12/12/5c0fe77321912.png" alt="" /></p>
-
-<p>需要注意的是，栈的内存是从上向下增长的，而堆的内存是从下向上增长的。</p>
-
-<h2 id="进程行为">进程行为</h2>
+<h2 id="线程行为">线程行为</h2>
 
 <h3 id="创建">创建</h3>
-<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pid_t</span> <span class="n">fork</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">pthread_creat</span><span class="p">(</span><span class="n">pthread_t</span> <span class="o">*</span><span class="kr">thread</span><span class="p">,</span> <span class="k">const</span> <span class="n">pthread_addr_t</span> <span class="o">*</span><span class="n">addr</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="p">(</span><span class="o">*</span><span class="n">start</span><span class="p">)(</span><span class="kt">void</span> <span class="o">*</span><span class="p">),</span> <span class="kt">void</span> <span class="o">*</span><span class="n">arg</span><span class="p">);</span>
 </code></pre></div></div>
-<p>调用<code class="highlighter-rouge">fork</code>后会出现两个进程，都会从<code class="highlighter-rouge">fork</code>的返回处开始执行。不同的是父进程返回子进程的进程号，而子进程返回0。</p>
-
-<ul>
-  <li>子进程共享父进程程序的文本段。</li>
-  <li>子进程将完全复制父进程的栈段、数据段及堆段，修改这些段中的变量不会影响父进程。</li>
-  <li>子进程将获取父进程的所有文件描述符副本，行为类似于<code class="highlighter-rouge">dup</code>，即<strong>父子进程对应的文件描述符均指向相同的打开文件句柄</strong>。</li>
-</ul>
+<p>线程创建后会从<code class="highlighter-rouge">start(arg)</code>开始执行，并继续执行调用之后的语句直到<code class="highlighter-rouge">return</code>。与进程类似，创建进程后无法确定那个线程先获得CPU资源。</p>
 
 <h3 id="终止">终止</h3>
-<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="n">_exit</span><span class="p">(</span><span class="kt">int</span> <span class="n">status</span><span class="p">);</span>
-</code></pre></div></div>
-
-<p>调用<code class="highlighter-rouge">_exit(status)</code>系统调用终止当前进程，并以参数<code class="highlighter-rouge">status</code>的值作为终止状态，可以供父进程<code class="highlighter-rouge">wait</code>获取，<code class="highlighter-rouge">0</code>为正常退出。</p>
-
-<p>经常通过调用库函数<code class="highlighter-rouge">exit(status)</code>来终止进程，它会执行以下动作：</p>
-
+<p>有四种方式可以终止线程：</p>
 <ul>
-  <li>调用退出处理程序</li>
-  <li>刷新stdio流缓冲区(fflush)</li>
-  <li>执行<code class="highlighter-rouge">_exit</code>系统调用</li>
+  <li>线程执行<code class="highlighter-rouge">start</code>函数的<code class="highlighter-rouge">return</code>正常返回退出。</li>
+  <li>线程调用<code class="highlighter-rouge">pthread_exit()</code>。</li>
+  <li>调用<code class="highlighter-rouge">pthread_cancel()</code>取消线程。</li>
+  <li>任意线程调用<code class="highlighter-rouge">exit()</code>或者主线程执行了<code class="highlighter-rouge">return</code>语句，会导致进程中所有的线程终止。</li>
 </ul>
 
-<p>注意：stdio流缓冲区是维护在用户空间内存中的，因此创建子进程时也会复制缓冲区。如果不希望子进程获取父进程的缓存，需要在<code class="highlighter-rouge">fork</code>调用前执行<code class="highlighter-rouge">fflush</code>刷新缓冲区。</p>
-
-<h3 id="等待子进程终止">等待子进程终止</h3>
-<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pid_t</span> <span class="n">wait</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="n">status</span><span class="p">);</span>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="n">pthread_exit</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">retval</span><span class="p">);</span>
 </code></pre></div></div>
-<p>调用<code class="highlighter-rouge">wait</code>来等待子进程终止，并以子进程<code class="highlighter-rouge">pid</code>作为调用返回值。如果调用<code class="highlighter-rouge">wait</code>前没有任何子进程终止，进程将被block直到任意子进程终止。</p>
-<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pid_t</span> <span class="n">waitpid</span><span class="p">(</span><span class="n">pid_t</span> <span class="n">pid</span><span class="p">,</span> <span class="kt">int</span> <span class="o">*</span><span class="n">status</span><span class="p">,</span> <span class="kt">int</span> <span class="n">options</span><span class="p">);</span>
-</code></pre></div></div>
-<p>调用<code class="highlighter-rouge">waitpid</code>等待指定子进程终止，<code class="highlighter-rouge">options</code>参数设置为<code class="highlighter-rouge">WNOHANG</code>，如果子进程状态为发生变化，父进程不会被block，而是直接返回0。<code class="highlighter-rouge">waitpid(-1)</code>相当于<code class="highlighter-rouge">wait</code>。</p>
+<p>调用<code class="highlighter-rouge">pthread_exit()</code>相当于执行<code class="highlighter-rouge">start</code>函数中的<code class="highlighter-rouge">return</code>提前返回退出。如果主线程执行<code class="highlighter-rouge">pthread_exit()</code>，其他线程将继续运行。</p>
 
-<p>父子进程生命周期不同将产生两种进程：</p>
+<h3 id="连接">连接</h3>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">pthread_join</span><span class="p">(</span><span class="n">pthread_t</span> <span class="n">threadm</span> <span class="kt">void</span> <span class="o">**</span><span class="n">retval</span><span class="p">);</span>
+</code></pre></div></div>
+<p>调用<code class="highlighter-rouge">pthread_join</code>来等待某个线程终止，如果该线程已经终止，join函数将立即返回，类似于进程的<code class="highlighter-rouge">waitpid</code>，不过有两点区别：</p>
 <ul>
-  <li><strong>孤儿进程</strong>: 父进程先于子进程终止，子进程变为孤儿进程，<code class="highlighter-rouge">init</code>将接管所有的孤儿进程成为其父进程。</li>
-  <li><strong>僵尸进程</strong>: 子进程先于父进程终止，父进程未调用<code class="highlighter-rouge">wait</code>，内核将子进程转变为僵尸进程，父进程调用<code class="highlighter-rouge">wait</code>后内核会将僵尸进程删除，如果父进程未调用<code class="highlighter-rouge">wait</code>而直接终止，<code class="highlighter-rouge">init</code>进程将接管子进程并直接调用<code class="highlighter-rouge">wait</code>。</li>
+  <li>线程之间关系是对等的。</li>
+  <li>无法“连接任意线程”，也无法“以非阻塞方式进行连接”。</li>
 </ul>
 
-<h3 id="执行新程序">执行新程序</h3>
-<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">execve</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">pathname</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="k">const</span> <span class="n">argv</span><span class="p">[],</span> <span class="kt">char</span> <span class="o">*</span><span class="k">const</span> <span class="n">envp</span><span class="p">[]);</span>
+<p><strong>僵尸线程</strong>：如果线程未分离，则必须使用<code class="highlighter-rouge">pthread_join</code>进行连接。如果未进行连接的线程提前终止，这个线程将转变为僵尸线程，与僵尸进程概念类似。如果僵尸线程积累过多，除了浪费资源外，应用将无法创建新的线程。</p>
+
+<h3 id="分离">分离</h3>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">pthread_detach</span><span class="p">(</span><span class="n">pthread_t</span> <span class="kr">thread</span><span class="p">);</span>
 </code></pre></div></div>
-<p>调用<code class="highlighter-rouge">execve</code>将制定路径的程序加载到当前进程的内存空间，进程的栈、数据、堆段将被新程序的相应部件替换，但<strong>进程中打开的文件描述符依然有效</strong>。</p>
+<p>如果不关心线程的返回状态，只是希望系统在线程结束时能够自动清理并移除，可以调用<code class="highlighter-rouge">pthread_detach</code>进行分离。分离后的线程不能再被连接。当主线程调用<code class="highlighter-rouge">exit</code>或<code class="highlighter-rouge">return</code>后，即使分离过的线程也将立即终止。</p>
 
-<p>若想在调用<code class="highlighter-rouge">exec</code>函数后关闭文件描述符，需对文件描述符设置<code class="highlighter-rouge">close-on-exec</code>标识。</p>
-<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">system</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">command</span><span class="p">);</span>
+<h3 id="取消">取消</h3>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">pthread_cancel</span><span class="p">(</span><span class="n">pthread_t</span> <span class="kr">thread</span><span class="p">);</span>
 </code></pre></div></div>
-<p>调用<code class="highlighter-rouge">system</code>函数来执行shell命令。<code class="highlighter-rouge">system</code>调用后至少会再创建两个新进程，一个运行shell，另一个用于shell执行的命令。</p>
+<p>调用<code class="highlighter-rouge">pthread_cancel</code>会使一个线程立即退出，函数将立即返回而不会等待目标线程退出。</p>
 
-<h2 id="sigchild信号">SIGCHILD信号</h2>
+<h2 id="进程与线程">进程与线程</h2>
 
-<p>子进程在终止时会向父进程发送SIGCHILD信号，父进程管理子进程的方式有两种：</p>
+<h3 id="优劣势">优劣势</h3>
+
+<p>线程相比进程的优势在于：</p>
 
 <ul>
-  <li>在SIGCHILD信号处理函数中循环以<code class="highlighter-rouge">WNOHANG</code>标识符调用<code class="highlighter-rouge">waitpid(-1)</code>，确保在此期间所有的已终止子进程被删除。</li>
-  <li>将SIGCHILD信号处置显式设置为<code class="highlighter-rouge">SIG_IGN</code>，虽然对SIGCHILD的默认处置就是忽略，但显式设置<code class="highlighter-rouge">SIG_IGN</code>后，子进程终止后会直接被内核删除，不用转化为僵尸进程。</li>
+  <li>线程数据共享简单。</li>
+  <li>线程创建的资源消耗小，创建速度比进程快10倍以上。</li>
 </ul>
+
+<p>劣势：</p>
+
+<ul>
+  <li>需要保证线程安全。</li>
+  <li>线程会争用宿主进程的虚拟内存空间（每个线程的线程栈都会消耗进程的虚拟内存）。</li>
+</ul>
+
+<h3 id="在线程中执行进程方法">在线程中执行进程方法</h3>
+
+<ul>
+  <li>线程执行<code class="highlighter-rouge">exec</code>：任一线程调用<code class="highlighter-rouge">exec</code>后调用进程将被完全替换，除了当前线程之外的所有线程都将立即消失。</li>
+  <li>线程执行<code class="highlighter-rouge">fork</code>：线程执行<code class="highlighter-rouge">fork</code>后，仅会将当前线程复制到子进程中，其他线程均会在子进程中消失。</li>
+</ul>
+
+<h2 id="线程安全">线程安全</h2>
+
+<ul>
+  <li><strong>临界区</strong>：访问某一共享变量的代码片段，这段代码片段执行的应为原子操作，同时访问同一共享资源的其他线程不应中断代码的执行。</li>
+  <li><strong>互斥量</strong>：有两个状态，锁定和未锁定，可以被获取（acquire）和释放（release），可以确保共享变量同一时间只有一个线程访问。</li>
+  <li><strong>条件变量</strong>：就共享变量的状态改变通知其他线程，并让其他线程等待这一通知。</li>
+  <li><strong>线程安全</strong>：若函数可以同时供多个线程调用，则称为线程安全函数。</li>
+</ul>
+
+<p>实现线程安全的方式主要有：采用互斥量或使用线程特有数据替代共享变量。可重入函数无需借助互斥量就可实现线程安全。</p>
+
+<h2 id="线程实现模型">线程实现模型</h2>
+
+<p>线程实现有三种模型，三种模型的不通主要集中在线程如何与<strong>内核调度实体（KSE）</strong>映射，KSE是内核分配CPU及其他系统资源的基本单位。</p>
+
+<h3 id="多对一用户级线程">多对一：用户级线程</h3>
+<p>线程创建、调度及同步的所有细节均有进程在<strong>用户空间</strong>的线程库处理，对于进程中的多个线程，内核一无所知。</p>
+
+<p>优点：</p>
+<ul>
+  <li>由于不涉及中断，因此线程的创建、终止以及上下文切换、同步等速度都很快。</li>
+</ul>
+
+<p>缺点：</p>
+<ul>
+  <li>系统调用会阻塞所有的线程。</li>
+  <li>无法将线程调度给多处理器，无法借助多核优势。</li>
+</ul>
+
+<h3 id="一对一内核级线程">一对一：内核级线程</h3>
+<p>每个线程映射一个单独的KSE，内核分别对每个线程做调度处理，线程同步操作也通过内核实现。Linux的线程都采用此模型。</p>
+
+<p>当应用程序中包含大量线程时，内核会为每个线程维护一个KSE，给内核调度器造成严重负担，大大降低系统的整体性能。</p>
+
+<h3 id="多对多两级模型">多对多：两级模型</h3>
+<p>结合了上述两种模型的有点，每个进程可以有多个KSE，也可以把多个线程映射到同一个KSE。但模型太过复杂，线程调度需要由内核及用户空间共同维护。</p>
 
 <p>(End)</p>
 
@@ -312,17 +335,11 @@
             
                 
                     
-                        
-                        <h2 id="similar_posts">Similar Posts</h2>
-                        <ul>
-                        
-                        <li class="relatedPost">
-                            <a href="/2018/12/19/linux4/">Linux基础（四）线程
-                            
-                            </a>
-                        </li>
-                        
-                        
+                
+                    
+                
+            
+                
                     
                 
                     
@@ -339,11 +356,17 @@
             
                 
                     
-                
-                    
-                
-            
-                
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2018/12/11/linux3/">Linux基础（三）进程
+                            
+                            </a>
+                        </li>
+                        
+                        
                     
                 
                     
@@ -519,13 +542,11 @@
         <div class="post-recent">
     <div class="pre">
         
-        <p><strong>上一篇</strong> <a href="/2018/11/27/sqlalchemy/">你真的了解SQLAlchemy吗</a></p>
+        <p><strong>上一篇</strong> <a href="/2018/12/19/gunicorn1/">Gunicorn源码阅读(一) WSGI协议与启动流程</a></p>
         
     </div>
     <div class="nex">
 
-        
-        <p><strong>下一篇</strong> <a href="/2018/12/19/gunicorn1/">Gunicorn源码阅读(一) WSGI协议与启动流程</a></p>
         
     </div>
 </div>
@@ -543,8 +564,8 @@
      */
 
     var disqus_config = function() {
-        this.page.url = 'http://localhost:4000/2018/12/11/linux3/'; // Replace PAGE_URL with your page's canonical URL variable
-        this.page.identifier = 'http://localhost:4000/2018/12/11/linux3/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+        this.page.url = 'http://localhost:4000/2018/12/19/linux4/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2018/12/19/linux4/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
     };
 
     (function() { // DON'T EDIT BELOW THIS LINE
