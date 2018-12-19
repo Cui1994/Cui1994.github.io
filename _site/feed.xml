@@ -5,9 +5,32 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Wed, 12 Dec 2018 21:30:54 +0800</pubDate>
-    <lastBuildDate>Wed, 12 Dec 2018 21:30:54 +0800</lastBuildDate>
+    <pubDate>Wed, 19 Dec 2018 21:12:37 +0800</pubDate>
+    <lastBuildDate>Wed, 19 Dec 2018 21:12:37 +0800</lastBuildDate>
     <generator>Jekyll v3.8.4</generator>
+    
+      <item>
+        <title>Gunicorn源码阅读(一) WSGI协议与启动流程</title>
+        <description>
+&lt;img src=&quot;https://picsum.photos/800/300/?image=61&quot; alt=&quot;&quot; /&gt;
+
+Gunicorn是一个实现了WSGI协议的HTTP Server，它采用了Pre-fork worker的进程模型，通过一个master进程fork一系列子进程来响应请求，master进程负责创建和管理这些子进程，而子进程则专注于处理客户端请求。为了适应不同的业务场景，Gunicorn也提供了不同的worker type，分别是sync、gthread、eventlet、gevent和tornado。
+
+</description>
+        <pubDate>Wed, 19 Dec 2018 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2018/12/19/gunicorn1/</link>
+        <guid isPermaLink="true">http://localhost:4000/2018/12/19/gunicorn1/</guid>
+        
+        <category>Gunicorn</category>
+        
+        <category>Python</category>
+        
+        <category>Web</category>
+        
+        
+        <category>Python</category>
+        
+      </item>
     
       <item>
         <title>Linux基础（三）进程</title>
@@ -229,34 +252,6 @@ Linux内核维护了三种与文件相关的数据结构，也提供了一套通
         <category>ORM</category>
         
         <category>缓存</category>
-        
-        
-        <category>Python Web</category>
-        
-      </item>
-    
-      <item>
-        <title>Python Web 基础向（五） api层</title>
-        <description>
-提供HTTP服务的api层负责处理以下任务：
-&lt;ul&gt;
-  &lt;li&gt;管理路由&lt;/li&gt;
-  &lt;li&gt;获取并检查参数&lt;/li&gt;
-  &lt;li&gt;将请求分发给相应的逻辑层 (简单的函数调用，略)&lt;/li&gt;
-  &lt;li&gt;包装返回数据&lt;/li&gt;
-  &lt;li&gt;处理错误&lt;/li&gt;
-&lt;/ul&gt;
-
-api层的代码应简单清晰，甚至你的每个路由对应的函数都“长得”差不多，这部分代码不应掺杂任何逻辑处理，他要做的仅仅是将请求指向相应的逻辑类去处理。
-
-</description>
-        <pubDate>Wed, 07 Mar 2018 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2018/03/07/yewu5/</link>
-        <guid isPermaLink="true">http://localhost:4000/2018/03/07/yewu5/</guid>
-        
-        <category>Flask</category>
-        
-        <category>降级策略</category>
         
         
         <category>Python Web</category>

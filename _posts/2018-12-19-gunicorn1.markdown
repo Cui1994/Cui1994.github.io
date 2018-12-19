@@ -1,0 +1,109 @@
+---
+layout: post
+category: "Python"
+title:  "Gunicorn源码阅读(一) WSGI协议与启动流程"
+tags: [Gunicorn, Python, Web]
+---
+
+* content
+{:toc}
+
+![](https://picsum.photos/800/300/?image=61)
+
+Gunicorn是一个实现了WSGI协议的HTTP Server，它采用了Pre-fork worker的进程模型，通过一个master进程fork一系列子进程来响应请求，master进程负责创建和管理这些子进程，而子进程则专注于处理客户端请求。为了适应不同的业务场景，Gunicorn也提供了不同的worker type，分别是sync、gthread、eventlet、gevent和tornado。
+
+
+
+
+
+## WSGI
+
+WSGI全称为Web Server Gateway Interface，是一种网关协议，定义Web Server与Web Application通信的规范。实现WSGI协议需要同时实现WSGI Server与WSGI Application两端。
+
+- **WSGI Server**: 负责接收请求，将请交给Application进行处理，并将处理之后的Response返回给客户端，需要实现`start_response(status, response_headers, exc_info=None)`接口供Application回调。
+- **WSGI Application**: 负责处理Server转发过来的请求，并将Response返回给Server，Application必须是可调用对象(callable)，需要实现`app(environ, start_response)`接口。
+
+![](https://i.loli.net/2018/12/18/5c190b637eda7.jpg)
+
+要运行Web应用，必须要有Web Server，如Nginx、Apache和Gunicorn，而Python中常见的Web框架如Flask、Django等都属于WSGI Application，如Flask对象就实现了WSGI Application的接口。这些框架必须与Web Server配合才能响应客户端请求，Web Server已经完成了HTTP解析和数据转发等一系列底层实现，开发者可以专注于开发Application。
+```python
+class Flask(_PackageBoundObject):
+    def __call__(self, environ, start_response):
+        """The WSGI server calls the Flask application object as the
+        WSGI application. This calls :meth:`wsgi_app` which can be
+        wrapped to applying middleware."""
+        return self.wsgi_app(environ, start_response)
+```
+> 那为什么没有Gunicorn，Flask这类应用也可以通过`app.run()`直接运行并接受请求呢？其实如果阅读过Flask源码的话，会发现其run方法实际上会调用werkzeug的`run_simple`方法，会创建一个WSGI Server并调用其`serve_forever`方法来接受请求，只不过相较于Gunicorn等Server，其性能相差很多。后面会有一篇文章简单分析一下Flask源码。
+
+Gunicorn也在自己的`Reponse`类中实现了`start_response`接口。
+```python
+class Response(object):
+    def start_response(self, status, headers, exc_info=None):
+        # ...略过
+        self.process_headers(headers)
+        self.chunked = self.is_chunked()
+        return self.write
+```
+
+## 启动流程
+
+借助一个Flask App来观察Gunicorn的启动过程。
+```python
+from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
+def hello_world():
+    return 'Hello World!'
+```
+使用`gunicorn -w 4 app:app`启动Gunicorn Server。命令直接调用`app/wsgiapp.py`中的`run`函数。
+```python
+def run():
+    """\
+    The ``gunicorn`` command line runner for launching Gunicorn with
+    generic WSGI applications.
+    """
+    from gunicorn.app.wsgiapp import WSGIApplication
+    WSGIApplication("%(prog)s [OPTIONS] [APP_MODULE]").run()
+```
+函数直接调用`WSGIApplication`的`run`方法，而最后会调用`Arbiter`的`run`方法并将自身传给`Arbiter`类，这是Gunicorn比较核心的一个类，现在先简单了解`Arbiter`的`run`方法是一个loop，至此master进程启动完成。
+
+在此之前，`WSGIApplication`类会完成从args或文件中加载配置的工作，配置储存在它的`cfg`属性中，是`config.py`中的`Config`类，`Config`的属性`settings`，储存着所有可用的配置对象，它们均继承自`Setting`类，包含了配置的cli短语与默认值。而对`Config`对象的操作会被映射到这些`Setting`的子类上。
+```python
+class Config(object):
+
+    def __init__(self, usage=None, prog=None):
+        self.settings = make_settings()
+        self.usage = usage
+        self.prog = prog or os.path.basename(sys.argv[0])
+        self.env_orig = os.environ.copy()
+
+    def __getattr__(self, name):
+        if name not in self.settings:
+            raise AttributeError("No configuration setting for: %s" % name)
+        return self.settings[name].get()
+
+    def __setattr__(self, name, value):
+        if name != "settings" and name in self.settings:
+            raise AttributeError("Invalid access!")
+        super(Config, self).__setattr__(name, value)
+```
+
+这个`Setting`对象由元类`SettingMeta`所创建，这里是个有意思的黑魔法，`Setting`类是由`SettingMeta`类创建的，继承自`Setting`类的各个配置类均有这个元类创建。
+```python
+Setting = SettingMeta('Setting', (Setting,), {})
+```
+由于`SettingMeta`元类的存在，每一个`Setting`类在创建时会将自身储存在`KNOWN_SETTINGS`全局变量中，格式化`desc`属性，并把`validator`函数转为实例方法（这里又是一个Python的黑魔法，通过一个类似装饰器的实现，动态的为函数添加了一个`instance`参数，从而使其能够被对象调用）。
+```python
+def wrap_method(func):
+    def _wrapped(instance, *args, **kwargs):
+        return func(*args, **kwargs)
+    return _wrapped
+```
+
+`WSGIApplication`继承自`Application`类，而`Application`又继承自`BaseApplication`，它在调用`Arbiter`类的`run`方法之前会将命令行或配置文件中读取的配置信息通过`load_config`方法加载到`Config`对象中，而`Config`对象则采用代理模式将各个配置的信息代理到不同的`Setting`对象中，实现了各部分间的解耦。
+
+下一篇文章将会走进`Arbiter`类，这是Gunicorn核心的部分，进程创建及管理、信号处置都在这里。
+
+(End)

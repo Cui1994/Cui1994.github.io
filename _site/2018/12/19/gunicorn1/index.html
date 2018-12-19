@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Gunicorn源码阅读(一) WSGI协议与启动流程</title>
+    <meta name="description" content="Gunicorn是一个实现了WSGI协议的HTTP Server，它采用了Pre-fork worker的进程模型，通过一个master进程fork一系列子进程来响应请求，master进程负责创建和管理这些子进程，而子进程则专注于处理客户端请求。为了适应不同的业务场景，Gunicorn也提供了不同的worker ...">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2018/12/19/gunicorn1/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>Gunicorn源码阅读(一) WSGI协议与启动流程</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2018-12-19
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Python" title="Category: Python" rel="category">Python</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#Gunicorn" title="Tag: Gunicorn" rel="tag">Gunicorn</a-->
+        <a href="/tag/#Gunicorn" title="Tag: Gunicorn" rel="tag">Gunicorn</a>&nbsp;
+    
+        <!--a href="/tag/#Python" title="Tag: Python" rel="tag">Python</a-->
+        <a href="/tag/#Python" title="Tag: Python" rel="tag">Python</a>&nbsp;
+    
+        <!--a href="/tag/#Web" title="Tag: Web" rel="tag">Web</a-->
+        <a href="/tag/#Web" title="Tag: Web" rel="tag">Web</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#wsgi" id="markdown-toc-wsgi">WSGI</a></li>
+  <li><a href="#启动流程" id="markdown-toc-启动流程">启动流程</a></li>
+</ul>
+
+<p><img src="https://picsum.photos/800/300/?image=61" alt="" /></p>
+
+<p>Gunicorn是一个实现了WSGI协议的HTTP Server，它采用了Pre-fork worker的进程模型，通过一个master进程fork一系列子进程来响应请求，master进程负责创建和管理这些子进程，而子进程则专注于处理客户端请求。为了适应不同的业务场景，Gunicorn也提供了不同的worker type，分别是sync、gthread、eventlet、gevent和tornado。</p>
+
+<h2 id="wsgi">WSGI</h2>
+
+<p>WSGI全称为Web Server Gateway Interface，是一种网关协议，定义Web Server与Web Application通信的规范。实现WSGI协议需要同时实现WSGI Server与WSGI Application两端。</p>
+
+<ul>
+  <li><strong>WSGI Server</strong>: 负责接收请求，将请交给Application进行处理，并将处理之后的Response返回给客户端，需要实现<code class="highlighter-rouge">start_response(status, response_headers, exc_info=None)</code>接口供Application回调。</li>
+  <li><strong>WSGI Application</strong>: 负责处理Server转发过来的请求，并将Response返回给Server，Application必须是可调用对象(callable)，需要实现<code class="highlighter-rouge">app(environ, start_response)</code>接口。</li>
+</ul>
+
+<p><img src="https://i.loli.net/2018/12/18/5c190b637eda7.jpg" alt="" /></p>
+
+<p>要运行Web应用，必须要有Web Server，如Nginx、Apache和Gunicorn，而Python中常见的Web框架如Flask、Django等都属于WSGI Application，如Flask对象就实现了WSGI Application的接口。这些框架必须与Web Server配合才能响应客户端请求，Web Server已经完成了HTTP解析和数据转发等一系列底层实现，开发者可以专注于开发Application。</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Flask</span><span class="p">(</span><span class="n">_PackageBoundObject</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
+        <span class="s">"""The WSGI server calls the Flask application object as the
+        WSGI application. This calls :meth:`wsgi_app` which can be
+        wrapped to applying middleware."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_app</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">)</span>
+</code></pre></div></div>
+<blockquote>
+  <p>那为什么没有Gunicorn，Flask这类应用也可以通过<code class="highlighter-rouge">app.run()</code>直接运行并接受请求呢？其实如果阅读过Flask源码的话，会发现其run方法实际上会调用werkzeug的<code class="highlighter-rouge">run_simple</code>方法，会创建一个WSGI Server并调用其<code class="highlighter-rouge">serve_forever</code>方法来接受请求，只不过相较于Gunicorn等Server，其性能相差很多。后面会有一篇文章简单分析一下Flask源码。</p>
+</blockquote>
+
+<p>Gunicorn也在自己的<code class="highlighter-rouge">Reponse</code>类中实现了<code class="highlighter-rouge">start_response</code>接口。</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Response</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">start_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="c1"># ...略过
+</span>        <span class="bp">self</span><span class="o">.</span><span class="n">process_headers</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chunked</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_chunked</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">write</span>
+</code></pre></div></div>
+
+<h2 id="启动流程">启动流程</h2>
+
+<p>借助一个Flask App来观察Gunicorn的启动过程。</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Flask</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+<span class="o">@</span><span class="n">app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s">'/'</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">hello_world</span><span class="p">():</span>
+    <span class="k">return</span> <span class="s">'Hello World!'</span>
+</code></pre></div></div>
+<p>使用<code class="highlighter-rouge">gunicorn -w 4 app:app</code>启动Gunicorn Server。命令直接调用<code class="highlighter-rouge">app/wsgiapp.py</code>中的<code class="highlighter-rouge">run</code>函数。</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">run</span><span class="p">():</span>
+    <span class="s">"""</span><span class="se">\
+</span><span class="s">    The ``gunicorn`` command line runner for launching Gunicorn with
+    generic WSGI applications.
+    """</span>
+    <span class="kn">from</span> <span class="nn">gunicorn.app.wsgiapp</span> <span class="kn">import</span> <span class="n">WSGIApplication</span>
+    <span class="n">WSGIApplication</span><span class="p">(</span><span class="s">"</span><span class="si">%(prog)</span><span class="s">s [OPTIONS] [APP_MODULE]"</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</code></pre></div></div>
+<p>函数直接调用<code class="highlighter-rouge">WSGIApplication</code>的<code class="highlighter-rouge">run</code>方法，而最后会调用<code class="highlighter-rouge">Arbiter</code>的<code class="highlighter-rouge">run</code>方法并将自身传给<code class="highlighter-rouge">Arbiter</code>类，这是Gunicorn比较核心的一个类，现在先简单了解<code class="highlighter-rouge">Arbiter</code>的<code class="highlighter-rouge">run</code>方法是一个loop，至此master进程启动完成。</p>
+
+<p>在此之前，<code class="highlighter-rouge">WSGIApplication</code>类会完成从args或文件中加载配置的工作，配置储存在它的<code class="highlighter-rouge">cfg</code>属性中，是<code class="highlighter-rouge">config.py</code>中的<code class="highlighter-rouge">Config</code>类，<code class="highlighter-rouge">Config</code>的属性<code class="highlighter-rouge">settings</code>，储存着所有可用的配置对象，它们均继承自<code class="highlighter-rouge">Setting</code>类，包含了配置的cli短语与默认值。而对<code class="highlighter-rouge">Config</code>对象的操作会被映射到这些<code class="highlighter-rouge">Setting</code>的子类上。</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Config</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">usage</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">prog</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">make_settings</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">usage</span> <span class="o">=</span> <span class="n">usage</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prog</span> <span class="o">=</span> <span class="n">prog</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env_orig</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="nb">AttributeError</span><span class="p">(</span><span class="s">"No configuration setting for: </span><span class="si">%</span><span class="s">s"</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">!=</span> <span class="s">"settings"</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="nb">AttributeError</span><span class="p">(</span><span class="s">"Invalid access!"</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Config</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__setattr__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>这个<code class="highlighter-rouge">Setting</code>对象由元类<code class="highlighter-rouge">SettingMeta</code>所创建，这里是个有意思的黑魔法，<code class="highlighter-rouge">Setting</code>类是由<code class="highlighter-rouge">SettingMeta</code>类创建的，继承自<code class="highlighter-rouge">Setting</code>类的各个配置类均有这个元类创建。</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Setting</span> <span class="o">=</span> <span class="n">SettingMeta</span><span class="p">(</span><span class="s">'Setting'</span><span class="p">,</span> <span class="p">(</span><span class="n">Setting</span><span class="p">,),</span> <span class="p">{})</span>
+</code></pre></div></div>
+<p>由于<code class="highlighter-rouge">SettingMeta</code>元类的存在，每一个<code class="highlighter-rouge">Setting</code>类在创建时会将自身储存在<code class="highlighter-rouge">KNOWN_SETTINGS</code>全局变量中，格式化<code class="highlighter-rouge">desc</code>属性，并把<code class="highlighter-rouge">validator</code>函数转为实例方法（这里又是一个Python的黑魔法，通过一个类似装饰器的实现，动态的为函数添加了一个<code class="highlighter-rouge">instance</code>参数，从而使其能够被对象调用）。</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">wrap_method</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_wrapped</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_wrapped</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">WSGIApplication</code>继承自<code class="highlighter-rouge">Application</code>类，而<code class="highlighter-rouge">Application</code>又继承自<code class="highlighter-rouge">BaseApplication</code>，它在调用<code class="highlighter-rouge">Arbiter</code>类的<code class="highlighter-rouge">run</code>方法之前会将命令行或配置文件中读取的配置信息通过<code class="highlighter-rouge">load_config</code>方法加载到<code class="highlighter-rouge">Config</code>对象中，而<code class="highlighter-rouge">Config</code>对象则采用代理模式将各个配置的信息代理到不同的<code class="highlighter-rouge">Setting</code>对象中，实现了各部分间的解耦。</p>
+
+<p>下一篇文章将会走进<code class="highlighter-rouge">Arbiter</code>类，这是Gunicorn核心的部分，进程创建及管理、信号处置都在这里。</p>
+
+<p>(End)</p>
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2018/11/27/sqlalchemy/">你真的了解SQLAlchemy吗
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2018/09/09/pkgen/">使用pkgen生成唯一id的问题
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+        
+            </ul>
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2018/12/11/linux3/">Linux基础（三）进程</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2018/12/19/gunicorn1/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2018/12/19/gunicorn1/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>
