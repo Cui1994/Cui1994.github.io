@@ -183,9 +183,20 @@
       <li><a href="#终止" id="markdown-toc-终止">终止</a></li>
       <li><a href="#等待子进程终止" id="markdown-toc-等待子进程终止">等待子进程终止</a></li>
       <li><a href="#执行新程序" id="markdown-toc-执行新程序">执行新程序</a></li>
+      <li><a href="#sigchild信号" id="markdown-toc-sigchild信号">SIGCHILD信号</a></li>
     </ul>
   </li>
-  <li><a href="#sigchild信号" id="markdown-toc-sigchild信号">SIGCHILD信号</a></li>
+  <li><a href="#进程调度及优先级" id="markdown-toc-进程调度及优先级">进程调度及优先级</a>    <ul>
+      <li><a href="#进程调度策略" id="markdown-toc-进程调度策略">进程调度策略</a></li>
+      <li><a href="#实时进程调度策略" id="markdown-toc-实时进程调度策略">实时进程调度策略</a>        <ul>
+          <li><a href="#sched_rr" id="markdown-toc-sched_rr">SCHED_RR</a></li>
+          <li><a href="#sched_fifo" id="markdown-toc-sched_fifo">SCHED_FIFO</a></li>
+        </ul>
+      </li>
+      <li><a href="#自愿释放cpu" id="markdown-toc-自愿释放cpu">自愿释放CPU</a></li>
+      <li><a href="#cpu亲和力" id="markdown-toc-cpu亲和力">CPU亲和力</a></li>
+    </ul>
+  </li>
 </ul>
 
 <p><img src="https://i.loli.net/2018/12/12/5c110d5c1ea0c.jpeg" alt="" /></p>
@@ -293,13 +304,71 @@
 </code></pre></div></div>
 <p>调用<code class="highlighter-rouge">system</code>函数来执行shell命令。<code class="highlighter-rouge">system</code>调用后至少会再创建两个新进程，一个运行shell，另一个用于shell执行的命令。</p>
 
-<h2 id="sigchild信号">SIGCHILD信号</h2>
+<h3 id="sigchild信号">SIGCHILD信号</h3>
 
 <p>子进程在终止时会向父进程发送SIGCHILD信号，父进程管理子进程的方式有两种：</p>
 
 <ul>
   <li>在SIGCHILD信号处理函数中循环以<code class="highlighter-rouge">WNOHANG</code>标识符调用<code class="highlighter-rouge">waitpid(-1)</code>，确保在此期间所有的已终止子进程被删除。</li>
   <li>将SIGCHILD信号处置显式设置为<code class="highlighter-rouge">SIG_IGN</code>，虽然对SIGCHILD的默认处置就是忽略，但显式设置<code class="highlighter-rouge">SIG_IGN</code>后，子进程终止后会直接被内核删除，不用转化为僵尸进程。</li>
+</ul>
+
+<h2 id="进程调度及优先级">进程调度及优先级</h2>
+
+<h3 id="进程调度策略">进程调度策略</h3>
+
+<p>Linux调度进程使用CPU的<strong>默认</strong>模型是<strong>循环时间分享</strong>，每个进程轮流使用CPU一段时间，这段时间称为<strong>时间片</strong>或量子。在循环时间共享算法中，进程无法控制何时使用CPU以及使用CPU的时间，默认情况下，每个进程轮流使用CPU直到</p>
+<ul>
+  <li>时间片被用光。</li>
+  <li>自动放弃CPU。</li>
+</ul>
+
+<p><strong>nice值</strong>：是一种进程特性，间接影响内核的调度算法。取值范围为-20（高优先级）到19（低优先级）。使用fork创建的进程会集成nice值并在执行<code class="highlighter-rouge">exec</code>后得到保持。</p>
+
+<h3 id="实时进程调度策略">实时进程调度策略</h3>
+<p>实时进程相比于后台进程对调度器有更严格的要求，Linux提供了两个实时进程调度策略，<strong>循环策略（SCHED_RR）</strong>和<strong>先入先出策略（SCHED_FIFO）</strong>，采用任意一种策略进行调度的进程优先级要高于标准循环时间分享模型（SCHED_OTHER）。</p>
+
+<p>在实时调度策略中，<strong>拥有高优先级的进程在尝试访问CPU时总是优于低优先级进程</strong>，Linux提供了99个实时优先级，从1（最低）到99（最高），适用于两个实时调度策略。两种策略中当前进程都可能因为下面的原因之一而被抢占：</p>
+<ul>
+  <li>之前被阻塞的高优先级进程解除阻塞了（如等待的io操作完成了）。</li>
+  <li>另一个可运行进程的优先级被提高到了高于当前进程的优先级。</li>
+  <li>当前进程的优先级被降到低于其他可运行进程的优先级。</li>
+</ul>
+
+<p>两种策略都维护着一个<strong>可运行进程队列</strong>，下一个可运行的进程是从<strong>优先级最高的队列头</strong>选出来的。</p>
+
+<h4 id="sched_rr">SCHED_RR</h4>
+
+<p>循环策略中，优先级相同的进程以循环时间分享的方式执行，进程每次使用CPU的时间为一个固定长度的时间片。进程被执行直到下面的条件之一满足：</p>
+<ul>
+  <li>达到时间片终点，进程被放入对应级别队列尾。</li>
+  <li>自愿放弃CPU，进程被放入对应界别队列尾。</li>
+  <li>进程终止。</li>
+  <li>被优先级更高的进程抢占，当高优先级进程执行结束后会继续执行直到剩余时间片耗尽。</li>
+</ul>
+
+<h4 id="sched_fifo">SCHED_FIFO</h4>
+
+<p>与循环时间策略类似，不过先入先出策略中<strong>不存在时间片的概念</strong>，进程获得CPU控制权后，如果不存在其他原因导致CPU切换，它将一直执行。</p>
+
+<h3 id="自愿释放cpu">自愿释放CPU</h3>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">sched_yield</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</code></pre></div></div>
+<p>实时进程可通过两种方式自愿放弃CPU:</p>
+<ul>
+  <li>调用一个阻塞进程的系统调用。</li>
+  <li>调用<code class="highlighter-rouge">sched_yield()</code>。</li>
+</ul>
+
+<h3 id="cpu亲和力">CPU亲和力</h3>
+<p>在多处理器系统上进行进程调度时，进程可能会从一个CPU上调度到另外一个CPU上执行，这会产生性能下降：如果在之前的CPU缓冲器中存在进程数据，为了将进程的一行数据加载到新的CPU，需要将原CPU的这行数据实效（未修改则丢失数据，修改则写入内存）。</p>
+<blockquote>
+  <p>为了防止高速缓冲器数据不一致，多处理器架构同一时刻只允许数据被存放在一个CPU的高速缓冲中。</p>
+</blockquote>
+
+<ul>
+  <li>软CPU亲和力：Linux在条件允许的情况下总是调度进程到原CPU执行。</li>
+  <li>硬CPU亲和力：可以为进程设置，显式将进程限制在可用CPU的一个或一组上允许。</li>
 </ul>
 
 <p>(End)</p>
