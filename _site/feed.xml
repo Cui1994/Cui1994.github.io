@@ -5,9 +5,33 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Wed, 19 Dec 2018 23:50:42 +0800</pubDate>
-    <lastBuildDate>Wed, 19 Dec 2018 23:50:42 +0800</lastBuildDate>
+    <pubDate>Thu, 20 Dec 2018 22:54:31 +0800</pubDate>
+    <lastBuildDate>Thu, 20 Dec 2018 22:54:31 +0800</lastBuildDate>
     <generator>Jekyll v3.8.4</generator>
+    
+      <item>
+        <title>Linux基础（五）信号</title>
+        <description>
+&lt;img src=&quot;https://picsum.photos/800/300/?image=76&quot; alt=&quot;&quot; /&gt;
+
+&lt;blockquote&gt;
+  该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
+书中的编程练习这里不做展示和说明。
+&lt;/blockquote&gt;
+
+</description>
+        <pubDate>Thu, 20 Dec 2018 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2018/12/20/linux5/</link>
+        <guid isPermaLink="true">http://localhost:4000/2018/12/20/linux5/</guid>
+        
+        <category>Linux</category>
+        
+        <category>读书笔记</category>
+        
+        
+        <category>Linux</category>
+        
+      </item>
     
       <item>
         <title>Linux基础（四）线程</title>
@@ -223,41 +247,6 @@ Linux内核维护了三种与文件相关的数据结构，也提供了一套通
         
         
         <category>服务架构</category>
-        
-      </item>
-    
-      <item>
-        <title>Python Web 基础向（七）分布式锁</title>
-        <description>
-当多个线程同时操作共享的内存数据时，为了解决线程安全问题，各语言都引入并发锁来确保同一时间只有一个线程会操作共享内存。而现在的大规模互联网应用一般采用分布式和集群来提高后端服务性能，同一个服务可能在不同的机器或容器中都存在实例，多线程中的并发锁也失去了意义，这时就引入了分布式锁的概念，当然它们的目的是相同的，都是为了限制同一时间内一个资源只能被一个请求操作，或者说某个方法只能被运行一次。
-
-目前业内实现分布式锁的方式主要有下面三种：
-
-&lt;ul&gt;
-  &lt;li&gt;
-    基于数据库的悲观锁乐观锁
-  &lt;/li&gt;
-  &lt;li&gt;
-    基于redis的分布式事务锁
-  &lt;/li&gt;
-  &lt;li&gt;
-    基于Zookeeper的节点锁
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-其中redis简单易用，应用最广也较为稳定，本文主要介绍这种方式下的分布式锁。
-
-</description>
-        <pubDate>Thu, 12 Jul 2018 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2018/07/12/yewu7/</link>
-        <guid isPermaLink="true">http://localhost:4000/2018/07/12/yewu7/</guid>
-        
-        <category>redis</category>
-        
-        <category>分布式锁</category>
-        
-        
-        <category>Python Web</category>
         
       </item>
     

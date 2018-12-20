@@ -104,6 +104,8 @@
                 
                     
                 
+                    
+                
             </ul>
         </nav>
     </div>
@@ -116,6 +118,73 @@
         <small>初学者的旅途</small>
         <hr>
         <ul>
+            
+              <li>
+                <h2>
+                  <a class="post-link" href="/2018/09/09/pkgen/">使用pkgen生成唯一id的问题</a>
+                </h2>
+                <div class="label">
+                    <div class="label-card">
+                        <i class="fa fa-calendar"></i>2018-09-09
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+
+                    <div class="label-card">
+                    
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Python" title="Category: Python" rel="category">Python</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+                    </div>
+
+                    <div class="label-card">
+                    
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <a href="/tag/#Python" title="Tag: Python" rel="tag">Python</a>&nbsp;
+    
+        <a href="/tag/#排坑" title="Tag: 排坑" rel="tag">排坑</a>
+    
+  
+
+</span>
+
+                    </div>
+                </div>
+                <div class="excerpt">
+                    <p>之前项目中有通过pkgen生成唯一id作为token字符串使用，一直未发现问题。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">token</span> <span class="o">=</span> <span class="n">PkGen</span><span class="p">()</span><span class="o">.</span><span class="n">pkgen</span><span class="p">()</span><span class="o">.</span><span class="n">pk</span>
+</code></pre></div></div>
+
+<p>直到前些天在测试环境（服务器为阿里云）突然开始抛出异常。</p>
+
+
+                </div>
+                <div class="read-all">
+                    <a  href="/2018/09/09/pkgen/"><i class="fa fa-newspaper-o"></i>Read All</a>
+                </div>
+                <hr>
+              </li>
             
               <li>
                 <h2>
@@ -474,78 +543,6 @@
                 <hr>
               </li>
             
-              <li>
-                <h2>
-                  <a class="post-link" href="/2018/03/07/yewu5/">Python Web 基础向（五） api层</a>
-                </h2>
-                <div class="label">
-                    <div class="label-card">
-                        <i class="fa fa-calendar"></i>2018-03-07
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-
-                    <div class="label-card">
-                    
-
-
-<!-- <span class="point">•</span> -->
-<span class="categories">
-  <i class="fa fa-th-list"></i>
-  
-    
-        <a href="/category/#Python Web" title="Category: Python Web" rel="category">Python Web</a>
-    
-  
-
-  <!-- <span class="point">•</span> -->
-</span>
-
-
-                    </div>
-
-                    <div class="label-card">
-                    
-<!-- <span class="point">•</span> -->
-<span class="pageTag">
-  <i class="fa fa-tags"></i>
-  
-    
-        <a href="/tag/#Flask" title="Tag: Flask" rel="tag">Flask</a>&nbsp;
-    
-        <a href="/tag/#降级策略" title="Tag: 降级策略" rel="tag">降级策略</a>
-    
-  
-
-</span>
-
-                    </div>
-                </div>
-                <div class="excerpt">
-                    
-<p>提供HTTP服务的api层负责处理以下任务：</p>
-<ul>
-  <li>管理路由</li>
-  <li>获取并检查参数</li>
-  <li>将请求分发给相应的逻辑层 (简单的函数调用，略)</li>
-  <li>包装返回数据</li>
-  <li>处理错误</li>
-</ul>
-
-<p>api层的代码应简单清晰，甚至你的每个路由对应的函数都“长得”差不多，这部分代码不应掺杂任何逻辑处理，他要做的仅仅是将请求指向相应的逻辑类去处理。</p>
-
-
-                </div>
-                <div class="read-all">
-                    <a  href="/2018/03/07/yewu5/"><i class="fa fa-newspaper-o"></i>Read All</a>
-                </div>
-                <hr>
-              </li>
-            
         </ul>
 
 
@@ -556,10 +553,10 @@
             <a href="/index.html" class="previous"><i class="fa fa-angle-double-left"></i></a>
             <a href="/" class="previous"><i class="fa fa-angle-left"></i></a>
           
-          <span class="page_number ">2/4</span>
+          <span class="page_number ">2/5</span>
           
             <a href="/page3" class="next"><i class="fa fa-angle-right"></i></a>
-            <a href="/page4" class="next"><i class="fa fa-angle-double-right"></i></a>
+            <a href="/page5" class="next"><i class="fa fa-angle-double-right"></i></a>
           
         </div>
     </div>
@@ -572,6 +569,8 @@
                     Recent Posts
                 </div>
                 <ul class="content-ul" recent>
+                    
+                        <li><a href="/2018/12/20/linux5/">Linux基础（五）信号</a></li>
                     
                         <li><a href="/2018/12/19/linux4/">Linux基础（四）线程</a></li>
                     
@@ -590,8 +589,6 @@
                         <li><a href="/2018/07/16/linux/">Linux基础（一）内核及系统调用</a></li>
                     
                         <li><a href="/2018/07/15/web/">大规模Web服务的一般性痛点与解决方案</a></li>
-                    
-                        <li><a href="/2018/07/12/yewu7/">Python Web 基础向（七）分布式锁</a></li>
                     
                 </ul>
             </div>
@@ -672,7 +669,7 @@
                             <span class="name">
                                 Linux
                             </span>
-                            <span class="badge">4</span>
+                            <span class="badge">5</span>
                         </a>
                     </li>
                     
@@ -714,14 +711,14 @@
                       
                       
                       
-                      <a href="/tag/#直播通" style="font-size: 18pt; color: #000;">直播通</a>
+                      <a href="/tag/#直播通" style="font-size: 16pt; color: #222;">直播通</a>
                     
                       
                       
                       
                       
                       
-                      <a href="/tag/#Flask" style="font-size: 12pt; color: #666;">Flask</a>
+                      <a href="/tag/#Flask" style="font-size: 11.5pt; color: #777;">Flask</a>
                     
                       
                       
@@ -763,7 +760,7 @@
                       
                       
                       
-                      <a href="/tag/#ORM" style="font-size: 12pt; color: #666;">ORM</a>
+                      <a href="/tag/#ORM" style="font-size: 11.5pt; color: #777;">ORM</a>
                     
                       
                       
@@ -847,7 +844,7 @@
                       
                       
                       
-                      <a href="/tag/#MySQL" style="font-size: 12pt; color: #666;">MySQL</a>
+                      <a href="/tag/#MySQL" style="font-size: 11.5pt; color: #777;">MySQL</a>
                     
                       
                       
@@ -882,7 +879,7 @@
                       
                       
                       
-                      <a href="/tag/#Python" style="font-size: 15pt; color: #333;">Python</a>
+                      <a href="/tag/#Python" style="font-size: 13.5pt; color: #444;">Python</a>
                     
                       
                       
