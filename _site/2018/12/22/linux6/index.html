@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Linux基础（六）作业控制与Deamon进程</title>
+    <meta name="description" content="  该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。书中的编程练习这里不做展示和说明。">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2018/12/22/linux6/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>Linux基础（六）作业控制与Deamon进程</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2018-12-22
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Linux" title="Category: Linux" rel="category">Linux</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#Linux" title="Tag: Linux" rel="tag">Linux</a-->
+        <a href="/tag/#Linux" title="Tag: Linux" rel="tag">Linux</a>&nbsp;
+    
+        <!--a href="/tag/#%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0" title="Tag: 读书笔记" rel="tag">读书笔记</a-->
+        <a href="/tag/#读书笔记" title="Tag: 读书笔记" rel="tag">读书笔记</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#概念" id="markdown-toc-概念">概念</a></li>
+  <li><a href="#进程组与会话行为" id="markdown-toc-进程组与会话行为">进程组与会话行为</a>    <ul>
+      <li><a href="#进程组" id="markdown-toc-进程组">进程组</a></li>
+      <li><a href="#会话" id="markdown-toc-会话">会话</a></li>
+    </ul>
+  </li>
+  <li><a href="#作业控制" id="markdown-toc-作业控制">作业控制</a>    <ul>
+      <li><a href="#作业控制命令" id="markdown-toc-作业控制命令">作业控制命令</a></li>
+    </ul>
+  </li>
+  <li><a href="#daemon进程" id="markdown-toc-daemon进程">Daemon进程</a>    <ul>
+      <li><a href="#概述" id="markdown-toc-概述">概述</a></li>
+      <li><a href="#创建流程" id="markdown-toc-创建流程">创建流程</a></li>
+      <li><a href="#重新初始化deamon" id="markdown-toc-重新初始化deamon">重新初始化Deamon</a></li>
+      <li><a href="#syslog" id="markdown-toc-syslog">syslog</a>        <ul>
+          <li><a href="#api" id="markdown-toc-api">API</a></li>
+          <li><a href="#配置文件" id="markdown-toc-配置文件">配置文件</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p><img src="https://picsum.photos/800/300/?image=857" alt="" /></p>
+
+<blockquote>
+  <p>该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
+书中的编程练习这里不做展示和说明。</p>
+</blockquote>
+
+<h2 id="概念">概念</h2>
+<ul>
+  <li><strong>进程组</strong>：一组相关进程的集合。作业即进程组。</li>
+  <li><strong>进程组ID</strong>：PGID，创建进程组的进程为<strong>进程组首进程</strong>，这个进程的PID为进程组ID，子进程会继承父进程的进程组ID。</li>
+  <li><strong>会话</strong>：一组进程组的集合。</li>
+  <li><strong>会话ID</strong>：SID，创建会话的进程为<strong>会话首进程</strong>，其PID为会话ID，子进程会继承父进程的会话ID。</li>
+  <li><strong>控制终端</strong>：会话首进程首次打开一个的终端设备，一个终端设备最多可以成为一个一个会话的控制终端，拥有控制终端的进程可以通过一个特殊的设备文件<code class="highlighter-rouge">/dev/tty</code>获取控制终端的文件描述符。</li>
+  <li><strong>前台进程组</strong>：在任意时刻，会话中的一个进程组会成为终端的前台进程组，其余进程组为后台进程组。只有前台进程组中的进程才能从终端中读取输入，在控制中端中键入字符产生的信号也只会发给前台进程组中的进程。</li>
+  <li><strong>终端控制进程</strong>：建立控制终端后，会话的首进程成为该终端的控制进程。</li>
+  <li><strong>shell</strong>：具有特殊用途的程序，用于读取用户输入的命令以执行相应的程序响应命令，又称为命令解释器。</li>
+  <li><strong>登陆shell</strong>：用户登陆系统时，由系统创建用于运行shell的进程。</li>
+</ul>
+
+<p>当登陆一台Linux服务器后，<code class="highlighter-rouge">登陆shell</code>成为<code class="highlighter-rouge">登陆会话</code>的首进程和终端的控制进程，后续执行的每一个命令都会导致一个或多个进程创建，shell会把这些进程放在一个新进程组中，这些进程组都是进程会话的一部分。</p>
+
+<p>与作业控制相关的信号：</p>
+<ul>
+  <li>SIGINT：终端中断，键入CTRL+C字符生成。</li>
+  <li>SIGQUIT：终端退出，键入CTRL+\生成。</li>
+  <li>SIGSTP：中断挂起，键入CTRL+Z生成。</li>
+  <li>SIGHUP：当控制进程断开与终端的连接时内核会向控制进程发送此信号。</li>
+  <li>SIGTTIN：后台进程组尝试从终端读取字符串时会受到此信号，默认停止作业。</li>
+  <li>SIGTTOU：后台进程组尝试向设置了TOSTOP（终端输出停止）标识的终端输出内容时收到此信号，默认停止作业。</li>
+</ul>
+
+<h2 id="进程组与会话行为">进程组与会话行为</h2>
+
+<h3 id="进程组">进程组</h3>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">setpgid</span><span class="p">(</span><span class="n">pid_t</span> <span class="n">pid</span><span class="p">,</span> <span class="n">pid_t</span> <span class="n">pgid</span><span class="p">);</span>
+</code></pre></div></div>
+<p><code class="highlighter-rouge">setpgid</code>系统调用用于将进程id为<code class="highlighter-rouge">pid</code>的进程的进程组id变更为<code class="highlighter-rouge">pgid</code>。</p>
+<ul>
+  <li>pid若为0则会将该值替换为当前进程的pid。</li>
+  <li>pgid若为0会以pid的值创建新的进程组，并将pid进程设置为进程组首进程。</li>
+</ul>
+
+<p>改变进程组id存在限制：</p>
+<ul>
+  <li>pid仅可以指定当前进程及其子进程。</li>
+  <li>pid指定的进程不能使会话首进程。</li>
+  <li>子进程如果已经执行了<code class="highlighter-rouge">exec</code>，则不能被修改进程组id了。</li>
+  <li>pgid仅可以指定相同会话内的pgid，创建的新进程组也属于当前会话。</li>
+</ul>
+
+<h3 id="会话">会话</h3>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pid_t</span> <span class="n">setsid</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</code></pre></div></div>
+<p><code class="highlighter-rouge">setsid</code>系统调用将会创建新会话：</p>
+<ul>
+  <li>调用进程将成为会话首进程以及会话中新进程组的首进程。</li>
+  <li>调用进程没有控制终端。之前与控制终端的连接会被断开。</li>
+</ul>
+
+<p>限制：</p>
+<ul>
+  <li>进程组首进程不能创建新会话。避免该限制的方法为<strong>fork出一个子进程并让父进程终止，之后由子进程调用<code class="highlighter-rouge">setsid</code></strong>，由于子进程会继承父进程的PGID，因此子进程不可能是进程组首进程。</li>
+</ul>
+
+<p>只有会话首进程能够打开终端设备并建立控制终端，之后次进程成为终端的控制进程，若控制进程终止：</p>
+<ul>
+  <li>会话中的所有进程会失去与终端的关联关系。</li>
+  <li>终端可以被其他会话的首进程控制。</li>
+  <li>内核会向前台进程组的所有成员发送SIGHUP信号。</li>
+</ul>
+
+<p>大多数会话的首进程都是shell，shell为SIGHUP信号设置了信号处理程序，会<strong>关闭shell并向由这个shell创建的所有进程组成员发送SIGHUP信号</strong>。</p>
+
+<h2 id="作业控制">作业控制</h2>
+<p><strong>作业控制</strong>是shell的特性，允许在一个shell上同时执行多个命令（即作业/进程组），其中一个命令在前台运行，其余命令在后台运行。作业可以被停止或恢复运行以及在前后台之间来回切换。</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  ~ sleep 3 &amp;
+[1] 10428
+</code></pre></div></div>
+<p>在命令后加<code class="highlighter-rouge">&amp;</code>可使进程组在后台运行，同时shell上会显示两个数字，方框内的数字为shell赋予每个作业的<strong>作业号num</strong>，后面的数字为执行命令的进程id或管道内最后一个进程的进程id。</p>
+
+<h3 id="作业控制命令">作业控制命令</h3>
+<p>在shell的作业控制中用<code class="highlighter-rouge">%num</code>来引用某个作业</p>
+<ul>
+  <li><strong><code class="highlighter-rouge">jobs</code></strong>：列出所有的后台作业</li>
+  <li><strong><code class="highlighter-rouge">fg %num</code></strong>：将某个后台作业移动到前台</li>
+  <li><strong><code class="highlighter-rouge">Type Ctrl+Z</code></strong>：键入Ctrl+Z挂起字符会向前台进程组发送SIGTSTP信号停止前台进程组。</li>
+  <li><strong><code class="highlighter-rouge">bg %num</code></strong>：向某个作业发送SIGCONT信号恢复执行</li>
+  <li><strong><code class="highlighter-rouge">stty tostop</code></strong>：设置TOSTOP（终端输出停止）标识</li>
+</ul>
+
+<p><img src="https://i.loli.net/2018/12/22/5c1d14e16c05e.png" alt="" /></p>
+
+<h2 id="daemon进程">Daemon进程</h2>
+
+<h3 id="概述">概述</h3>
+<p>Deamon进程应具备以下特征：</p>
+<ul>
+  <li><strong>生命周期很长</strong>：一般会在系统启动时创建并一直运行到系统关闭。</li>
+  <li><strong>在后台运行并且不拥有控制终端</strong>：终端缺失保证内核永远无法为Deamon进程生成终端相关信号，如SIGINT、SIGTSTP和SIGHUP。</li>
+</ul>
+
+<p>Linux常用Deamon进程：</p>
+<ul>
+  <li><strong>cron</strong>：定时任务。</li>
+  <li><strong>sshd</strong>：安全shell，允许远程主机使用安全通信协议登录系统。</li>
+  <li><strong>httpd</strong>：http服务器deamon。</li>
+  <li><strong>inetd</strong>：Internet超级服务器deamon，监听指定TCP/IP端口上的网络连接并启动响应服务器程序处理这些链接。</li>
+</ul>
+
+<h3 id="创建流程">创建流程</h3>
+<ol>
+  <li><strong>执行<code class="highlighter-rouge">fork()</code>，之后父进程退出，子进程继续运行。</strong>（防止进程为进程组首进程，确保其可以创建会话）</li>
+  <li><strong>调用<code class="highlighter-rouge">setsid()</code>开启新会话。</strong>（使进程断开所有控制终端）</li>
+  <li><strong>第二次调用<code class="highlighter-rouge">fork()</code>，父进程退出，子进程继续运行。</strong>（防止进程为会话首进程，确保其不会控制任何终端）</li>
+  <li><strong>清除进程的umask。</strong> （确保拥有创建文件和目录的权限）</li>
+  <li><strong>将进程的工作目录修改为根目录（/）。</strong>（确保当前工作目录无法被卸载）</li>
+  <li><strong>关闭从父进程继承的打开的文件描述符，关闭指向终端的0、1、2文件描述符。</strong></li>
+  <li><strong>打开<code class="highlighter-rouge">/dev/null</code>，并使用<code class="highlighter-rouge">dup2</code>将0、1、2文件描述符指向这个设备。</strong>（确保在0、1、2上的io库函数不会失败，也防止使用这些文件描述符打开其他的文件）</li>
+</ol>
+
+<h3 id="重新初始化deamon">重新初始化Deamon</h3>
+<p>由于Deamon永远不会建立控制终端，因此不会收到SIGHUP信号，Deamon可以选择<strong>为SIGHUP信号建立信号处理函数来重新初始化自身</strong>。</p>
+
+<h3 id="syslog">syslog</h3>
+<p>Deamon程序编写的一个问题是如何显示错误信息，Linux提供了一个集中日志工具，系统中的所有应用程序都可以使用这个工具来记录日志信息。syslog包含两个组件：</p>
+<ul>
+  <li><strong>syslogd deamon</strong>：从两个不同的源接收日志，一个UNIX domain socket<code class="highlighter-rouge">/dev/log</code>，保存本地产生的消息；另一个Internet domain socket（UNP端口514），保存通过TCP/IP发送的消息。</li>
+  <li><strong>syslog(3) 函数</strong>：供进程调用来记录消息，会使用传入的参数以标准格式构建一条消息，将其写入<code class="highlighter-rouge">/dev/log</code>socket供syslogd读取。</li>
+</ul>
+
+<p>由syslogd处理的消息包括两个特性：</p>
+<ul>
+  <li><strong>facility</strong>：指定了消息产生的程序类型</li>
+  <li><strong>level</strong>：指定了消息的严重程度（优先级）</li>
+</ul>
+
+<p>syslogd根据这两个特性，以及配置文件<code class="highlighter-rouge">/etc/syslog.conf</code>中的指令将消息传递到几个目录中的一个或多个：</p>
+<ul>
+  <li>终端或虚拟控制台</li>
+  <li>磁盘文件</li>
+  <li>FIFO</li>
+  <li>一个或多个登陆过的用户</li>
+  <li>位于另一个系统上的通过TCP/IP网络连接的进程</li>
+</ul>
+
+<h4 id="api">API</h4>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="n">openlog</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">ident</span><span class="p">,</span> <span class="kt">int</span> <span class="n">log_options</span><span class="p">,</span> <span class="kt">int</span> <span class="n">facility</span><span class="p">);</span>
+</code></pre></div></div>
+<p><code class="highlighter-rouge">openlog()</code>会建立一个到系统日志的连接，调用是可选的，如果没有建立连接，在调用<code class="highlighter-rouge">syslog()</code>时会使用默认设置建立连接。</p>
+<ul>
+  <li><code class="highlighter-rouge">ident</code>为一个指向字符串的指针，<code class="highlighter-rouge">syslog()</code>输出的每个消息都会包含这个字符串。</li>
+  <li><code class="highlighter-rouge">facility</code>的默认值为<code class="highlighter-rouge">LOG_USER</code>，表示用户进程生成的消息。</li>
+</ul>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="n">syslog</span><span class="p">(</span><span class="kt">int</span> <span class="n">priority</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">format</span><span class="p">,</span> <span class="p">...);</span>
+</code></pre></div></div>
+<p><code class="highlighter-rouge">syslog()</code>会记录一条日志消息。</p>
+<ul>
+  <li><code class="highlighter-rouge">priority</code>是<code class="highlighter-rouge">facility</code>和<code class="highlighter-rouge">level</code>的OR值，如果省略这个参数，会采用前一个<code class="highlighter-rouge">openlog()</code>调用中指定的<code class="highlighter-rouge">facility</code>值，如果没有调用或没有<code class="highlighter-rouge">facility</code>参数时会设置为<code class="highlighter-rouge">LOG_USER</code>。</li>
+  <li><code class="highlighter-rouge">format</code>参数是一个格式字符串。在调用<code class="highlighter-rouge">syslog</code>时如果使用参数传入字符串需要在前面先指定<code class="highlighter-rouge">%s</code>参数，如<code class="highlighter-rouge">syslog(priority, %s, user_string)</code>，而不应该是<code class="highlighter-rouge">syslog(priority, user_string)</code>。</li>
+</ul>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="n">closelog</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</code></pre></div></div>
+<p><code class="highlighter-rouge">closelog()</code>会关闭到系统日志的连接并释放分配给<code class="highlighter-rouge">/dev/log</code>socket的文件描述符。deamon进程通常缺失这个调用。</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">setlogmask</span><span class="p">(</span><span class="kt">int</span> <span class="n">mask_priority</span><span class="p">);</span>
+</code></pre></div></div>
+<p><code class="highlighter-rouge">setlogmask()</code>会设置一个掩码，所有level不在这个掩码中的消息都会被过滤。有两个宏可以将level替换为<code class="highlighter-rouge">mask_priority</code>参数，分别是<code class="highlighter-rouge">LOG_MASK</code>与<code class="highlighter-rouge">LOG_UPTO</code>。</p>
+
+<h4 id="配置文件">配置文件</h4>
+<p><code class="highlighter-rouge">/etc/syslog.conf</code>配置文件控制了syslogd deamon的行为，配置规则如下</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>facility.level    action
+</code></pre></div></div>
+<p>下面是一个例子，表示所有level为err或者更高级别的消息被发送到<code class="highlighter-rouge">/dev/tty10</code>控制台设备上。</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>*.err    /dev/tty10
+</code></pre></div></div>
+<p>在修改配置文件后需要发送SIGHUP信号来初始化syslogd。</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ killall -HUP syslogd
+</code></pre></div></div>
+
+<p>(End)</p>
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2018/12/20/linux5/">Linux基础（五）信号
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2018/12/19/linux4/">Linux基础（四）线程
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2018/12/11/linux3/">Linux基础（三）进程
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2018/09/08/linux2/">Linux基础（二）文件系统及文件I/O
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2018/07/16/linux/">Linux基础（一）内核及系统调用
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+        
+            </ul>
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2018/12/20/linux5/">Linux基础（五）信号</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2018/12/22/linux6/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2018/12/22/linux6/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>
