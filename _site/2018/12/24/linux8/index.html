@@ -6,15 +6,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Linux基础（一）内核及系统调用</title>
-    <meta name="description" content="本文对Linux系统编程的一些基本概念做一些介绍，对应用程序系统调用的流程进行说明。  该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。书中的编程练习这里不做展示和说明。">
+    <title>Linux基础（八）管道与FIFO</title>
+    <meta name="description" content="  该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。书中的编程练习这里不做展示和说明。">
 
     <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
     <link rel="icon" href="/favicon.ico?" type="image/x-icon">
     <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
     <link rel="stylesheet" href="/css/main.css ">
-    <link rel="canonical" href="http://localhost:4000/2018/07/16/linux/">
+    <link rel="canonical" href="http://localhost:4000/2018/12/24/linux8/">
     <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
 
 
@@ -114,11 +114,11 @@
 
         <div class="page clearfix" post>
     <div class="left">
-        <h1>Linux基础（一）内核及系统调用</h1>
+        <h1>Linux基础（八）管道与FIFO</h1>
         <div class="label">
 
             <div class="label-card">
-                <i class="fa fa-calendar"></i>2018-07-16
+                <i class="fa fa-calendar"></i>2018-12-24
             </div>
 
             <div class="label-card">
@@ -171,64 +171,98 @@
         <hr>
         <article itemscope itemtype="http://schema.org/BlogPosting">
         <ul id="markdown-toc">
-  <li><a href="#内核" id="markdown-toc-内核">内核</a>    <ul>
-      <li><a href="#具体职责" id="markdown-toc-具体职责">具体职责</a></li>
-      <li><a href="#内核态" id="markdown-toc-内核态">内核态</a></li>
+  <li><a href="#管道" id="markdown-toc-管道">管道</a>    <ul>
+      <li><a href="#创建及使用管道" id="markdown-toc-创建及使用管道">创建及使用管道</a></li>
+      <li><a href="#使用管道连接过滤器" id="markdown-toc-使用管道连接过滤器">使用管道连接过滤器</a></li>
     </ul>
   </li>
-  <li><a href="#系统调用" id="markdown-toc-系统调用">系统调用</a>    <ul>
-      <li><a href="#调用系统调用的执行过程" id="markdown-toc-调用系统调用的执行过程">调用系统调用的执行过程</a></li>
+  <li><a href="#fifo" id="markdown-toc-fifo">FIFO</a>    <ul>
+      <li><a href="#创建及使用" id="markdown-toc-创建及使用">创建及使用</a></li>
     </ul>
   </li>
 </ul>
 
-<p>本文对Linux系统编程的一些基本概念做一些介绍，对应用程序系统调用的流程进行说明。</p>
+<p><img src="https://picsum.photos/800/300/?image=155" alt="" /></p>
 
 <blockquote>
   <p>该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
 书中的编程练习这里不做展示和说明。</p>
 </blockquote>
 
-<h2 id="内核">内核</h2>
+<p>管道是一个单向、容量有限的字节流，用来在相关进程之间传递数据。FIFO是管道的变体，他们之间的一个重要区别在于FIFO可以用于任意进程间的通信。</p>
 
-<p>是操作系统的核心，指<strong>管理和分配计算机资源（如CPU、RAM和设备）的核心软件层</strong>。</p>
+<h2 id="管道">管道</h2>
 
-<h3 id="具体职责">具体职责</h3>
-
+<p>管道有以下几个特性：</p>
 <ul>
-  <li>进程调度</li>
-  <li>内存管理</li>
-  <li>文件系统</li>
-  <li>创建和终止进程</li>
-  <li>设备访问</li>
-  <li>联网</li>
-  <li>提供系统调用应用编程接口（API）</li>
+  <li><strong>是一个字节流</strong>：即拥有字节流的几个特点：
+    <ul>
+      <li>管道中是不存在消息或者消息边界的概念的，可以从管道中读取任意大小的数据块，而不管写入管道的数据大小。</li>
+      <li>通过管道传输的数据是有序的，顺序为写入管道的数据顺序。</li>
+      <li>在管道中无法通过<code class="highlighter-rouge">lseek()</code>随机访问数据。</li>
+    </ul>
+  </li>
+  <li><strong>是单向的</strong>：一端用于写入，另一端用于读取。</li>
+  <li><strong>是容量有限的</strong>：管道是一个维护在内核内存中的缓冲器，一旦管道被填满，后续的写入操作会被阻塞直到读者从管道中移除了一些数据。</li>
 </ul>
 
-<h3 id="内核态">内核态</h3>
+<p>管道中的读取写入行为：</p>
+<ul>
+  <li>从管道中读取数据字节为n：
+    <ul>
+      <li>若管道内数据字节p=0：若写入端没有全部关闭，读取操作将被阻塞；若写入端全部关闭，将会读到文件结束（即<code class="highlighter-rouge">read()</code>调用返回0）。</li>
+      <li>若管道内数据字节p&lt;n：读取p字节后阻塞。</li>
+      <li>若管道内数据字节p&gt;n：读取n字节。</li>
+    </ul>
+  </li>
+  <li>向管道内写入数据：
+    <ul>
+      <li>管道存在一个PIPE_BUF，如果写入的字节数不超过这个值，管道可以保证原子写入。如果超过这个值，内核可能会将数据分成几段来传输，如果存在多个进程写入，那么写入的数据可能会交叉。</li>
+      <li>如果写入时已经没有读取端，写入端进程将受到SIGPIPE信号，默认终止进程，<code class="highlighter-rouge">write()</code>调用也将返回EPIPE错误。</li>
+    </ul>
+  </li>
+</ul>
 
-<p>CPU运行的两种不同状态：<strong>内核态</strong>和<strong>用户态</strong>。</p>
+<h3 id="创建及使用管道">创建及使用管道</h3>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">pipe</span><span class="p">(</span><span class="kt">int</span> <span class="n">filedes</span><span class="p">[</span><span class="mi">2</span><span class="p">]);</span>
+</code></pre></div></div>
+<p>调用<code class="highlighter-rouge">pipe()</code>系统调用会在数组<code class="highlighter-rouge">filedes</code>中返回两个打开的文件描述符，<code class="highlighter-rouge">filedes[0]</code>用于管道的<strong>读取端</strong>，<code class="highlighter-rouge">filedes[1]</code>用于管道的<strong>写入端</strong>。</p>
 
-<p>相应的，虚拟内存内存区域划分（标记）为用户空间部分和内核空间部分，CPU处于用户态时只能访问用户空间的内存，处于内核态时可访问所有部分。</p>
+<p>管道用于父子进程或兄弟进程间的通信，方法是在调用<code class="highlighter-rouge">pipe()</code>之后调用<code class="highlighter-rouge">fork()</code>，子进程会继承父进程的文件描述符的副本，之后一个进程应立即关闭管道写入端的文件描述符，另一个则应关闭读取端的文件描述符。</p>
 
-<p>只有处于内核态的CPU才可以执行特定操作，如宕机、访问内存管理硬件、初始化I/O设备等。</p>
+<h3 id="使用管道连接过滤器">使用管道连接过滤器</h3>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">ls</span> | <span class="nb">grep </span>filename
+</code></pre></div></div>
+<p>shell中常见的过滤器即采用管道实现：<strong>将前一个进程的标准输出连接到管道的写入端，将后一个进程的标准输入连接到管道的读取端</strong>，可以采用<code class="highlighter-rouge">dup2()</code>调用关闭标准输入（1）或标准输出描述符（2），并将管道的响应文件描述符复制到1和2上。</p>
+<blockquote>
+  <p>这里复习一下文件I/O的知识，<code class="highlighter-rouge">dup2(oldfd, newfd)</code>系统调用会确保<code class="highlighter-rouge">oldfd</code>复制到<code class="highlighter-rouge">newfd</code>上，如果<code class="highlighter-rouge">newfd</code>已经打开，调用会关闭<code class="highlighter-rouge">newfd</code>所指的文件描述符，并忽略关闭过程中的所有错误。</p>
+</blockquote>
 
-<h2 id="系统调用">系统调用</h2>
+<p>多数情况下进程会默认打开0、1、2的文件描述符，但为了不依赖这个前提，复制的过程应该如下所示：</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">pfd</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+<span class="n">pipe</span><span class="p">(</span><span class="n">pfd</span><span class="p">);</span>
 
-<p>受控的内核入口，应用程序可以<strong>请求内核以自己名义去执行某些动作</strong>，内核以API形式提供这些入口。</p>
+<span class="k">if</span> <span class="p">(</span><span class="n">pfd</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">STDOUT_FILENO</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">dup2</span><span class="p">(</span><span class="n">pfd</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">STDOUT_FILENO</span><span class="p">);</span>
+    <span class="n">close</span><span class="p">(</span><span class="n">pfd</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
-<p>所有系统调用进入内核的方式相同，系统以一个唯一数字标识不同的系统调用，对应用程序不可见。</p>
+<h2 id="fifo">FIFO</h2>
+<p>FIFO的作用与管道类似，不过其存在与文件系统中，打开方式与打开一个普通文件一致，这样就实现了非相关进程间的通信。</p>
 
-<p>每个系统调用在内核中有自己的系统调用服务例程，借助glibc的外壳函数可以调用相应的服务例程，因此完整意义上的调用系统调用即<strong>借助外壳函数来调用相应的系统调用服务例程。</strong></p>
+<h3 id="创建及使用">创建及使用</h3>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">mkfifo</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">pathname</span><span class="p">,</span> <span class="n">mode_t</span> <span class="n">mode</span><span class="p">);</span>
+</code></pre></div></div>
+<p><code class="highlighter-rouge">mkfifo()</code>调用会创建一个FIFO文件，并制定其权限掩码<code class="highlighter-rouge">mode</code>。可以通过<code class="highlighter-rouge">open()</code>系统调用打开FIFO：</p>
+<ul>
+  <li>设置O_RDONLY标记打开一个FIFO以便读取数据，<code class="highlighter-rouge">open()</code>调用将会阻塞直到另一个进程打开FIFO以写入数据。</li>
+  <li>设置O_WRONLY标记打开一个FIFO以便写入数据，<code class="highlighter-rouge">open()</code>调用将会阻塞直到另一个进程打开FIFO以读取数据。</li>
+</ul>
 
-<h3 id="调用系统调用的执行过程">调用系统调用的执行过程</h3>
-
-<p><img src="https://i.loli.net/2018/11/26/5bfc054a3f51c.png" alt="" /></p>
-
-<p>调用系统调用过程通过<strong>中断</strong>指令实现用户态到内核态的切换。</p>
+<p>为了防止进程打开多个FIFO时产生死锁，在打开FIFO时应设置O_NONBLOCK标记来实现非阻塞I/O。如果采用这种方式调用<code class="highlighter-rouge">write()</code>向FIFO中写入数据时，若没有相应进程打开FIFO用以读取，这个调用将会失败。</p>
 
 <p>(End)</p>
-
 
         </article>
         <hr>
@@ -242,30 +276,6 @@
                         
                         <h2 id="similar_posts">Similar Posts</h2>
                         <ul>
-                        
-                        <li class="relatedPost">
-                            <a href="/2018/12/24/linux8/">Linux基础（八）管道与FIFO
-                            
-                            </a>
-                        </li>
-                        
-                        
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-            
-        
-            
-            
-                
-                    
                         
                         <li class="relatedPost">
                             <a href="/2018/12/23/linux7/">Linux基础（七）一张图了解进程间通信IPC
@@ -454,6 +464,30 @@
                 
             
         
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2018/09/08/linux2/">Linux基础（二）文件系统及文件I/O
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
         
             </ul>
         
@@ -461,13 +495,11 @@
         <div class="post-recent">
     <div class="pre">
         
-        <p><strong>上一篇</strong> <a href="/2018/07/15/web/">大规模Web服务的一般性痛点与解决方案</a></p>
+        <p><strong>上一篇</strong> <a href="/2018/12/23/linux7/">Linux基础（七）一张图了解进程间通信IPC</a></p>
         
     </div>
     <div class="nex">
 
-        
-        <p><strong>下一篇</strong> <a href="/2018/09/08/linux2/">Linux基础（二）文件系统及文件I/O</a></p>
         
     </div>
 </div>
@@ -485,8 +517,8 @@
      */
 
     var disqus_config = function() {
-        this.page.url = 'http://localhost:4000/2018/07/16/linux/'; // Replace PAGE_URL with your page's canonical URL variable
-        this.page.identifier = 'http://localhost:4000/2018/07/16/linux/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+        this.page.url = 'http://localhost:4000/2018/12/24/linux8/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2018/12/24/linux8/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
     };
 
     (function() { // DON'T EDIT BELOW THIS LINE
