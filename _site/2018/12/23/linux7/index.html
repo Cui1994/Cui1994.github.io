@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Linux基础（四）线程</title>
+    <title>Linux基础（七）一张图了解进程间通信IPC</title>
     <meta name="description" content="  该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。书中的编程练习这里不做展示和说明。">
 
     <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
     <link rel="stylesheet" href="/css/main.css ">
-    <link rel="canonical" href="http://localhost:4000/2018/12/19/linux4/">
+    <link rel="canonical" href="http://localhost:4000/2018/12/23/linux7/">
     <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
 
 
@@ -114,11 +114,11 @@
 
         <div class="page clearfix" post>
     <div class="left">
-        <h1>Linux基础（四）线程</h1>
+        <h1>Linux基础（七）一张图了解进程间通信IPC</h1>
         <div class="label">
 
             <div class="label-card">
-                <i class="fa fa-calendar"></i>2018-12-19
+                <i class="fa fa-calendar"></i>2018-12-23
             </div>
 
             <div class="label-card">
@@ -170,163 +170,25 @@
         </div>
         <hr>
         <article itemscope itemtype="http://schema.org/BlogPosting">
-        <ul id="markdown-toc">
-  <li><a href="#概念" id="markdown-toc-概念">概念</a></li>
-  <li><a href="#线程行为" id="markdown-toc-线程行为">线程行为</a>    <ul>
-      <li><a href="#创建" id="markdown-toc-创建">创建</a></li>
-      <li><a href="#终止" id="markdown-toc-终止">终止</a></li>
-      <li><a href="#连接" id="markdown-toc-连接">连接</a></li>
-      <li><a href="#分离" id="markdown-toc-分离">分离</a></li>
-      <li><a href="#取消" id="markdown-toc-取消">取消</a></li>
-    </ul>
-  </li>
-  <li><a href="#进程与线程" id="markdown-toc-进程与线程">进程与线程</a>    <ul>
-      <li><a href="#优劣势" id="markdown-toc-优劣势">优劣势</a></li>
-      <li><a href="#在线程中执行进程方法" id="markdown-toc-在线程中执行进程方法">在线程中执行进程方法</a></li>
-    </ul>
-  </li>
-  <li><a href="#线程安全" id="markdown-toc-线程安全">线程安全</a></li>
-  <li><a href="#线程实现模型" id="markdown-toc-线程实现模型">线程实现模型</a>    <ul>
-      <li><a href="#多对一用户级线程" id="markdown-toc-多对一用户级线程">多对一：用户级线程</a></li>
-      <li><a href="#一对一内核级线程" id="markdown-toc-一对一内核级线程">一对一：内核级线程</a></li>
-      <li><a href="#多对多两级模型" id="markdown-toc-多对多两级模型">多对多：两级模型</a></li>
-    </ul>
-  </li>
-</ul>
-
-<p><img src="https://picsum.photos/800/300/?image=574" alt="" /></p>
+        
+<p><img src="https://picsum.photos/800/300/?image=490" alt="" /></p>
 
 <blockquote>
   <p>该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
 书中的编程练习这里不做展示和说明。</p>
 </blockquote>
 
-<h2 id="概念">概念</h2>
-
-<p><strong>线程</strong>：允许应用程序并发执行多个任务的一种机制，一个进程可以执行多个线程，这些线程执行相同的程序，共享一份全局内存，包括初始化数据段、未初始化数据段以及堆内存段。进程启动时有且只有单个线程，称为初始(initial)线程或者主(main)线程。</p>
-
-<p><strong>线程ID</strong>：线程的唯一标识（C语言中定义为<code class="highlighter-rouge">pthread_t</code>），在Linux中，线程ID在所有进程中都是唯一的。</p>
-
-<p>多个线程共享的主要属性有：</p>
-<ul>
-  <li>进程ID</li>
-  <li>控制终端</li>
-  <li>打开的文件描述符</li>
-  <li>信号处置</li>
-</ul>
-
-<p>线程独占的属性有：</p>
-<ul>
-  <li>线程id</li>
-  <li>CPU亲和力</li>
-  <li>栈</li>
-</ul>
-
-<h2 id="线程行为">线程行为</h2>
-
-<h3 id="创建">创建</h3>
-<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">pthread_creat</span><span class="p">(</span><span class="n">pthread_t</span> <span class="o">*</span><span class="kr">thread</span><span class="p">,</span> <span class="k">const</span> <span class="n">pthread_addr_t</span> <span class="o">*</span><span class="n">addr</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="p">(</span><span class="o">*</span><span class="n">start</span><span class="p">)(</span><span class="kt">void</span> <span class="o">*</span><span class="p">),</span> <span class="kt">void</span> <span class="o">*</span><span class="n">arg</span><span class="p">);</span>
-</code></pre></div></div>
-<p>线程创建后会从<code class="highlighter-rouge">start(arg)</code>开始执行，并继续执行调用之后的语句直到<code class="highlighter-rouge">return</code>。与进程类似，创建进程后无法确定那个线程先获得CPU资源。</p>
-
-<h3 id="终止">终止</h3>
-<p>有四种方式可以终止线程：</p>
-<ul>
-  <li>线程执行<code class="highlighter-rouge">start</code>函数的<code class="highlighter-rouge">return</code>正常返回退出。</li>
-  <li>线程调用<code class="highlighter-rouge">pthread_exit()</code>。</li>
-  <li>调用<code class="highlighter-rouge">pthread_cancel()</code>取消线程。</li>
-  <li>任意线程调用<code class="highlighter-rouge">exit()</code>或者主线程执行了<code class="highlighter-rouge">return</code>语句，会导致进程中所有的线程终止。</li>
-</ul>
-
-<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="n">pthread_exit</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">retval</span><span class="p">);</span>
-</code></pre></div></div>
-<p>调用<code class="highlighter-rouge">pthread_exit()</code>相当于执行<code class="highlighter-rouge">start</code>函数中的<code class="highlighter-rouge">return</code>提前返回退出。如果主线程执行<code class="highlighter-rouge">pthread_exit()</code>，其他线程将继续运行。</p>
-
-<h3 id="连接">连接</h3>
-<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">pthread_join</span><span class="p">(</span><span class="n">pthread_t</span> <span class="n">threadm</span> <span class="kt">void</span> <span class="o">**</span><span class="n">retval</span><span class="p">);</span>
-</code></pre></div></div>
-<p>调用<code class="highlighter-rouge">pthread_join</code>来等待某个线程终止，如果该线程已经终止，join函数将立即返回，类似于进程的<code class="highlighter-rouge">waitpid</code>，不过有两点区别：</p>
-<ul>
-  <li>线程之间关系是对等的。</li>
-  <li>无法“连接任意线程”，也无法“以非阻塞方式进行连接”。</li>
-</ul>
-
-<p><strong>僵尸线程</strong>：如果线程未分离，则必须使用<code class="highlighter-rouge">pthread_join</code>进行连接。如果未进行连接的线程提前终止，这个线程将转变为僵尸线程，与僵尸进程概念类似。如果僵尸线程积累过多，除了浪费资源外，应用将无法创建新的线程。</p>
-
-<h3 id="分离">分离</h3>
-<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">pthread_detach</span><span class="p">(</span><span class="n">pthread_t</span> <span class="kr">thread</span><span class="p">);</span>
-</code></pre></div></div>
-<p>如果不关心线程的返回状态，只是希望系统在线程结束时能够自动清理并移除，可以调用<code class="highlighter-rouge">pthread_detach</code>进行分离。分离后的线程不能再被连接。当主线程调用<code class="highlighter-rouge">exit</code>或<code class="highlighter-rouge">return</code>后，即使分离过的线程也将立即终止。</p>
-
-<h3 id="取消">取消</h3>
-<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">pthread_cancel</span><span class="p">(</span><span class="n">pthread_t</span> <span class="kr">thread</span><span class="p">);</span>
-</code></pre></div></div>
-<p>调用<code class="highlighter-rouge">pthread_cancel</code>会使一个线程立即退出，函数将立即返回而不会等待目标线程退出。</p>
-
-<h2 id="进程与线程">进程与线程</h2>
-
-<h3 id="优劣势">优劣势</h3>
-
-<p>线程相比进程的优势在于：</p>
+<p>这里一张图可以对UNIX系统上所有的IPC工具有一个大概的认识。
+<img src="https://i.loli.net/2018/12/23/5c1f56cf371db.png" alt="" /></p>
 
 <ul>
-  <li>线程数据共享简单。</li>
-  <li>线程创建的资源消耗小，创建速度比进程快10倍以上。</li>
+  <li><strong>数据传输工具</strong>：有写入和读取的概念，这些工具在用户内存与内核内存之间存在两次数据传输，一次调用<code class="highlighter-rouge">write()</code>系统调用从用户内存到内核内存，一次调用<code class="highlighter-rouge">read()</code>从内核内存到用户内存。</li>
+  <li><strong>共享内存</strong>：内核通过将每个进程中的页条目指向同一个RAM分页来实现共享内存。</li>
+  <li>管道、FIFO以及socket是使用文件描述符实现的，因此可以借助<strong>I/O多路复用、信号驱动I/O以及Linux特有的epoll API</strong>来判断是否可以在某些文件描述符上执行I/O操作。</li>
+  <li>IPC工具有自己的权限模型，一些工具（如FIFO、socket）位于文件系统中，其权限模型是文件权限掩码。另一些工具（如管道、匿名内存映射）只允许相关进程访问，即调用<code class="highlighter-rouge">fork</code>。</li>
 </ul>
-
-<p>劣势：</p>
-
-<ul>
-  <li>需要保证线程安全。</li>
-  <li>线程会争用宿主进程的虚拟内存空间（每个线程的线程栈都会消耗进程的虚拟内存）。</li>
-</ul>
-
-<h3 id="在线程中执行进程方法">在线程中执行进程方法</h3>
-
-<ul>
-  <li>线程执行<code class="highlighter-rouge">exec</code>：任一线程调用<code class="highlighter-rouge">exec</code>后调用进程将被完全替换，除了当前线程之外的所有线程都将立即消失。</li>
-  <li>线程执行<code class="highlighter-rouge">fork</code>：线程执行<code class="highlighter-rouge">fork</code>后，仅会将当前线程复制到子进程中，其他线程均会在子进程中消失。</li>
-</ul>
-
-<h2 id="线程安全">线程安全</h2>
-
-<ul>
-  <li><strong>临界区</strong>：访问某一共享变量的代码片段，这段代码片段执行的应为原子操作，同时访问同一共享资源的其他线程不应中断代码的执行。</li>
-  <li><strong>互斥量</strong>：有两个状态，锁定和未锁定，可以被获取（acquire）和释放（release），可以确保共享变量同一时间只有一个线程访问。</li>
-  <li><strong>条件变量</strong>：就共享变量的状态改变通知其他线程，并让其他线程等待这一通知。</li>
-  <li><strong>线程安全</strong>：若函数可以同时供多个线程调用，则称为线程安全函数。</li>
-</ul>
-
-<p>实现线程安全的方式主要有：采用互斥量或使用线程特有数据替代共享变量。可重入函数无需借助互斥量就可实现线程安全。</p>
-
-<h2 id="线程实现模型">线程实现模型</h2>
-
-<p>线程实现有三种模型，三种模型的不通主要集中在线程如何与<strong>内核调度实体（KSE）</strong>映射，KSE是内核分配CPU及其他系统资源的基本单位。</p>
-
-<h3 id="多对一用户级线程">多对一：用户级线程</h3>
-<p>线程创建、调度及同步的所有细节均有进程在<strong>用户空间</strong>的线程库处理，对于进程中的多个线程，内核一无所知。</p>
-
-<p>优点：</p>
-<ul>
-  <li>由于不涉及中断，因此线程的创建、终止以及上下文切换、同步等速度都很快。</li>
-</ul>
-
-<p>缺点：</p>
-<ul>
-  <li>系统调用会阻塞所有的线程。</li>
-  <li>无法将线程调度给多处理器，无法借助多核优势。</li>
-</ul>
-
-<h3 id="一对一内核级线程">一对一：内核级线程</h3>
-<p>每个线程映射一个单独的KSE，内核分别对每个线程做调度处理，线程同步操作也通过内核实现。Linux的线程都采用此模型。</p>
-
-<p>当应用程序中包含大量线程时，内核会为每个线程维护一个KSE，给内核调度器造成严重负担，大大降低系统的整体性能。</p>
-
-<h3 id="多对多两级模型">多对多：两级模型</h3>
-<p>结合了上述两种模型的有点，每个进程可以有多个KSE，也可以把多个线程映射到同一个KSE。但模型太过复杂，线程调度需要由内核及用户空间共同维护。</p>
 
 <p>(End)</p>
-
 
         </article>
         <hr>
@@ -340,30 +202,6 @@
                         
                         <h2 id="similar_posts">Similar Posts</h2>
                         <ul>
-                        
-                        <li class="relatedPost">
-                            <a href="/2018/12/23/linux7/">Linux基础（七）一张图了解进程间通信IPC
-                            
-                            </a>
-                        </li>
-                        
-                        
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-            
-        
-            
-            
-                
-                    
                         
                         <li class="relatedPost">
                             <a href="/2018/12/22/linux6/">Linux基础（六）作业控制与Deamon进程
@@ -391,6 +229,30 @@
                         
                         <li class="relatedPost">
                             <a href="/2018/12/20/linux5/">Linux基础（五）信号
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2018/12/19/linux4/">Linux基础（四）线程
                             
                             </a>
                         </li>
@@ -559,13 +421,11 @@
         <div class="post-recent">
     <div class="pre">
         
-        <p><strong>上一篇</strong> <a href="/2018/12/19/gunicorn1/">Gunicorn源码阅读(一) WSGI协议与启动流程</a></p>
+        <p><strong>上一篇</strong> <a href="/2018/12/22/linux6/">Linux基础（六）作业控制与Deamon进程</a></p>
         
     </div>
     <div class="nex">
 
-        
-        <p><strong>下一篇</strong> <a href="/2018/12/20/linux5/">Linux基础（五）信号</a></p>
         
     </div>
 </div>
@@ -583,8 +443,8 @@
      */
 
     var disqus_config = function() {
-        this.page.url = 'http://localhost:4000/2018/12/19/linux4/'; // Replace PAGE_URL with your page's canonical URL variable
-        this.page.identifier = 'http://localhost:4000/2018/12/19/linux4/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+        this.page.url = 'http://localhost:4000/2018/12/23/linux7/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2018/12/23/linux7/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
     };
 
     (function() { // DON'T EDIT BELOW THIS LINE
