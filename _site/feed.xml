@@ -5,9 +5,36 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Mon, 24 Dec 2018 00:34:40 +0800</pubDate>
-    <lastBuildDate>Mon, 24 Dec 2018 00:34:40 +0800</lastBuildDate>
+    <pubDate>Mon, 07 Jan 2019 23:53:34 +0800</pubDate>
+    <lastBuildDate>Mon, 07 Jan 2019 23:53:34 +0800</lastBuildDate>
     <generator>Jekyll v3.8.4</generator>
+    
+      <item>
+        <title>分布式系统架构浅析</title>
+        <description>
+&lt;img src=&quot;https://picsum.photos/800/300/?image=586&quot; alt=&quot;&quot; /&gt;
+
+看了几本分布式系统架构的书和文章，对分布式系统的架构认知清晰了些。之前只知道分布式系统「要这样做」，但对「为什么这样做」和「这样做解决什么问题」一直懵懵懂懂，这次结合书中所讲、前人经验和一点点自己的理解，对分布式系统架构中所涉及的一些关键知识做一些归纳。
+
+</description>
+        <pubDate>Mon, 07 Jan 2019 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2019/01/07/cap1/</link>
+        <guid isPermaLink="true">http://localhost:4000/2019/01/07/cap1/</guid>
+        
+        <category>分布式</category>
+        
+        <category>CAP</category>
+        
+        <category>架构</category>
+        
+        <category>SOA</category>
+        
+        <category>异地多活</category>
+        
+        
+        <category>服务架构</category>
+        
+      </item>
     
       <item>
         <title>Linux基础（八）管道与FIFO</title>
@@ -215,29 +242,6 @@ SQLAlchemy作为一款强大而又实用的ORM框架，越来越频繁的出现�
         
         
         <category>Zookeeper</category>
-        
-      </item>
-    
-      <item>
-        <title>使用pkgen生成唯一id的问题</title>
-        <description>之前项目中有通过pkgen生成唯一id作为token字符串使用，一直未发现问题。
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;token&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PkGen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pkgen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pk&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-直到前些天在测试环境（服务器为阿里云）突然开始抛出异常。
-
-</description>
-        <pubDate>Sun, 09 Sep 2018 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2018/09/09/pkgen/</link>
-        <guid isPermaLink="true">http://localhost:4000/2018/09/09/pkgen/</guid>
-        
-        <category>Python</category>
-        
-        <category>排坑</category>
-        
-        
-        <category>Python</category>
         
       </item>
     
