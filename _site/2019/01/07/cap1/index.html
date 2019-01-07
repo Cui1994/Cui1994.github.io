@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>分布式系统架构浅析</title>
+    <meta name="description" content="看了几本分布式系统架构的书和文章，对分布式系统的架构认知清晰了些。之前只知道分布式系统「要这样做」，但对「为什么这样做」和「这样做解决什么问题」一直懵懵懂懂，这次结合书中所讲、前人经验和一点点自己的理解，对分布式系统架构中所涉及的一些关键知识做一些归纳。">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2019/01/07/cap1/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>分布式系统架构浅析</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2019-01-07
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#服务架构" title="Category: 服务架构" rel="category">服务架构</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#%E5%88%86%E5%B8%83%E5%BC%8F" title="Tag: 分布式" rel="tag">分布式</a-->
+        <a href="/tag/#分布式" title="Tag: 分布式" rel="tag">分布式</a>&nbsp;
+    
+        <!--a href="/tag/#CAP" title="Tag: CAP" rel="tag">CAP</a-->
+        <a href="/tag/#CAP" title="Tag: CAP" rel="tag">CAP</a>&nbsp;
+    
+        <!--a href="/tag/#%E6%9E%B6%E6%9E%84" title="Tag: 架构" rel="tag">架构</a-->
+        <a href="/tag/#架构" title="Tag: 架构" rel="tag">架构</a>&nbsp;
+    
+        <!--a href="/tag/#SOA" title="Tag: SOA" rel="tag">SOA</a-->
+        <a href="/tag/#SOA" title="Tag: SOA" rel="tag">SOA</a>&nbsp;
+    
+        <!--a href="/tag/#%E5%BC%82%E5%9C%B0%E5%A4%9A%E6%B4%BB" title="Tag: 异地多活" rel="tag">异地多活</a-->
+        <a href="/tag/#异地多活" title="Tag: 异地多活" rel="tag">异地多活</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#架构" id="markdown-toc-架构">架构</a>    <ul>
+      <li><a href="#高性能" id="markdown-toc-高性能">高性能</a></li>
+      <li><a href="#高可用" id="markdown-toc-高可用">高可用</a></li>
+      <li><a href="#可扩展" id="markdown-toc-可扩展">可扩展</a></li>
+    </ul>
+  </li>
+  <li><a href="#cap理论" id="markdown-toc-cap理论">CAP理论</a></li>
+  <li><a href="#高可用的一般架构" id="markdown-toc-高可用的一般架构">高可用的一般架构</a>    <ul>
+      <li><a href="#计算高可用架构" id="markdown-toc-计算高可用架构">计算高可用架构</a>        <ul>
+          <li><a href="#主备" id="markdown-toc-主备">主备</a></li>
+          <li><a href="#主从" id="markdown-toc-主从">主从</a></li>
+          <li><a href="#集群" id="markdown-toc-集群">集群</a></li>
+        </ul>
+      </li>
+      <li><a href="#存储高可用架构" id="markdown-toc-存储高可用架构">存储高可用架构</a>        <ul>
+          <li><a href="#双机架构" id="markdown-toc-双机架构">双机架构</a></li>
+          <li><a href="#集群-1" id="markdown-toc-集群-1">集群</a></li>
+          <li><a href="#数据分区" id="markdown-toc-数据分区">数据分区</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><a href="#分布式系统的集大成之作---异地多活" id="markdown-toc-分布式系统的集大成之作---异地多活">分布式系统的集大成之作 - 异地多活</a>    <ul>
+      <li><a href="#标准" id="markdown-toc-标准">标准</a></li>
+      <li><a href="#意义" id="markdown-toc-意义">意义</a></li>
+      <li><a href="#实现难点" id="markdown-toc-实现难点">实现难点</a></li>
+    </ul>
+  </li>
+</ul>
+
+<p><img src="https://picsum.photos/800/300/?image=586" alt="" /></p>
+
+<p>看了几本分布式系统架构的书和文章，对分布式系统的架构认知清晰了些。之前只知道分布式系统「要这样做」，但对「为什么这样做」和「这样做解决什么问题」一直懵懵懂懂，这次结合书中所讲、前人经验和一点点自己的理解，对分布式系统架构中所涉及的一些关键知识做一些归纳。</p>
+
+<h2 id="架构">架构</h2>
+<p>软件架构指的是<strong>软件系统的顶层结构</strong>，其出现的目的是<strong>为了解决软件系统复杂度所带来的问题</strong>，而我们常说的高性能、高可用、可扩展恰恰是软件系统复杂度的三个主要来源。</p>
+
+<h4 id="高性能">高性能</h4>
+<ul>
+  <li>单机高性能：利用多进程、多线程编程充分提高单台计算机的性能。</li>
+  <li>多机高性能：利用增加机器形成集群来解决单机性能瓶颈，复杂度在于任务分配和任务分解。</li>
+</ul>
+
+<h4 id="高可用">高可用</h4>
+<p>指的是<strong>系统无中断地执行其功能的能力</strong>，目前的解决思路万变不离其宗，即通过<strong>冗余</strong>解决可用性问题。高可用带来的复杂度主要在于</p>
+<ul>
+  <li><strong>故障检测 failure detection</strong></li>
+  <li><strong>故障转移 failover</strong></li>
+  <li><strong>故障恢复 recover</strong></li>
+</ul>
+
+<p>常用的解决上述问题的<strong>决策策略</strong>有以下几种</p>
+<ul>
+  <li><strong>独裁式</strong> 即存在独立的决策主体负责收集信息与决策</li>
+  <li><strong>协商式</strong> 即常用的主备决策，个体间互相交流进行决策</li>
+  <li><strong>民主式</strong> 个体间通过投票方式选举leader（多数取胜）进行决策</li>
+</ul>
+
+<h4 id="可扩展">可扩展</h4>
+<p>采用灵活的设计<strong>正确预测变化，合理封装变化</strong></p>
+
+<h2 id="cap理论">CAP理论</h2>
+<p>CAP从理论上论证了分布式系统高可用的复杂度，具体阐释为<strong>在⼀一个分布式系统(指互相连接并共享数据的节点的集合)中，当涉及读写操作时，只能保证一致性 (Consistence)、可用性(Availability)、分区容错性(Partition Tolerance)三者中的两个，另外一个必须被牺牲。</strong></p>
+<ul>
+  <li>一致性：对于指定客户端，读操作能返回最新的写操作结果。</li>
+  <li>可用性：非故障节点能在合理的时间内返回合理的结果（非错误和超时）。</li>
+  <li>分区容错性：当出现网络分区（包括丢包、连接中断、拥塞），系统能够继续履行职责。</li>
+</ul>
+
+<p>CAP理论的一些细节：</p>
+<ul>
+  <li>网络分区是必然现象，因此分区容错性P是必须的选项，即要么CP，要么AP。</li>
+  <li>CAP关注的是数据，而非系统。即同一个系统里，有的数据要保证CP，有的需要保证AP。</li>
+  <li>CAP是忽略网络延迟的。</li>
+  <li>无网络分区时，需要保证CA。</li>
+  <li>牺牲不代表什么都不做，需要考虑补偿策略（如记录日志）。</li>
+</ul>
+
+<p>CAP的扩展和补充BASE：</p>
+<ul>
+  <li><strong>基本可用 Basically Available</strong>：保证核心业务可用</li>
+  <li><strong>软状态 Soft State</strong>：允许系统存在中间态</li>
+  <li><strong>最终⼀致性 Eventual Consistency</strong>：系统中的数据副本在经过一定时间后达到一致。</li>
+</ul>
+
+<h2 id="高可用的一般架构">高可用的一般架构</h2>
+
+<h3 id="计算高可用架构">计算高可用架构</h3>
+
+<h4 id="主备">主备</h4>
+<p>任务分配器不会将请求发送给备机，故障后需要人工干预将备机变为主机。</p>
+<ul>
+  <li><strong>冷备</strong>：备机上的业务系统没有启动。</li>
+  <li><strong>温备</strong>：备机上的业务系统启动完成，一般采用温备便于快速切换。</li>
+</ul>
+
+<h4 id="主从">主从</h4>
+<p>进行任务拆分，将一部分任务发送给从机，故障后同样需要人工干预将备机变为主机。</p>
+
+<h4 id="集群">集群</h4>
+<p>多台服务器节点进行冗余</p>
+<ul>
+  <li><strong>对称集群</strong>：所有服务器节点角色相同，也叫负载均衡服务器，任务调度器（负载均衡器）需采取负载均衡算法分配请求。</li>
+  <li><strong>非对称集群</strong>：服务器节点存在角色划分，不同角色执行不同的任务，如常见的Master-Slave模型。</li>
+</ul>
+
+<p>常见的负载均衡器：</p>
+<ul>
+  <li><strong>DNS负载均衡</strong>：实现地理级别的负载均衡</li>
+  <li><strong>硬件负载均衡</strong>：实现集群级别的负载均衡</li>
+  <li><strong>软件负载均衡</strong>：实现机器级别的负载均衡</li>
+</ul>
+
+<p>常见的负载均衡算法：</p>
+<ul>
+  <li><strong>轮训</strong></li>
+  <li><strong>加权轮训</strong></li>
+  <li><strong>负载最低优先</strong></li>
+  <li><strong>性能最好优先</strong></li>
+  <li><strong>Hash</strong></li>
+</ul>
+
+<h3 id="存储高可用架构">存储高可用架构</h3>
+
+<h4 id="双机架构">双机架构</h4>
+<p>主要实现储存系统的高可用架构。</p>
+<ul>
+  <li><strong>主备复制</strong>：备机不承担业务读写，只是一个备份，故障后需要人工干预将备机变为主机。</li>
+  <li><strong>主从复制</strong>：master-slave 备机可读，存在主从延迟，故障需要人工干预。</li>
+  <li><strong>双机切换</strong>：解决上述两种需要人工干预切换的缺点，实现自动切换，但需要状态传递和状态决策。</li>
+  <li><strong>主主复制</strong>：multi-master 两台均可读写，不存在切换，但须解决同时写入时的数据冲突问题。</li>
+</ul>
+
+<h4 id="集群-1">集群</h4>
+<ul>
+  <li><strong>数据集中集群</strong>：与主备、主从类似，也叫一主多从或一主多备，数据只写入主机，如ZooKeeper。</li>
+  <li><strong>数据分散集群</strong>：每台服务器都会储存一部分数据，如Hadoop。</li>
+</ul>
+
+<h4 id="数据分区">数据分区</h4>
+<p>按照一定的规则将数据进行分区，不同分区位于不同的地理位置上，避免地理级别的故障造成的损害。分区的数据同样要进行复制已进行故障恢复，复制规则有：</p>
+<ul>
+  <li>集中式：将数据复制到一个总的备份中心。</li>
+  <li>备份式：每个分区都会备份不同分区的数据。</li>
+  <li>独立式：每个分区都有自己的备份。</li>
+</ul>
+
+<h2 id="分布式系统的集大成之作---异地多活">分布式系统的集大成之作 - 异地多活</h2>
+<p>如果系统希望实现地理级别的容灾，即如果某地的机房发生灾难性故障，业务也不应受影响或短时间内可恢复，就应该实现<strong>异地多活（multi-datacenter）</strong>。异地多活的复杂度有质的提高，是分布式系统的技术高峰。</p>
+
+<h3 id="标准">标准</h3>
+<p>判断一个系统是否满足异地多活，有两个条件：</p>
+<ul>
+  <li>正常情况，不论访问哪个地点的业务系统都应得到正确的业务服务。</li>
+  <li>某个地点业务异常，用户访问其他地点的业务系统，能够得到正确的业务服务。</li>
+</ul>
+
+<h3 id="意义">意义</h3>
+<ul>
+  <li>实现地理级别的容灾（fault tolerant），这是异地多活最重要的意义</li>
+  <li>可以实现无限扩展（scale out），异地多活每个地点均存在独立的存储master，理论上可以无限扩展，避免single-master的性能瓶颈</li>
+  <li>可以提高单机房性能</li>
+</ul>
+
+<h3 id="实现难点">实现难点</h3>
+<ul>
+  <li><strong>流量路由</strong>：请求应该被打到哪个机房</li>
+  <li><strong>数据同步</strong>：多个机房之间如何进行数据同步，如何克服同步延迟，对数据强一致有较高要求的业务如何解决</li>
+  <li><strong>灾难恢复</strong>：在failover切换流量时如何解决一个机房内新写入数据与复制数据不一致的问题</li>
+</ul>
+
+<p>异地多活的实现成本较高，需要根据业务判断是否有必要实现，不通业务模式下的实现方式也不同，下篇文章将借助饿了么的异地多活架构对异地多活的实现思路进行简单说明。</p>
+
+<blockquote>
+  <p>参考资料</p>
+  <ul>
+    <li><a href="https://book.douban.com/subject/25972633/">《大型分布式网站架构设计与实践》</a></li>
+    <li><a href="https://time.geekbang.org/column/intro/81?code=R3CSmyV%252FmA-5-p1oG7enz3TbTPn9EUlJLDh2V3aGO7U%253D">极客时间 - 从零开始学架构</a></li>
+    <li><a href="https://zhuanlan.zhihu.com/p/32009822">知乎专栏 - 饿了么异地多活实现思路</a></li>
+  </ul>
+</blockquote>
+
+<p>（End）</p>
+
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2018/12/24/linux8/">Linux基础（八）管道与FIFO</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2019/01/07/cap1/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2019/01/07/cap1/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>
