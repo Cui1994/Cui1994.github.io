@@ -5,9 +5,31 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Mon, 07 Jan 2019 23:53:34 +0800</pubDate>
-    <lastBuildDate>Mon, 07 Jan 2019 23:53:34 +0800</lastBuildDate>
+    <pubDate>Tue, 08 Jan 2019 22:33:01 +0800</pubDate>
+    <lastBuildDate>Tue, 08 Jan 2019 22:33:01 +0800</lastBuildDate>
     <generator>Jekyll v3.8.4</generator>
+    
+      <item>
+        <title>饿厂的异地多活实践</title>
+        <description>
+&lt;img src=&quot;https://picsum.photos/800/300/?image=692&quot; alt=&quot;&quot; /&gt;
+饿厂于17年顺利完成了异地多活改造。改造的目的一是当时每天的订单量已经达到千万级，北京的机房无法扩容；二是机房级别的故障时有发生，每次都会造成很大损失，需要地理级别的容灾。&lt;a href=&quot;https://cui1994.github.io/2019/01/07/cap1/&quot;&gt;上篇文章&lt;/a&gt;的最后已经提到过，异地多活的复杂度和实现成本都是很高的，饿厂也不例外，除了中间件的建设，各业务方都需要进行多活改造。作为在饿厂搬了一年砖的业务小白，这里整理一下饿厂异地多活建设中所解决的问题和解决问题的方法。
+
+</description>
+        <pubDate>Tue, 08 Jan 2019 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2019/01/08/yididuohuo/</link>
+        <guid isPermaLink="true">http://localhost:4000/2019/01/08/yididuohuo/</guid>
+        
+        <category>分布式</category>
+        
+        <category>架构</category>
+        
+        <category>异地多活</category>
+        
+        
+        <category>服务架构</category>
+        
+      </item>
     
       <item>
         <title>分布式系统架构浅析</title>
@@ -223,25 +245,6 @@ SQLAlchemy作为一款强大而又实用的ORM框架，越来越频繁的出现�
         
         
         <category>Python</category>
-        
-      </item>
-    
-      <item>
-        <title>Zookeeper全攻略</title>
-        <description>
-&lt;img src=&quot;https://i.loli.net/2018/11/26/5bfc089b99acb.png&quot; alt=&quot;&quot; /&gt;
-
-</description>
-        <pubDate>Fri, 12 Oct 2018 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2018/10/12/zookeeper/</link>
-        <guid isPermaLink="true">http://localhost:4000/2018/10/12/zookeeper/</guid>
-        
-        <category>Zookeeper</category>
-        
-        <category>学习实战</category>
-        
-        
-        <category>Zookeeper</category>
         
       </item>
     

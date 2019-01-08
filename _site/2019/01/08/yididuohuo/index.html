@@ -6,15 +6,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>项目中添加搜索功能</title>
-    <meta name="description" content="这部分内容的起因是我想在自己的Flask项目直播通中加入一个搜索框用来搜索数据库中的主播姓名，于是在网上搜索flask 搜索关键字，当时没注意出来的都是全文搜索的教程，一步步做下来却发现原来根本和自己的需求不符合，可见弄清需求是多么重要啊！虽然走了点弯路，却意外发现了全文搜索的方法。">
+    <title>饿厂的异地多活实践</title>
+    <meta name="description" content="饿厂于17年顺利完成了异地多活改造。改造的目的一是当时每天的订单量已经达到千万级，北京的机房无法扩容；二是机房级别的故障时有发生，每次都会造成很大损失，需要地理级别的容灾。上篇文章的最后已经提到过，异地多活的复杂度和实现成本都是很高的，饿厂也不例外，除了中间件的建设，各业务方都需要进行多活改造。作为在饿厂搬了一年...">
 
     <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
     <link rel="icon" href="/favicon.ico?" type="image/x-icon">
     <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
     <link rel="stylesheet" href="/css/main.css ">
-    <link rel="canonical" href="http://localhost:4000/2017/01/15/search/">
+    <link rel="canonical" href="http://localhost:4000/2019/01/08/yididuohuo/">
     <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
 
 
@@ -114,11 +114,11 @@
 
         <div class="page clearfix" post>
     <div class="left">
-        <h1>项目中添加搜索功能</h1>
+        <h1>饿厂的异地多活实践</h1>
         <div class="label">
 
             <div class="label-card">
-                <i class="fa fa-calendar"></i>2017-01-15
+                <i class="fa fa-calendar"></i>2019-01-08
             </div>
 
             <div class="label-card">
@@ -138,7 +138,7 @@
   <i class="fa fa-th-list"></i>
   
     
-        <a href="/category/#直播通" title="Category: 直播通" rel="category">直播通</a>
+        <a href="/category/#服务架构" title="Category: 服务架构" rel="category">服务架构</a>
     
   
 
@@ -155,11 +155,14 @@
   <i class="fa fa-tags"></i>
   
     
-        <!--a href="/tag/#%E7%9B%B4%E6%92%AD%E9%80%9A" title="Tag: 直播通" rel="tag">直播通</a-->
-        <a href="/tag/#直播通" title="Tag: 直播通" rel="tag">直播通</a>&nbsp;
+        <!--a href="/tag/#%E5%88%86%E5%B8%83%E5%BC%8F" title="Tag: 分布式" rel="tag">分布式</a-->
+        <a href="/tag/#分布式" title="Tag: 分布式" rel="tag">分布式</a>&nbsp;
     
-        <!--a href="/tag/#Flask" title="Tag: Flask" rel="tag">Flask</a-->
-        <a href="/tag/#Flask" title="Tag: Flask" rel="tag">Flask</a>
+        <!--a href="/tag/#%E6%9E%B6%E6%9E%84" title="Tag: 架构" rel="tag">架构</a-->
+        <a href="/tag/#架构" title="Tag: 架构" rel="tag">架构</a>&nbsp;
+    
+        <!--a href="/tag/#%E5%BC%82%E5%9C%B0%E5%A4%9A%E6%B4%BB" title="Tag: 异地多活" rel="tag">异地多活</a-->
+        <a href="/tag/#异地多活" title="Tag: 异地多活" rel="tag">异地多活</a>
     
   
 
@@ -171,75 +174,81 @@
         <hr>
         <article itemscope itemtype="http://schema.org/BlogPosting">
         <ul id="markdown-toc">
-  <li><a href="#设置搜索框" id="markdown-toc-设置搜索框">设置搜索框</a></li>
-  <li><a href="#模糊搜索" id="markdown-toc-模糊搜索">模糊搜索</a></li>
-  <li><a href="#全文搜索" id="markdown-toc-全文搜索">全文搜索</a></li>
+  <li><a href="#流量sharding---api-router" id="markdown-toc-流量sharding---api-router">流量sharding - API Router</a></li>
+  <li><a href="#multi-master写入冲突---dal" id="markdown-toc-multi-master写入冲突---dal">multi-master写入冲突 - DAL</a></li>
+  <li><a href="#replication---drc" id="markdown-toc-replication---drc">replication - DRC</a></li>
+  <li><a href="#强一致---gz" id="markdown-toc-强一致---gz">强一致 - GZ</a></li>
+  <li><a href="#failover时的一致性" id="markdown-toc-failover时的一致性">failover时的一致性</a></li>
 </ul>
 
-<p>这部分内容的起因是我想在自己的Flask项目直播通中加入一个搜索框用来搜索数据库中的主播姓名，于是在网上搜索flask 搜索关键字，当时没注意出来的都是全文搜索的教程，一步步做下来却发现原来根本和自己的需求不符合，可见弄清需求是多么重要啊！虽然走了点弯路，却意外发现了全文搜索的方法。</p>
+<p><img src="https://picsum.photos/800/300/?image=692" alt="" />
+饿厂于17年顺利完成了异地多活改造。改造的目的一是当时每天的订单量已经达到千万级，北京的机房无法扩容；二是机房级别的故障时有发生，每次都会造成很大损失，需要地理级别的容灾。<a href="https://cui1994.github.io/2019/01/07/cap1/">上篇文章</a>的最后已经提到过，异地多活的复杂度和实现成本都是很高的，饿厂也不例外，除了中间件的建设，各业务方都需要进行多活改造。作为在饿厂搬了一年砖的业务小白，这里整理一下饿厂异地多活建设中所解决的问题和解决问题的方法。</p>
 
-<h2 id="设置搜索框">设置搜索框</h2>
-<p>考虑到用户体验，这里想做导航栏上的搜索框，也就是全局搜索框，这就要用到flask中的程序上下文g，在处理请求时用作临时存储的对象，每次请求都会重设这个变量。很显然，这里就需要将一个搜索框设置成为程序上下文，具体做法如下。</p>
+<p>要实现异地多活，需要在不同地理位置的两个机房有独立的Service集群和存储集群，同时为了进行故障切换，每个机房的存储单元要有全量数据，相对简化下的架构图如下：
+<img src="https://i.loli.net/2019/01/08/5c349cad3d7ee.png" alt="" /></p>
 
+<p>看似简单，但异地多活引入了很多棘手的问题：</p>
 <ul>
-  <li>创建搜索框
-很简单，在forms中添加
-    <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">SearchForm</span><span class="p">(</span><span class="n">Form</span><span class="p">):</span>
-  <span class="n">search</span> <span class="o">=</span> <span class="n">StringField</span><span class="p">(</span><span class="s">u''</span><span class="p">,</span> <span class="n">validators</span><span class="o">=</span><span class="p">[</span><span class="n">Required</span><span class="p">()])</span>
-</code></pre></div>    </div>
-    <p>这里的Required是必须的，否则每次点击搜索按钮都会运行搜索函数，web性能下降。</p>
-  </li>
-  <li>定义全局变量
-在main.view中写入：
-    <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">@</span><span class="n">main</span><span class="o">.</span><span class="n">before_app_request</span>
-<span class="k">def</span> <span class="nf">before_request</span><span class="p">():</span> <span class="c1">#定义全局变量
-</span>  <span class="n">g</span><span class="o">.</span><span class="n">search_form</span> <span class="o">=</span> <span class="n">SearchForm</span><span class="p">()</span>
-</code></pre></div>    </div>
-    <p>就将一个搜索框设置成为了程序上下文变量。</p>
-  </li>
-  <li>创建搜索和搜索结果的视图函数
-    <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">@</span><span class="n">main</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s">'/search'</span><span class="p">,</span> <span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="s">'POST'</span><span class="p">])</span>
-<span class="k">def</span> <span class="nf">search</span><span class="p">():</span>
-  <span class="k">if</span> <span class="ow">not</span> <span class="n">g</span><span class="o">.</span><span class="n">search_form</span><span class="o">.</span><span class="n">validate_on_submit</span><span class="p">():</span>
-      <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s">'.index'</span><span class="p">))</span>
-  <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s">'.search_results'</span><span class="p">,</span> <span class="n">query</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">search_form</span><span class="o">.</span><span class="n">search</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
-<span class="o">@</span><span class="n">main</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s">'/search-results/&lt;query&gt;'</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">search_results</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
-  <span class="k">pass</span>
-</code></pre></div>    </div>
-  </li>
-  <li>在模板中添加搜索框</li>
+  <li>如何分配流量到不同的IDC</li>
+  <li>多存储集群引入了multi-master，如何解决multi-master的写入冲突</li>
+  <li>如何进行机房间的数据同步</li>
+  <li>数据同步存在延迟，如何应对对数据强一致性要求较高的业务</li>
+  <li>故障转移（failover）时如何解决写入与复制的数据冲突</li>
 </ul>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;form class="navbar-form navbar-left" action="" method="post" role="search"&gt;
-	&lt;div class="form-group"&gt;
-		
-		&lt;input type="text" name="search" class="form-control" placeholder="Search"&gt;
-	&lt;/div&gt;
-	&lt;button type="submit" class="btn btn-default"&gt;搜索&lt;/button&gt;
-&lt;/form&gt;
-</code></pre></div></div>
-<p>要注意flask_wtf的请求跨站保护和表单的name属性设置。
-这样，一个全局搜索框就创建好啦！</p>
+<p>我们看一下饿厂给出的解决方案。</p>
 
-<h2 id="模糊搜索">模糊搜索</h2>
-<p>模糊搜索其实很简单，只要对数据库中进行模糊检索即可，一条语句适用于很多场合：</p>
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="nb">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">like</span><span class="p">(</span><span class="s">'</span><span class="si">%</span><span class="s">'</span><span class="o">+</span><span class="n">query</span><span class="o">+</span><span class="s">'</span><span class="si">%</span><span class="s">'</span><span class="p">))</span><span class="o">.</span><span class="nb">all</span><span class="p">()</span>
-</code></pre></div></div>
+<h2 id="流量sharding---api-router">流量sharding - API Router</h2>
+<p>异地多活的流量分配可以简单用id来划分，但用id划分会造成很多的跨机房调用，此外由于外卖业务的特殊性，商户-骑手-用户都处于同一地理级别，因此饿厂利用经纬度将全国划分为很多的地理围栏，主要以省为单位，接壤部分进行微调，不同地理位置的流量打入确定的IDC。</p>
 
-<h2 id="全文搜索">全文搜索</h2>
-<p>虽然有的时候模糊搜索很方便，但对于某些任务，比如搜索出现某些关键词的文章的时候就不能用模糊搜索了，因为不管关键词顺序还是空格都会影响模糊搜索的查询结果，这个时候就需要用到全文搜索。</p>
+<p>shardingKey是APP改造后携带的分流标签，核心是地理位置，也有很多业务标签如订单id、商户id等。<strong>GZS(Global Zone Service：全局状态协调器)</strong>会将APP客户端请求携带的shardingKey根据地理围栏计算成shardid，再根据shardid查询流量该打入哪个IDC。
+<img src="https://i.loli.net/2019/01/08/5c34a68215b2e.png" alt="" /></p>
 
-<p>这里有一款实现全文搜索的良好flask扩展：WhooshAlchemy，在项目中应用也只需要简单几步：</p>
+<p>饿厂开发了<strong>API Router</strong>层负责处理流量路由，部署在多个公有云中，它是流量的最上游，通过查询GZS将流量打入正确的IDC。</p>
 
-<ul>
-  <li>安装： <code class="highlighter-rouge">pip install flask_whooshalchemy</code></li>
-  <li>配置： 在配置文件config.py中写入要应用全文搜索的数据库路径：<code class="highlighter-rouge">WHOOSH_BASE=</code></li>
-  <li>索引对象：在models.py中需要全文搜索的对象中加入<code class="highlighter-rouge">__searchable__=['COLUMN']</code>,COLOMN为需要搜索的列</li>
-  <li>在manage中添加索引：<code class="highlighter-rouge">whooshalchemy.whoosh_index(app, Model)</code></li>
-  <li>最后在搜索时加入<code class="highlighter-rouge">Model.query.whoosh_search('keyword').all()</code>即可
-注意：使用whooshalchemy进行搜索要现将数据库中的要搜索的对象实例全部删除，这样才能创建索引，否则会报错。</li>
-</ul>
+<h2 id="multi-master写入冲突---dal">multi-master写入冲突 - DAL</h2>
+<p>两个IDC必然要有两个master，解决multi-master下的写入冲突最为行之有效的办法是，<strong>对于一条记录，只能有一个master可以写入</strong>。</p>
+
+<p><strong>DAL（Data Access Layer：数据访问)</strong>层负责处理这部分逻辑。判断流量该打进哪个IDC与判断一条记录可以写入哪个master是一样的道理，DAL也会请求GZS判断路由规则，将不属于当前机房的流量拒绝。</p>
+
+<p>对于不同机房的主键冲突，饿厂的解决方案是两个机房采用相同的步进长度，但设定不同的offset。</p>
+
+<h2 id="replication---drc">replication - DRC</h2>
+<p><strong>DRC(Data Replication Center)</strong>用来实现MySQL的双向复制，解析MySQL的binlog并将binlog event转化为自己的数据格式（更小），通过JDBC写入另一个机房的服务器，整体延迟在1s以下。</p>
+
+<p>上面提到通过确保一条记录只能写入一个master来解决写入冲突，但实际上冲突是无法避免的（如shardingkey缺失的行记录），饿厂通过<strong>给所有表增加一个业务方不感知的时间戳字段check_time，当发生写入冲突时根据时间戳保留最新的记录。</strong></p>
+
+<h2 id="强一致---gz">强一致 - GZ</h2>
+<p>对于一些不能接受DRC延迟的业务（如注册），可以通过<strong>GZ（Global Zone）</strong>实现强一致性。</p>
+
+<p>GZ模式下只有一个机房的数据库支持写入，类似于主从模式，同时DAL支持读操作绑定主库，实现强一致性。在进行failover切换时，将另一个机房的数据库设置为主库。GZ的一个问题在于跨机房读写的延迟较高，高QPS业务需要避免使用或通过缓存解决延迟问题。</p>
+
+<h2 id="failover时的一致性">failover时的一致性</h2>
+<p>由于双机房的数据同步存在延时，当故障发生时，会有一部分来不及同步的数据，此时如果切换到新机房发生新的写操作，会导致数据的乱序写，且无法修复。这时根据CAP理论，如果要保证一致性的话，就要暂时放弃可用性，方法是：<strong>failover时锁定一部分老数据的update操作（会直接报错），直到数据同步完成，在此期间新数据是可以插入的。</strong></p>
+
+<p>饿厂的具体shard切换方法如下：</p>
+<ol>
+  <li>同样利用上面提到过的时间戳check_time，发生切换时记录一个当前时间reshard_at。</li>
+  <li>老机房完全停止写入。</li>
+  <li>新机房check_time在reshard_at之前的数据禁止写入。</li>
+  <li>DRC复制数据的check_time追上了reshard_at，新机房开启写入。</li>
+</ol>
+
+<p>最终架构如下：
+<img src="https://i.loli.net/2019/01/08/5c34b3b20d48a.png" alt="" />
+饿厂对于异地多活中的难点问题的解决方案大体上就是这些，上面的解决方案中所提到的中间件大部分都是一笔带过，其中有各种难点问题需要解决，这里就不再赘述了。有兴趣可以查看相应博文。</p>
+
+<p>(End)</p>
+
+<blockquote>
+  <p>参考资料：</p>
+  <ul>
+    <li><a href="https://zhuanlan.zhihu.com/p/32009822">知乎 - 饿了么异地多活技术实现</a></li>
+    <li><a href="https://www.jianshu.com/p/fe8bf1ebf34d">饿了么MySQL异地多活数据双向复制经验</a></li>
+    <li><a href="http://afghl.github.io/2018/02/11/distributed-system-multi-datacenter-1.html">分布式系统 - 关于异地多活的一点笔记 - overview</a></li>
+  </ul>
+</blockquote>
+
 
         </article>
         <hr>
@@ -250,31 +259,18 @@
             
                 
                     
-                
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/07/cap1/">分布式系统架构浅析
+                            
+                            </a>
+                        </li>
+                        
+                        
                     
-                
-            
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-            
-        
-            
-            
-                
-                    
-                
-                    
-                
-            
                 
                     
                 
@@ -286,10 +282,6 @@
                 
                     
                 
-            
-                
-                    
-                
                     
                 
             
@@ -298,16 +290,19 @@
                 
                     
                 
-            
-        
-            
+                    
+                
             
                 
                     
                 
                     
                 
+                    
+                
             
+                
+                    
                 
                     
                 
@@ -322,22 +317,11 @@
                 
                     
                 
-            
-                
-                    
-                
                     
                 
             
-        
-            
-            
                 
                     
-                
-                    
-                
-            
                 
                     
                 
@@ -352,22 +336,11 @@
                 
                     
                 
-            
-                
-                    
-                
                     
                 
             
-        
-            
-            
                 
                     
-                
-                    
-                
-            
                 
                     
                 
@@ -382,13 +355,11 @@
                 
                     
                 
-            
-                
-                    
-                
                     
                 
             
+                
+                    
                 
                     
                 
@@ -403,7 +374,30 @@
                 
                     
                 
+                    
+                
             
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
                 
                     
                 
@@ -418,13 +412,19 @@
                 
                     
                 
+                    
+                
             
                 
                     
                 
                     
                 
+                    
+                
             
+                
+                    
                 
                     
                 
@@ -432,18 +432,83 @@
                 
             
         
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+        
+            </ul>
         
 
         <div class="post-recent">
     <div class="pre">
         
-        <p><strong>上一篇</strong> <a href="/2017/01/15/gunicorn/">项目部署路上的坑</a></p>
+        <p><strong>上一篇</strong> <a href="/2019/01/07/cap1/">分布式系统架构浅析</a></p>
         
     </div>
     <div class="nex">
 
-        
-        <p><strong>下一篇</strong> <a href="/2017/01/16/zhibotong/">关于直播通</a></p>
         
     </div>
 </div>
@@ -461,8 +526,8 @@
      */
 
     var disqus_config = function() {
-        this.page.url = 'http://localhost:4000/2017/01/15/search/'; // Replace PAGE_URL with your page's canonical URL variable
-        this.page.identifier = 'http://localhost:4000/2017/01/15/search/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+        this.page.url = 'http://localhost:4000/2019/01/08/yididuohuo/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2019/01/08/yididuohuo/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
     };
 
     (function() { // DON'T EDIT BELOW THIS LINE
@@ -491,6 +556,8 @@
                     Content
                 </div>
                 <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
                     
                     <li><a href="#comments">Comments</a></li>
                 </ul>
