@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
     <link rel="stylesheet" href="/css/main.css ">
-    <link rel="canonical" href="http://localhost:4000/page3/">
+    <link rel="canonical" href="http://localhost:4000/page6/">
     <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
 
 
@@ -123,11 +123,11 @@
             
               <li>
                 <h2>
-                  <a class="post-link" href="/2018/09/09/pkgen/">使用pkgen生成唯一id的问题</a>
+                  <a class="post-link" href="/2017/01/11/celery/">项目中引入celery</a>
                 </h2>
                 <div class="label">
                     <div class="label-card">
-                        <i class="fa fa-calendar"></i>2018-09-09
+                        <i class="fa fa-calendar"></i>2017-01-11
                     </div>
                     <div class="label-card">
                         
@@ -145,7 +145,7 @@
   <i class="fa fa-th-list"></i>
   
     
-        <a href="/category/#Python" title="Category: Python" rel="category">Python</a>
+        <a href="/category/#直播通" title="Category: 直播通" rel="category">直播通</a>
     
   
 
@@ -162,76 +162,9 @@
   <i class="fa fa-tags"></i>
   
     
-        <a href="/tag/#Python" title="Tag: Python" rel="tag">Python</a>&nbsp;
+        <a href="/tag/#celery" title="Tag: celery" rel="tag">celery</a>&nbsp;
     
-        <a href="/tag/#排坑" title="Tag: 排坑" rel="tag">排坑</a>
-    
-  
-
-</span>
-
-                    </div>
-                </div>
-                <div class="excerpt">
-                    <p>之前项目中有通过pkgen生成唯一id作为token字符串使用，一直未发现问题。</p>
-
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">token</span> <span class="o">=</span> <span class="n">PkGen</span><span class="p">()</span><span class="o">.</span><span class="n">pkgen</span><span class="p">()</span><span class="o">.</span><span class="n">pk</span>
-</code></pre></div></div>
-
-<p>直到前些天在测试环境（服务器为阿里云）突然开始抛出异常。</p>
-
-
-                </div>
-                <div class="read-all">
-                    <a  href="/2018/09/09/pkgen/"><i class="fa fa-newspaper-o"></i>Read All</a>
-                </div>
-                <hr>
-              </li>
-            
-              <li>
-                <h2>
-                  <a class="post-link" href="/2018/09/08/linux2/">Linux基础（二）文件系统及文件I/O</a>
-                </h2>
-                <div class="label">
-                    <div class="label-card">
-                        <i class="fa fa-calendar"></i>2018-09-08
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-
-                    <div class="label-card">
-                    
-
-
-<!-- <span class="point">•</span> -->
-<span class="categories">
-  <i class="fa fa-th-list"></i>
-  
-    
-        <a href="/category/#Linux" title="Category: Linux" rel="category">Linux</a>
-    
-  
-
-  <!-- <span class="point">•</span> -->
-</span>
-
-
-                    </div>
-
-                    <div class="label-card">
-                    
-<!-- <span class="point">•</span> -->
-<span class="pageTag">
-  <i class="fa fa-tags"></i>
-  
-    
-        <a href="/tag/#Linux" title="Tag: Linux" rel="tag">Linux</a>&nbsp;
-    
-        <a href="/tag/#读书笔记" title="Tag: 读书笔记" rel="tag">读书笔记</a>
+        <a href="/tag/#直播通" title="Tag: 直播通" rel="tag">直播通</a>
     
   
 
@@ -241,306 +174,12 @@
                 </div>
                 <div class="excerpt">
                     
-<p>理解Linux文件系统的关键一点在于<strong>一切皆文件</strong>的思想。</p>
-
-<p>Linux中，文件既包括普通数据文件，又包括如设备、管道、套接字、目录、符号链接等特殊文件。</p>
-
-<p>文件系统指的是常规文件和目录的组织集合，Linux支持多种文件系统，并提供虚拟文件系统（VFS）来隐藏不同文件系统的实现细节。</p>
-
-<p>Linux内核维护了三种与文件相关的数据结构，也提供了一套通用的文件I/O模型对所有类型的文件进行操作。</p>
-
-<blockquote>
-  <p>该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
-书中的编程练习这里不做展示和说明。</p>
-</blockquote>
+<p>捣鼓了两天自己的直播通项目，终于大概有了雏形，在主页的视图函数中集成了爬虫，爬取用户关注主播的在线hangtag。但在运行时发现打开主页时延迟明显，有时候竟然长达数秒，突然想起了之前了解到的celery，试试能不能解决这一问题。</p>
 
 
                 </div>
                 <div class="read-all">
-                    <a  href="/2018/09/08/linux2/"><i class="fa fa-newspaper-o"></i>Read All</a>
-                </div>
-                <hr>
-              </li>
-            
-              <li>
-                <h2>
-                  <a class="post-link" href="/2018/07/16/linux/">Linux基础（一）内核及系统调用</a>
-                </h2>
-                <div class="label">
-                    <div class="label-card">
-                        <i class="fa fa-calendar"></i>2018-07-16
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-
-                    <div class="label-card">
-                    
-
-
-<!-- <span class="point">•</span> -->
-<span class="categories">
-  <i class="fa fa-th-list"></i>
-  
-    
-        <a href="/category/#Linux" title="Category: Linux" rel="category">Linux</a>
-    
-  
-
-  <!-- <span class="point">•</span> -->
-</span>
-
-
-                    </div>
-
-                    <div class="label-card">
-                    
-<!-- <span class="point">•</span> -->
-<span class="pageTag">
-  <i class="fa fa-tags"></i>
-  
-    
-        <a href="/tag/#Linux" title="Tag: Linux" rel="tag">Linux</a>&nbsp;
-    
-        <a href="/tag/#读书笔记" title="Tag: 读书笔记" rel="tag">读书笔记</a>
-    
-  
-
-</span>
-
-                    </div>
-                </div>
-                <div class="excerpt">
-                    
-<p>本文对Linux系统编程的一些基本概念做一些介绍，对应用程序系统调用的流程进行说明。</p>
-
-<blockquote>
-  <p>该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
-书中的编程练习这里不做展示和说明。</p>
-</blockquote>
-
-
-                </div>
-                <div class="read-all">
-                    <a  href="/2018/07/16/linux/"><i class="fa fa-newspaper-o"></i>Read All</a>
-                </div>
-                <hr>
-              </li>
-            
-              <li>
-                <h2>
-                  <a class="post-link" href="/2018/07/15/web/">大规模Web服务的一般性痛点与解决方案</a>
-                </h2>
-                <div class="label">
-                    <div class="label-card">
-                        <i class="fa fa-calendar"></i>2018-07-15
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-
-                    <div class="label-card">
-                    
-
-
-<!-- <span class="point">•</span> -->
-<span class="categories">
-  <i class="fa fa-th-list"></i>
-  
-    
-        <a href="/category/#服务架构" title="Category: 服务架构" rel="category">服务架构</a>
-    
-  
-
-  <!-- <span class="point">•</span> -->
-</span>
-
-
-                    </div>
-
-                    <div class="label-card">
-                    
-<!-- <span class="point">•</span> -->
-<span class="pageTag">
-  <i class="fa fa-tags"></i>
-  
-    
-        <a href="/tag/#服务架构" title="Tag: 服务架构" rel="tag">服务架构</a>&nbsp;
-    
-        <a href="/tag/#MySQL" title="Tag: MySQL" rel="tag">MySQL</a>&nbsp;
-    
-        <a href="/tag/#页面缓存" title="Tag: 页面缓存" rel="tag">页面缓存</a>&nbsp;
-    
-        <a href="/tag/#扩展" title="Tag: 扩展" rel="tag">扩展</a>
-    
-  
-
-</span>
-
-                    </div>
-                </div>
-                <div class="excerpt">
-                    
-<p>如今，各类Web架构竞相辉映，集群，微服务，异地多活，分布式等名词层出不穷，这些东西是你日常工作的一部分，或者至少也是不少技术类文章中的热词，于开发人员来讲并不生疏。但这些东西是怎么来的，为了解决什么样的问题，确是值得思索的命题。</p>
-
-<p>其实，如今各类成熟的Web服务架构并非一蹴而就的，而是随着服务规模的不断增大而演化过来的。刚来时可能服务的用户并不多，业务线也很少，这时的应用程序、数据库、静态文件可能都在一台服务器上，代码能够正常运行即可满足要求。而随着用户量的增加，一台服务器就无法满足需求了，流量的上升导致访问速度越来越慢，数据量的增大导致储存空间的不足，这时候就会将应用程序、数据库和文件服务进行分离，分别放在三台服务器上。之后，随着规模进一步加大，越来越多的问题暴露出来：为了解决应用程序服务的压力，出现了代理服务器、集群和负载均衡的概念；为了解决数据库压力，出现了读写分离、缓存服务器和分布式数据库的概念；为了解决文件服务器的压力，出现了CDN加速的概念；为了应对冗杂的业务线，出现了微服务和职能划分的概念……服务架构也慢慢趋于成熟变成了现在的模样。</p>
-
-<p>本文就简单介绍下大规模Web服务发展过程中出现的一般性问题和解决方案。</p>
-
-
-                </div>
-                <div class="read-all">
-                    <a  href="/2018/07/15/web/"><i class="fa fa-newspaper-o"></i>Read All</a>
-                </div>
-                <hr>
-              </li>
-            
-              <li>
-                <h2>
-                  <a class="post-link" href="/2018/07/12/yewu7/">Python Web 基础向（七）分布式锁</a>
-                </h2>
-                <div class="label">
-                    <div class="label-card">
-                        <i class="fa fa-calendar"></i>2018-07-12
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-
-                    <div class="label-card">
-                    
-
-
-<!-- <span class="point">•</span> -->
-<span class="categories">
-  <i class="fa fa-th-list"></i>
-  
-    
-        <a href="/category/#Python Web" title="Category: Python Web" rel="category">Python Web</a>
-    
-  
-
-  <!-- <span class="point">•</span> -->
-</span>
-
-
-                    </div>
-
-                    <div class="label-card">
-                    
-<!-- <span class="point">•</span> -->
-<span class="pageTag">
-  <i class="fa fa-tags"></i>
-  
-    
-        <a href="/tag/#redis" title="Tag: redis" rel="tag">redis</a>&nbsp;
-    
-        <a href="/tag/#分布式锁" title="Tag: 分布式锁" rel="tag">分布式锁</a>
-    
-  
-
-</span>
-
-                    </div>
-                </div>
-                <div class="excerpt">
-                    
-<p>当多个线程同时操作共享的内存数据时，为了解决线程安全问题，各语言都引入并发锁来确保同一时间只有一个线程会操作共享内存。而现在的大规模互联网应用一般采用分布式和集群来提高后端服务性能，同一个服务可能在不同的机器或容器中都存在实例，多线程中的并发锁也失去了意义，这时就引入了分布式锁的概念，当然它们的目的是相同的，都是为了限制同一时间内一个资源只能被一个请求操作，或者说某个方法只能被运行一次。</p>
-
-<p>目前业内实现分布式锁的方式主要有下面三种：</p>
-
-<ul>
-  <li>
-    <p>基于数据库的悲观锁乐观锁</p>
-  </li>
-  <li>
-    <p>基于redis的分布式事务锁</p>
-  </li>
-  <li>
-    <p>基于Zookeeper的节点锁</p>
-  </li>
-</ul>
-
-<p>其中redis简单易用，应用最广也较为稳定，本文主要介绍这种方式下的分布式锁。</p>
-
-
-                </div>
-                <div class="read-all">
-                    <a  href="/2018/07/12/yewu7/"><i class="fa fa-newspaper-o"></i>Read All</a>
-                </div>
-                <hr>
-              </li>
-            
-              <li>
-                <h2>
-                  <a class="post-link" href="/2018/04/20/yewu6/">Python Web 基础向（六） 查询</a>
-                </h2>
-                <div class="label">
-                    <div class="label-card">
-                        <i class="fa fa-calendar"></i>2018-04-20
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-
-                    <div class="label-card">
-                    
-
-
-<!-- <span class="point">•</span> -->
-<span class="categories">
-  <i class="fa fa-th-list"></i>
-  
-    
-        <a href="/category/#Python Web" title="Category: Python Web" rel="category">Python Web</a>
-    
-  
-
-  <!-- <span class="point">•</span> -->
-</span>
-
-
-                    </div>
-
-                    <div class="label-card">
-                    
-<!-- <span class="point">•</span> -->
-<span class="pageTag">
-  <i class="fa fa-tags"></i>
-  
-    
-        <a href="/tag/#ORM" title="Tag: ORM" rel="tag">ORM</a>&nbsp;
-    
-        <a href="/tag/#缓存" title="Tag: 缓存" rel="tag">缓存</a>
-    
-  
-
-</span>
-
-                    </div>
-                </div>
-                <div class="excerpt">
-                    
-<p>本篇文章将介绍实际业务中的查询场景。一般来说，这部分要做的只是从数据层调用查询方法获取数据并返回给api层。但在业务量不断上涨的过程中，可能会出现百万级以上的大规模数据查询场景，也可能会存在基础信息（用户账户信息等）被多个接口同时调用查询的场景，给DB造成很大压力。这时就需要考虑引入协程和缓存等方式来降低数据库IO。除此之外，还将介绍一些查询中经常碰到的一些场景的处理方法。</p>
-
-<p><img src="https://i.loli.net/2018/11/26/5bfc04705c3ce.png" alt="此处输入图片的描述" /></p>
-
-
-                </div>
-                <div class="read-all">
-                    <a  href="/2018/04/20/yewu6/"><i class="fa fa-newspaper-o"></i>Read All</a>
+                    <a  href="/2017/01/11/celery/"><i class="fa fa-newspaper-o"></i>Read All</a>
                 </div>
                 <hr>
               </li>
@@ -553,12 +192,12 @@
         <div class="pagination">
           
             <a href="/index.html" class="previous"><i class="fa fa-angle-double-left"></i></a>
-            <a href="/page2" class="previous"><i class="fa fa-angle-left"></i></a>
+            <a href="/page5" class="previous"><i class="fa fa-angle-left"></i></a>
           
-          <span class="page_number ">3/6</span>
+          <span class="page_number ">6/6</span>
           
-            <a href="/page4" class="next"><i class="fa fa-angle-right"></i></a>
-            <a href="/page6" class="next"><i class="fa fa-angle-double-right"></i></a>
+            <span class="next disable"><i class="fa fa-angle-right"></i></span>
+            <span class="next disable"><i class="fa fa-angle-double-right"></i></span>
           
         </div>
     </div>

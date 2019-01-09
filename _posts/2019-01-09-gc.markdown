@@ -1,0 +1,177 @@
+---
+layout: post
+category: "Java"
+title:  "JVM基础 GC及内存分配"
+tags: [Java, JVM, GC]
+---
+
+* content
+{:toc}
+
+![](https://picsum.photos/800/300/?image=328)
+JVM的内存分配与垃圾回收是老生常谈的话题了，这里先对GC涉及的知识进行整理，主要内容有JVM内存布局、GC算法、垃圾回收器以及JVM的内存分配。
+
+
+
+
+## 内存布局
+JVM将运行时内存划分为下面几个部分：
++ **程序计数器(PC Register)**：用于线程轮转切换并分配CPU时间
++ **虚拟机栈(Java Virtual Machine Stacks)**：Java方法执行的栈帧，包含以下内容
+    - 局部变量表（基本数据类型和引用类型）
+    - 操作数栈（入栈出栈）
+    - 动态链接
+    - 方法出口
++ **本地方法栈(Native Method Stacks)**：与虚拟机栈类似，为Native方法服务
++ **堆(Heap)**：储存几乎所有实例化的对象，根据对象生命周期划分为
+    - **新生代 Young**：包括eden、from survivor、to survivor
+    - **老年代 Tenured**
++ **方法区(Method Area)**：保存类信息、常量、静态变量、编译后的代码，在Java8之前，这块区域也称为永久代(permanent generation)
+    - **运行时常量池(Runtime Constant Pool)**也属于该区域
+
+>复习：运行时常量池(Runtime Constant Pool)指的是在编译期被确定，并被保存在已编译的.class文件中的一些数据。它包括了关于类、方法、接口等中的常量，也包括字符串常量。
+>存在于.class文件中的常量池，在运行期被JVM装载，并且可以扩充。String的intern()方法就是扩充常量池的一个方法；当一个String实例str调用intern()方法时，Java查找常量池中是否有相同Unicode的字符串常量，如果有，则返回其的引用，如果没有，则在常量池中增加一个Unicode等于str的字符串并返回它的引用；
+
+其中，PC Register、JVM Stacks与Native Methods Stacks为线程私有，生命周期与线程相同，没有垃圾回收的必要。而Heap和Method Area为线程共享，需要进行垃圾回收。
+
+![](https://i.loli.net/2019/01/09/5c35f4b48c12f.png)
+
+## 垃圾标记
+
+进行垃圾回收首先需要判断哪些对象还「活着」，哪些对象已经「死了」，也就是垃圾标记。
+
+JVM采用**根搜索算法(GC Roots Tracing)**来判定对象是否还存活，从**GC Root**作为起点进行搜索，搜索走过的路径称作**引用链(Reference Chain)**，当一个对象到GC Root没有任何引用链相连，即**从GC Root到这个对象不可达**，则证明此对象不存活。
+
+### GC Root
+- 虚拟机栈中引用的对象
+- 方法区中类静态变量引用的对象
+- 方法区中常量引用的对象
+- 本地方法栈中JNI（也就是一般说的Native方法）引用的对象
+
+### 对象引用
+JVM中对对象的引用分为四种，不同引用下的对象的GC时机也不同。
+- **强引用 Obj obj = new Obj()** 只要强引用在，垃圾回收器就不会对对象进行回收
+- **软引用 SoftReference** 对象一般还有用，但非必需，系统发生内存溢出异常之前垃圾回收器对其进行回收，如果回收之后还是没有足够的内存，才会抛出异常
+- **弱引用 WeakReference** 同样非必需，无论内存是否足够，垃圾回收器都会回收只被弱引用的对象
+- **虚引用 PhantomReference** 无法通过虚引用获得一个对象，虚引用不对对象的生存周期产生任何影响
+
+### finalize
+通过根搜索算法宣告一个对象死亡至少要经历两次标记过程，第一次将判断是否有必要执行对象的`finalize`方法，如果有必要执行`finalize`方法，对象将被加入`F-Queue`队列中等待一个低优先级的线程执行，判断条件如下：
+- 对象重写过此方法
+- 此方法之前没有被调用过
+
+对象在`finalize`方法中通过将自身与引用链上的任意一个对象建立关联即可拯救自己，但`finalize`方法只会被虚拟机调用一次，第二次垃圾回收器将回收此对象。此方法带有极大的不确定性，强烈不推荐重写任何对象的`finalize`方法。
+
+## 垃圾回收算法
+
+### 标记-清除算法 Mark-Sweep
+JVM直接将标记好的垃圾回收，具体方法是维护一个`free-list`，里面存放着所有被标记为垃圾的内存地址，下次分配内存时直接使用`free-list`里的地址。
+
+此方法有两个问题
+- 效率问题 标记和清除的效率都不高
+- 空间问题 大量不连续的内存碎片
+
+### 标记-整理算法 Mark-Compact
+标记出需要清除的对象，让所有的对象都向一端移动，最后清理端边界以外的区域。Compact算法解决了Sweep算法的内存碎片问题，使得创建新对象的成本降低。
+![](https://i.loli.net/2019/01/09/5c35fef4622b7.png)
+
+### 复制算法 Copy
+将可用内存划分为大小相等的两块，每次回收时将活着的对象复制到另一块内存上，并将之前的内存整块清除。由于复制和标记可以同时进行，此方法的效率较高，不过存在缺点就是会浪费额外的空间。
+
+Hotspot虚拟机采用此算法回收新生代，将新生代内存按8:1:1（默认）划分为Eden和两块Survivor，每次垃圾回收都会Eden和一块Survivor上活着的对象复制到另一块Survivor上。
+- **分配担保机制**：若Survivor内存不足以存放活着的对象，多出来的部分将直接进入老年代。
+
+### 分代收集
+实际上，JVM会根据对象的生命周期将内存划分为几个区域，每个区域的垃圾回收采用不同的算法
+- 新生代：对象存活率低，采用复制算法
+- 老年代：对象存活率较高，采用标记清除/整理算法
+
+## 垃圾回收器
+
+GC使用手册上给出了Java8可用的GC组合，一般常用的为表中加粗的四种组合，分别为Serial、Parallel、SMS和G1，其中G1回收器不区分新生代与老年代。
+
+| Young | Tenured | JVM options |
+| ------ | ------ | ------ |
+| Incremental | Incremental | -Xincgc |
+| **Serial** | **Serial** | **-XX:+UseSerialGC** |
+| Parallel Scavenge | Serial | -XX:+UseParallelGC -XX:-UseParallelOldGC |
+| Parallel New | Serial | N/A |
+| Serial  | Parallel Old | N/A |
+| **Parallel Scavenge** | **Parallel Old** | **-XX:+UseParallelGC -XX:+UseParallelOldGC** |
+| Parallel New | Parallel Old | N/A |
+| Serial | CMS | -XX:-UseParNewGC -XX:+UseConcMarkSweepGC |
+| Parallel Scavenge | CMS | N/A |
+| **Par New** | **CMS** | **-XX:+UseParNewGC -XX:+UseConcMarkSweepGC** |
+| **G1** | | **-XX:+UseG1GC** |
+
+### Serial GC
+最古老的垃圾回收器，也是client模式下的默认回收器，GC时会**stop the world**（后面简写为STW）。
+- **Serial**：新生代，单线程，Copy算法
+- **Serial Old**：老年代，单线程，Mark-Compact算法
+
+### Parallel GC
+Serial的多线程版本，同样会**stop the world**，优势是可以达到可控制的吞吐量。
+- **Parallel Scavenge**：新生代，多线程，Copy算法
+- **Parallel Old**：老年代，多线程，Mark-Compact算法
+
+可以通过设置参数来控制吞吐量：
+- `-XX:MaxGCPauseMillis`：最大垃圾回收时间
+- `-XX:GCTimeRatio`：垃圾回收时间占总时间比例
+
+### CMS GC
+是Server模式下最常用的垃圾回收器组合，设计初衷是为了缩短GC时间。
+- **Par New**：新生代，多线程，Copy算法，STW
+- **CMS（Concurrent Mark Sweep）**：老年代，并发
+
+CMS在进行老年代GC时分下面几个步骤进行，这也是CMS能够在短时间内进行Full GC的原因：
+- **初始标记 Initial Mark**：标记跟GC Root**直接关联**的对象为live，具体方式为扫描新生代，标记新生代对象和GC Root本身，这一阶段是**STW**的。
+- **并发标记 Concurrent Mark**：从第一阶段标记到的对象开始扫描整个堆，标记所有的live-object，与用户线程并发进行。
+- **并发预清理 Preclean**：与下一步重标记工作相同，是非STW的，为了缩短重标记时间。这里标记的对象为**新生代晋升的对象、新分配到老年代的对象和在并发标记过程中被修改的对象**。
+- **重新标记 Remark**：重新修正live-object，**STW**。
+- **并发清除 Concurrent Sweep**：Mark-Sweep回收空间，方式为将dead-object的地址放入`free-list`，与用户线程并发进行。
+- **重置 Resetting**：收尾重置，为下一次GC做准备。
+
+CMS也存在很多问题：
+- CMS的Concurrent机制会与用户线程竞争CPU资源，CMS的默认线程时**(CPU核数+3)/4**，当CPU核数大于4时会占用至少25%的CPU资源。
+- CMS无法处理在并发清除时产生的**浮动垃圾**，必须为这些垃圾预留空间。因此CMS不能在老年代满了再进行GC，它有一个阈值，由`-XX:CMSInitiatingOccupancyFraction`参数设置。
+- Sweep会产生大量内存碎片，导致内存使用效率不高。CMS默认开启`-XX:+UseCMSCompactAtFullCollection`参数，在进行Full GC时进行碎片整理，是STW的。
+
+### G1 GC
+G1是一个基于Mark-Compact算法的收集器，可以非常精准的控制停顿时间，它将整个堆划分为多个（通常是2048）大小独立的固定区域（Region），跟踪每个区域的垃圾堆积程度。在后台维护一个优先列表，每次根据允许的收集时间回收垃圾最多的区域。
+
+## 内存分配
+JVM不同区域的内存大小由下面的参数确定：
+- `-Xms`：Heap的初始尺寸（最小尺寸）
+- `-Xmx`：Heap的最大尺寸
+- `-Xmn`：新生代的大小（一般为Heap大小的3/8）
+- `-XX:SurvivorRatio`：新生代中Eden与Survior的比例
+
+GC分为两个部分：
+- **minor GC**：新生代的Eden区满了就会触发minor GC
+- **major/full GC**：如果采用了CMS回收器，会在老年代内存使用达到一定值时就进行full GC
+> major GC与full GC的区别在于major GC只针对老年代内存的回收，而full GC是针对整个heap区的回收
+
+JVM为新对象进行内存分配时有以下规则：
+- **对象优先分配在Eden区**，如果Eden已经没有足够的内存进行分配，触发一次minor GC
+- **需要大量连续空间的Java对象直接分配在老年代**
+- **长期存活的对象晋升至老年代**，JVM为每个对象维护了一个Age计数器，年龄增加到一定程度就会进入老年代
+- **对象担保机制**：判断每次minor GC后会进入Tenured大小的平均值是否大于Tenured可用空间，如果大于则直接full GC，如果小于再判断是否允许**担保失败**，若允许担保失败只进行minor GC，否则进行full GC
+
+
+涉及到的参数：
+
+- `-XX:PretenureSizeThreshold`：确定超过多大的对象分配在Tenured，默认是0，即全部分配在Eden
+- `-XX:MaxTenuringThreshold`确定超过多少年龄会晋升老年代，默认15
+- `-XX:HandlePromotionFailure`确定是否允许担保失败，一般会打开
+
+
+(End)
+
+> 参考资料
+> - [GC使用手册](https://plumbr.io/handbook/garbage-collection-algorithms-implementations#parallel-minor-gc)
+> - 《深入理解Java虚拟机》
+
+
+
+
+
