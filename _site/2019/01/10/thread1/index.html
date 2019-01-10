@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Java并发编程 线程同步机制</title>
+    <meta name="description" content="对Java在并发环境下线程安全的实现方式做点笔记。">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2019/01/10/thread1/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>Java并发编程 线程同步机制</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2019-01-10
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Java" title="Category: Java" rel="category">Java</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a-->
+        <a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a>&nbsp;
+    
+        <!--a href="/tag/#%E5%A4%9A%E7%BA%BF%E7%A8%8B" title="Tag: 多线程" rel="tag">多线程</a-->
+        <a href="/tag/#多线程" title="Tag: 多线程" rel="tag">多线程</a>&nbsp;
+    
+        <!--a href="/tag/#%E5%B9%B6%E5%8F%91" title="Tag: 并发" rel="tag">并发</a-->
+        <a href="/tag/#并发" title="Tag: 并发" rel="tag">并发</a>&nbsp;
+    
+        <!--a href="/tag/#%E7%AC%94%E8%AE%B0" title="Tag: 笔记" rel="tag">笔记</a-->
+        <a href="/tag/#笔记" title="Tag: 笔记" rel="tag">笔记</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#基础知识" id="markdown-toc-基础知识">基础知识</a>    <ul>
+      <li><a href="#线程生命周期" id="markdown-toc-线程生命周期">线程生命周期</a></li>
+      <li><a href="#竞态" id="markdown-toc-竞态">竞态</a></li>
+      <li><a href="#线程安全" id="markdown-toc-线程安全">线程安全</a>        <ul>
+          <li><a href="#原子性-atomic" id="markdown-toc-原子性-atomic"><strong>原子性 Atomic</strong></a></li>
+          <li><a href="#可见性-visibility" id="markdown-toc-可见性-visibility"><strong>可见性 Visibility</strong></a></li>
+          <li><a href="#有序性-odering" id="markdown-toc-有序性-odering"><strong>有序性 Odering</strong></a></li>
+        </ul>
+      </li>
+      <li><a href="#上下文切换" id="markdown-toc-上下文切换">上下文切换</a></li>
+    </ul>
+  </li>
+  <li><a href="#java的线程同步机制" id="markdown-toc-java的线程同步机制">Java的线程同步机制</a>    <ul>
+      <li><a href="#锁-lock" id="markdown-toc-锁-lock">锁 Lock</a></li>
+      <li><a href="#volatile" id="markdown-toc-volatile">volatile</a></li>
+      <li><a href="#cas" id="markdown-toc-cas">CAS</a></li>
+      <li><a href="#安全发布" id="markdown-toc-安全发布">安全发布</a></li>
+    </ul>
+  </li>
+</ul>
+
+<p><img src="https://picsum.photos/800/300/?image=1047" alt="" />
+对Java在并发环境下线程安全的实现方式做点笔记。</p>
+
+<h2 id="基础知识">基础知识</h2>
+<p>先介绍一些Java线程相关的基础概念</p>
+
+<h3 id="线程生命周期">线程生命周期</h3>
+
+<p>Java中线程也是一个对象，由<code class="highlighter-rouge">Thread</code>类创建，其状态<code class="highlighter-rouge">STATE</code>有：</p>
+<ul>
+  <li><strong>NEW</strong> 已创建未启动</li>
+  <li><strong>RUNABLE</strong>：已获得CPU资源（RUNNING）和可被CPU调度（READY）状态</li>
+  <li><strong>BLOCKED</strong>：阻塞状态，进行I/O调用和请求被其他线程占有的锁</li>
+  <li><strong>WAITING</strong>：等待其他线程特定的操作</li>
+  <li><strong>TIMED_WATING</strong>：并非无限制等待，到达一定时间后变为RUNABLE状态</li>
+  <li><strong>TERMINATED</strong>：终止</li>
+</ul>
+
+<p>线程生命周期如下：
+<img src="https://i.loli.net/2019/01/10/5c3745b60784c.png" alt="" /></p>
+
+<h3 id="竞态">竞态</h3>
+<p><strong>相同输入得不到相同输入，计算结果与时间有关的状态即为竞态。</strong></p>
+
+<p>竞态产生的原因一般是<strong>多个线程在不加控制的条件下并发更新、读取了同一个共享变量</strong>，引发竞态的模式主要有两种：</p>
+<ul>
+  <li>read-and-modify</li>
+  <li>check-then-action</li>
+</ul>
+
+<h3 id="线程安全">线程安全</h3>
+<p><strong>一个类在单线程下运行正常，在多线程环境下也能运行正常，</strong>就称这个类是线程安全的。如果一个类是线程安全的，就不会引发竞态。标准库中一些常见的类都不是线程安全的，如<code class="highlighter-rouge">ArrayList</code>、<code class="highlighter-rouge">HashMap</code>、<code class="highlighter-rouge">SimpleDateFormat</code>。</p>
+
+<p>线程安全需要保证三个条件：原子性、可见性和有序性。</p>
+
+<h5 id="原子性-atomic"><strong>原子性 Atomic</strong></h5>
+<p>线程读写某个变量的操作，从其他线程看不存在中间状态，要么执行发生，要么未发生，就称其满足原子性。</p>
+
+<p>Java原子性的方式主要是：</p>
+<ul>
+  <li>锁（指代码中的锁，也叫软件锁）</li>
+  <li>CAS（硬件锁）</li>
+</ul>
+
+<blockquote>
+  <p>Java中对基本类型的写操作，除了long和double外都是原子性的。</p>
+</blockquote>
+
+<h5 id="可见性-visibility"><strong>可见性 Visibility</strong></h5>
+<p>线程对共享变量的更新对其他线程可见，即其他线程在线程更新之后立即可以读到最新值，就称其满足可见性。</p>
+
+<p>下面两个问题会影响可见性：</p>
+<ul>
+  <li>编译优化，如将<code class="highlighter-rouge">while</code>循环内的判断优化至循环外。</li>
+  <li>计算机存储结构，处理器会缓存一些变量的更新。</li>
+</ul>
+
+<blockquote>
+  <p>CPU有自己的缓存单元，包括寄存器 Registerr，高速缓存 Cache，写缓冲器 Store Buffer，无效化队列 Invalidate Queue</p>
+</blockquote>
+
+<p>Java的一些同步机制会使CPU缓存同步，即使CPU可以读到另一个CPU上的缓存：</p>
+<ul>
+  <li><strong>写线程冲刷处理器缓存</strong>：更新一个变量后使处理器对变量的修改写入Cache或RAM中，而不是停留在Store Cache</li>
+  <li><strong>读线程刷新处理器缓存</strong>：读取一个变量的值时，如果其他处理器已经更新，需要进行缓存同步</li>
+</ul>
+
+<h5 id="有序性-odering"><strong>有序性 Odering</strong></h5>
+<p>线程执行的内存访问操作在其他线程看来没有发生变化，就称其满足有序性。<strong>重排序</strong>会影响有序性。</p>
+
+<h3 id="上下文切换">上下文切换</h3>
+<p>一个线程被暂停，另一个线程获取CPU控制权的过程，称作上下文切换。切换过程包括<strong>线程切出 Switch out</strong>和<strong>线程切入 Switch in</strong>。</p>
+
+<p>线程在进行上下文切换时需要在<strong>内存</strong>中读取或保存自己的运行状态，包括<strong>通用寄存器</strong>的内容和<strong>程序计数器</strong>的内容。</p>
+
+<p>上下文切换可分为两种方式：</p>
+<ul>
+  <li><strong>自发性上下文切换</strong>：线程主动让出CPU控制权，如调用<code class="highlighter-rouge">wait</code>/<code class="highlighter-rouge">sleep</code>/<code class="highlighter-rouge">yield</code>/<code class="highlighter-rouge">join</code>/<code class="highlighter-rouge">park</code>、进行I/O操作或请求其他线程持有的锁。</li>
+  <li><strong>非自发性上下文切换</strong>：线程的CPU时间片耗尽或被其他高优先级线程（如GC）夺取CPU控制权。</li>
+</ul>
+
+<p>上下文切换时有开销的：</p>
+<ul>
+  <li>直接开销：<strong>CPU调度</strong>的开销和<strong>保存/恢复上下文</strong>的开销。</li>
+  <li>间接开销：高速缓存重新加载和高速缓存被冲刷（Flush到二级缓冲）。</li>
+</ul>
+
+<h2 id="java的线程同步机制">Java的线程同步机制</h2>
+<p>每种同步机制需要分析其是否满足原子性、可见性和有序性，是否存在上下文切换开销。</p>
+
+<h3 id="锁-lock">锁 Lock</h3>
+<p>Java中锁的实现有两种</p>
+<ul>
+  <li>内部锁：<code class="highlighter-rouge">synchronize</code>关键字</li>
+  <li>显式锁：<code class="highlighter-rouge">java.concurrent.locks.Lock</code>接口的实现类</li>
+</ul>
+
+<p>用锁实现线程同步可以满足原子性、可见性、有序性，存在上下文开销</p>
+<ul>
+  <li>原子性：被锁同步的代码块称作<strong>临界区</strong>，同一时间只有一个线程可以访问临界区。</li>
+  <li>可见性：Java中获得锁（Acquire）刷新处理器缓存，释放锁（Release）会冲刷处理器缓存。</li>
+  <li>有序性：临界区内的指令不会被重排序到临界区外。</li>
+  <li>上下文切换开销：请求被其他线程持有的锁会发生上下文切换。</li>
+</ul>
+
+<h3 id="volatile">volatile</h3>
+<p>用<code class="highlighter-rouge">volatile</code>修饰的变量满足可见性、有序性和写操作的原子性，但不具有计算的原子性，不存在上下文切换。</p>
+<ul>
+  <li>可见性：变量不会被缓存在Store Cache中，即写操作之后会冲刷处理器缓存，读操作之前会刷新处理器缓存。</li>
+  <li>有序性：编译器不会对该变量上的操作与其他内存操作进行重排序。</li>
+  <li>原子性：不具有自增等计算的原子性</li>
+</ul>
+
+<h3 id="cas">CAS</h3>
+<p><code class="highlighter-rouge">java.util.concurrent.atomic</code>中的原子类借助CAS实现了可见性和原子性，它的计算实现基于一种乐观锁的思想：<strong>执行某种操作，如果不成功就一直执行直到成功为止</strong>。这里借助一段源码加强理解。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kt">int</span> <span class="nf">getAndAddInt</span><span class="o">(</span><span class="n">Object</span> <span class="n">var1</span><span class="o">,</span> <span class="kt">long</span> <span class="n">var2</span><span class="o">,</span> <span class="kt">int</span> <span class="n">var4</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kt">int</span> <span class="n">var5</span><span class="o">;</span>
+    <span class="k">do</span> <span class="o">{</span>
+        <span class="n">var5</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">getIntVolatile</span><span class="o">(</span><span class="n">var1</span><span class="o">,</span> <span class="n">var2</span><span class="o">);</span>
+    <span class="o">}</span> <span class="k">while</span><span class="o">(!</span><span class="k">this</span><span class="o">.</span><span class="na">compareAndSwapInt</span><span class="o">(</span><span class="n">var1</span><span class="o">,</span> <span class="n">var2</span><span class="o">,</span> <span class="n">var5</span><span class="o">,</span> <span class="n">var5</span> <span class="o">+</span> <span class="n">var4</span><span class="o">));</span>
+
+    <span class="k">return</span> <span class="n">var5</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>CAS的问题是<code class="highlighter-rouge">ABA</code>问题，可以借助<code class="highlighter-rouge">AtomicStampedReference</code>类解决。</p>
+
+<h3 id="安全发布">安全发布</h3>
+<p>安全发布一个对象有以下几种方式：</p>
+<ul>
+  <li>在静态初始化函数中初始化一个对象的引用<code class="highlighter-rouge">static</code></li>
+  <li>将某个对象的引用保存在<code class="highlighter-rouge">volatile</code>类型的域或<code class="highlighter-rouge">AtomicReference</code>对象中</li>
+  <li>将对象的引用保存在正确构造对象的<code class="highlighter-rouge">final</code>类型的域中</li>
+  <li>将对象的引用保存在由锁保护的域中</li>
+</ul>
+
+<p>(End)</p>
+
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/09/gc/">JVM基础 GC及内存分配
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+        
+            </ul>
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2019/01/09/gc/">JVM基础 GC及内存分配</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2019/01/10/thread1/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2019/01/10/thread1/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>

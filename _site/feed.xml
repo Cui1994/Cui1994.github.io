@@ -5,9 +5,33 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Thu, 10 Jan 2019 00:32:30 +0800</pubDate>
-    <lastBuildDate>Thu, 10 Jan 2019 00:32:30 +0800</lastBuildDate>
+    <pubDate>Fri, 11 Jan 2019 00:02:39 +0800</pubDate>
+    <lastBuildDate>Fri, 11 Jan 2019 00:02:39 +0800</lastBuildDate>
     <generator>Jekyll v3.8.4</generator>
+    
+      <item>
+        <title>Java并发编程 线程同步机制</title>
+        <description>
+&lt;img src=&quot;https://picsum.photos/800/300/?image=1047&quot; alt=&quot;&quot; /&gt;
+对Java在并发环境下线程安全的实现方式做点笔记。
+
+</description>
+        <pubDate>Thu, 10 Jan 2019 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2019/01/10/thread1/</link>
+        <guid isPermaLink="true">http://localhost:4000/2019/01/10/thread1/</guid>
+        
+        <category>Java</category>
+        
+        <category>多线程</category>
+        
+        <category>并发</category>
+        
+        <category>笔记</category>
+        
+        
+        <category>Java</category>
+        
+      </item>
     
       <item>
         <title>JVM基础 GC及内存分配</title>
@@ -220,30 +244,6 @@ Gunicorn是一个实现了WSGI协议的HTTP Server，它采用了Pre-fork worker
         
         
         <category>Python</category>
-        
-      </item>
-    
-      <item>
-        <title>Linux基础（三）进程</title>
-        <description>
-&lt;img src=&quot;https://i.loli.net/2018/12/12/5c110d5c1ea0c.jpeg&quot; alt=&quot;&quot; /&gt;
-
-&lt;blockquote&gt;
-  该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
-书中的编程练习这里不做展示和说明。
-&lt;/blockquote&gt;
-
-</description>
-        <pubDate>Tue, 11 Dec 2018 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2018/12/11/linux3/</link>
-        <guid isPermaLink="true">http://localhost:4000/2018/12/11/linux3/</guid>
-        
-        <category>Linux</category>
-        
-        <category>读书笔记</category>
-        
-        
-        <category>Linux</category>
         
       </item>
     
