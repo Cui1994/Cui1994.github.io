@@ -5,9 +5,33 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Fri, 11 Jan 2019 00:02:39 +0800</pubDate>
-    <lastBuildDate>Fri, 11 Jan 2019 00:02:39 +0800</lastBuildDate>
+    <pubDate>Tue, 15 Jan 2019 00:03:01 +0800</pubDate>
+    <lastBuildDate>Tue, 15 Jan 2019 00:03:01 +0800</lastBuildDate>
     <generator>Jekyll v3.8.4</generator>
+    
+      <item>
+        <title>Java核心类库学习（一） 线程池</title>
+        <description>
+&lt;img src=&quot;https://picsum.photos/800/300/?image=1010&quot; alt=&quot;&quot; /&gt;
+这系列文章会对Java的一些核心类库实现做点笔记，本篇学习的是线程池相关实现。
+
+</description>
+        <pubDate>Mon, 14 Jan 2019 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2019/01/14/excutors/</link>
+        <guid isPermaLink="true">http://localhost:4000/2019/01/14/excutors/</guid>
+        
+        <category>Java</category>
+        
+        <category>Executors</category>
+        
+        <category>线程</category>
+        
+        <category>源码</category>
+        
+        
+        <category>Java</category>
+        
+      </item>
     
       <item>
         <title>Java并发编程 线程同步机制</title>
@@ -221,29 +245,6 @@ JVM的内存分配与垃圾回收是老生常谈的话题了，这里先对GC涉
         
         
         <category>Linux</category>
-        
-      </item>
-    
-      <item>
-        <title>Gunicorn源码阅读(一) WSGI协议与启动流程</title>
-        <description>
-&lt;img src=&quot;https://picsum.photos/800/300/?image=61&quot; alt=&quot;&quot; /&gt;
-
-Gunicorn是一个实现了WSGI协议的HTTP Server，它采用了Pre-fork worker的进程模型，通过一个master进程fork一系列子进程来响应请求，master进程负责创建和管理这些子进程，而子进程则专注于处理客户端请求。为了适应不同的业务场景，Gunicorn也提供了不同的worker type，分别是sync、gthread、eventlet、gevent和tornado。
-
-</description>
-        <pubDate>Wed, 19 Dec 2018 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2018/12/19/gunicorn1/</link>
-        <guid isPermaLink="true">http://localhost:4000/2018/12/19/gunicorn1/</guid>
-        
-        <category>Gunicorn</category>
-        
-        <category>Python</category>
-        
-        <category>Web</category>
-        
-        
-        <category>Python</category>
         
       </item>
     

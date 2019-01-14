@@ -19,6 +19,8 @@ type: page
 
 * [《领域驱动设计》](https://book.douban.com/subject/26819666/)
 
+*
+
 ## 博文
 
 * [进击的Java新人系列](https://zhuanlan.zhihu.com/p/24393775?refer=hinus)
@@ -43,6 +45,8 @@ type: page
 ## 问题
 
 * [git push 卡住不动的问题 Git push hangs on POST git-receive-pack](https://stackoverflow.com/questions/10790232/hanging-at-post-git-receive-pack-chunked)
+
+* [安装独立MAT及在MAC下运行报错的问题](https://mahl1990.iteye.com/blog/2410197)
 
 
 ## Comments

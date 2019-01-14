@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Java核心类库学习（一） 线程池</title>
+    <meta name="description" content="这系列文章会对Java的一些核心类库实现做点笔记，本篇学习的是线程池相关实现。">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2019/01/14/excutors/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>Java核心类库学习（一） 线程池</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2019-01-14
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Java" title="Category: Java" rel="category">Java</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a-->
+        <a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a>&nbsp;
+    
+        <!--a href="/tag/#Executors" title="Tag: Executors" rel="tag">Executors</a-->
+        <a href="/tag/#Executors" title="Tag: Executors" rel="tag">Executors</a>&nbsp;
+    
+        <!--a href="/tag/#%E7%BA%BF%E7%A8%8B" title="Tag: 线程" rel="tag">线程</a-->
+        <a href="/tag/#线程" title="Tag: 线程" rel="tag">线程</a>&nbsp;
+    
+        <!--a href="/tag/#%E6%BA%90%E7%A0%81" title="Tag: 源码" rel="tag">源码</a-->
+        <a href="/tag/#源码" title="Tag: 源码" rel="tag">源码</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#接口和抽象类" id="markdown-toc-接口和抽象类">接口和抽象类</a>    <ul>
+      <li><a href="#线程池相关" id="markdown-toc-线程池相关">线程池相关</a></li>
+      <li><a href="#任务相关" id="markdown-toc-任务相关">任务相关</a></li>
+      <li><a href="#future" id="markdown-toc-future">Future</a></li>
+      <li><a href="#threadfactory" id="markdown-toc-threadfactory">ThreadFactory</a></li>
+    </ul>
+  </li>
+  <li><a href="#threadpoolexecutor" id="markdown-toc-threadpoolexecutor">ThreadPoolExecutor</a>    <ul>
+      <li><a href="#几个关键的内部变量" id="markdown-toc-几个关键的内部变量">几个关键的内部变量</a>        <ul>
+          <li><a href="#状态位" id="markdown-toc-状态位">状态位</a></li>
+          <li><a href="#任务队列" id="markdown-toc-任务队列">任务队列</a></li>
+          <li><a href="#工作线程集合" id="markdown-toc-工作线程集合">工作线程集合</a></li>
+          <li><a href="#任务拒绝handler" id="markdown-toc-任务拒绝handler">任务拒绝Handler</a></li>
+          <li><a href="#线程数目" id="markdown-toc-线程数目">线程数目</a></li>
+          <li><a href="#线程超时时间" id="markdown-toc-线程超时时间">线程超时时间</a></li>
+        </ul>
+      </li>
+      <li><a href="#几个关键方法" id="markdown-toc-几个关键方法">几个关键方法</a>        <ul>
+          <li><a href="#execute" id="markdown-toc-execute">execute</a></li>
+          <li><a href="#addworker" id="markdown-toc-addworker">addWorker</a></li>
+          <li><a href="#runworker" id="markdown-toc-runworker">runWorker</a></li>
+          <li><a href="#gettask" id="markdown-toc-gettask">getTask</a></li>
+          <li><a href="#shutdown和shutdownnow" id="markdown-toc-shutdown和shutdownnow">shutdown和shutdownNow</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><a href="#executors中的几种常见的线程池" id="markdown-toc-executors中的几种常见的线程池">Executors中的几种常见的线程池</a>    <ul>
+      <li><a href="#fixedthreadpool" id="markdown-toc-fixedthreadpool">FixedThreadPool</a></li>
+      <li><a href="#singlethreadexecutor" id="markdown-toc-singlethreadexecutor">SingleThreadExecutor</a></li>
+      <li><a href="#cachedthreadpool" id="markdown-toc-cachedthreadpool">CachedThreadPool</a></li>
+      <li><a href="#scheduledthreadpool" id="markdown-toc-scheduledthreadpool">ScheduledThreadPool</a></li>
+      <li><a href="#阿里java开发文档不允许使用executors创建线程池" id="markdown-toc-阿里java开发文档不允许使用executors创建线程池">阿里Java开发文档不允许使用Executors创建线程池</a></li>
+    </ul>
+  </li>
+</ul>
+
+<p><img src="https://picsum.photos/800/300/?image=1010" alt="" />
+这系列文章会对Java的一些核心类库实现做点笔记，本篇学习的是线程池相关实现。</p>
+
+<h2 id="接口和抽象类">接口和抽象类</h2>
+
+<h3 id="线程池相关">线程池相关</h3>
+<ul>
+  <li><code class="highlighter-rouge">Executor</code>：是一个抽象层面的核心接口
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Executor</span> <span class="o">{</span>
+  <span class="kt">void</span> <span class="nf">execute</span><span class="o">(</span><span class="n">Runnable</span> <span class="n">command</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+  <li><code class="highlighter-rouge">ExecutorService</code>：线程池的抽象接口，继承了<code class="highlighter-rouge">Executor</code>并对其进行扩展，提供了一些线程池管理的方法，并引入了<code class="highlighter-rouge">Future</code>对象，不但能执行<code class="highlighter-rouge">Runnable</code>对象，也可以执行<code class="highlighter-rouge">Callable</code>对象。
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">ExecutorService</span> <span class="kd">extends</span> <span class="n">Executor</span> <span class="o">{</span>
+  <span class="kt">void</span> <span class="nf">shutdown</span><span class="o">();</span>
+  <span class="n">List</span><span class="o">&lt;</span><span class="n">Runnable</span><span class="o">&gt;</span> <span class="nf">shutdownNow</span><span class="o">();</span>
+  <span class="kt">boolean</span> <span class="nf">awaitTermination</span><span class="o">(</span><span class="kt">long</span> <span class="n">timeout</span><span class="o">,</span> <span class="n">TimeUnit</span> <span class="n">unit</span><span class="o">);</span>
+  <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">Future</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="nf">submit</span><span class="o">(</span><span class="n">Callable</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">task</span><span class="o">);</span>
+  <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">Future</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="nf">submit</span><span class="o">(</span><span class="n">Runnable</span> <span class="n">task</span><span class="o">,</span> <span class="n">T</span> <span class="n">result</span><span class="o">);</span>
+  <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">Future</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="nf">invokeAll</span><span class="o">(</span><span class="n">Collection</span><span class="o">&lt;?</span> <span class="kd">extends</span> <span class="n">Callable</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="n">tasks</span><span class="o">);</span>
+  <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">invokeAny</span><span class="o">(</span><span class="n">Collection</span><span class="o">&lt;?</span> <span class="kd">extends</span> <span class="n">Callable</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="n">tasks</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+  <li><code class="highlighter-rouge">AbstractExecutorService</code>：<code class="highlighter-rouge">ExecutorService</code>的抽象实现类，实现了<code class="highlighter-rouge">invokeAll</code>和<code class="highlighter-rouge">invokeAny</code>方法。</li>
+  <li><code class="highlighter-rouge">ThreadPoolExecutor</code>：继承自<code class="highlighter-rouge">AbstractExecutorService</code>，<code class="highlighter-rouge">ExecutorService</code>的主要实现类。</li>
+  <li><code class="highlighter-rouge">ForkJoinPool</code>：采用分治和work-stealing的思想对大任务进行拆分，并行执行，合理利用CPU资源，<code class="highlighter-rouge">ExecutorService</code>的另一个实现。</li>
+  <li><code class="highlighter-rouge">Executors</code>：一个工具类，提供不同的工厂方法来创建不同的线程池，如<code class="highlighter-rouge">FixedThreadPool</code>、<code class="highlighter-rouge">SingleThreadExecutor</code>、<code class="highlighter-rouge">ScheduledThreadPool</code>和<code class="highlighter-rouge">CacheThreadExecutor</code>，类似于<code class="highlighter-rouge">Collections</code>。</li>
+</ul>
+
+<h3 id="任务相关">任务相关</h3>
+<p>均为<strong>函数式接口Functional Interface</strong>，即只存在一个抽象方法</p>
+<ul>
+  <li><code class="highlighter-rouge">Runable</code>
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@FunctionalInterface</span>
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Runnable</span> <span class="o">{</span>
+  <span class="kd">public</span> <span class="kd">abstract</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+  <li><code class="highlighter-rouge">Callable</code>：配合<code class="highlighter-rouge">ExecutorService</code>使用，存在返回值。
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@FunctionalInterface</span>
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Callable</span><span class="o">&lt;</span><span class="n">V</span><span class="o">&gt;</span> <span class="o">{</span>
+  <span class="n">V</span> <span class="nf">call</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">Exception</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<h3 id="future">Future</h3>
+<ul>
+  <li><code class="highlighter-rouge">Future</code>：抽象接口，对特定的<code class="highlighter-rouge">Runable</code>或<code class="highlighter-rouge">Callable</code>任务进行取消、查询执行结果、查询是否完成等操作。其中<code class="highlighter-rouge">get()</code>方法会阻塞直到任务返回结果。
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Future</span><span class="o">&lt;</span><span class="n">V</span><span class="o">&gt;</span> <span class="o">{</span>
+  <span class="kt">boolean</span> <span class="nf">cancel</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">mayInterruptIfRunning</span><span class="o">);</span> <span class="c1">// 参数指定是否打断任务执行</span>
+  <span class="kt">boolean</span> <span class="nf">isCancelled</span><span class="o">();</span>
+  <span class="kt">boolean</span> <span class="nf">isDone</span><span class="o">();</span>
+  <span class="n">V</span> <span class="nf">get</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">InterruptedException</span><span class="o">,</span> <span class="n">ExecutionException</span><span class="o">;</span>
+  <span class="n">V</span> <span class="nf">get</span><span class="o">(</span><span class="kt">long</span> <span class="n">timeout</span><span class="o">,</span> <span class="n">TimeUnit</span> <span class="n">unit</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">InterruptedException</span><span class="o">,</span> <span class="n">ExecutionException</span><span class="o">,</span> <span class="n">TimeoutException</span>
+<span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+  <li><code class="highlighter-rouge">RunnableFuture</code>：继承<code class="highlighter-rouge">Runnable</code>和<code class="highlighter-rouge">Future</code>接口，既可以作为<code class="highlighter-rouge">Runnable</code>被线程执行，又可以作为<code class="highlighter-rouge">Future</code>得到<code class="highlighter-rouge">Callable</code>的返回值。
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">RunnableFuture</span><span class="o">&lt;</span><span class="n">V</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">Runnable</span><span class="o">,</span> <span class="n">Future</span><span class="o">&lt;</span><span class="n">V</span><span class="o">&gt;</span> <span class="o">{</span>
+  <span class="kt">void</span> <span class="nf">run</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+  <li><code class="highlighter-rouge">FutureTask</code>：<code class="highlighter-rouge">RunnableFuture</code>的实现类，也是唯一实现类，内部维护了一个<code class="highlighter-rouge">Thread</code>对象和一个<code class="highlighter-rouge">Callable</code>对象，给出了两个构造方法。
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">FutureTask</span><span class="o">&lt;</span><span class="n">V</span><span class="o">&gt;</span> <span class="kd">implements</span> <span class="n">RunnableFuture</span><span class="o">&lt;</span><span class="n">V</span><span class="o">&gt;</span> <span class="o">{</span>
+  <span class="kd">public</span> <span class="nf">FutureTask</span><span class="o">(</span><span class="n">Callable</span><span class="o">&lt;</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">callable</span><span class="o">)</span>
+  <span class="kd">public</span> <span class="nf">FutureTask</span><span class="o">(</span><span class="n">Runnable</span> <span class="n">runnable</span><span class="o">,</span> <span class="n">V</span> <span class="n">result</span><span class="o">)</span>
+<span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<h3 id="threadfactory">ThreadFactory</h3>
+<ul>
+  <li><code class="highlighter-rouge">ThreadFactory</code>：创建线程的工厂接口，与<code class="highlighter-rouge">ExecutorService</code>配合使用，用来创建线程。<code class="highlighter-rouge">Executors</code>中提供了两个实现类，分别是<code class="highlighter-rouge">DefaultThreadFactory</code>和<code class="highlighter-rouge">PrivilegedThreadFactory</code>。
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">ThreadFactory</span> <span class="o">{</span>
+  <span class="n">Thread</span> <span class="nf">newThread</span><span class="o">(</span><span class="n">Runnable</span> <span class="n">r</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<h2 id="threadpoolexecutor">ThreadPoolExecutor</h2>
+<p>下面看看<code class="highlighter-rouge">ThreadPoolExecutor</code>的内部实现。</p>
+
+<h3 id="几个关键的内部变量">几个关键的内部变量</h3>
+<h4 id="状态位">状态位</h4>
+<p>引入状态位，高3位表示线程池状态，低29位表示线程池woker（一个线程的抽象）的数量。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kd">final</span> <span class="n">AtomicInteger</span> <span class="n">ctl</span> <span class="o">=</span> <span class="k">new</span> <span class="n">AtomicInteger</span><span class="o">(</span><span class="n">ctlOf</span><span class="o">(</span><span class="n">RUNNING</span><span class="o">,</span> <span class="mi">0</span><span class="o">));</span>
+</code></pre></div></div>
+<p>线程池维护5个状态，状态的变化是不可逆的，由小到大依次是：</p>
+<ul>
+  <li><strong>RUNNING</strong>：允许接收新任务并且处理队列中的任务</li>
+  <li><strong>SHUTDOWN</strong>：不再接收新的任务，仅消化队列内的任务</li>
+  <li><strong>STOP</strong>：不再接收新的任务，队列内的任务也不再处理，正在尝试中断正在执行的任务线程</li>
+  <li><strong>TIDYING</strong>：所有任务被终止了，工作线程数<code class="highlighter-rouge">workCount</code>也被设为0，并开始调用钩子函数<code class="highlighter-rouge">terminated()</code></li>
+  <li><strong>TERMINATED</strong>：钩子函数<code class="highlighter-rouge">terminated()</code>执行完毕</li>
+</ul>
+
+<h4 id="任务队列">任务队列</h4>
+<p>维护一个先进先出的并发队列，用来缓存未分配给worker的任务。<code class="highlighter-rouge">Executors</code>中采用的默认队列是<code class="highlighter-rouge">LinkedBlockingQueue</code>，它的大小上限是<code class="highlighter-rouge">Integer.MAX_VALUE</code>。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kd">final</span> <span class="n">BlockingQueue</span><span class="o">&lt;</span><span class="n">Runnable</span><span class="o">&gt;</span> <span class="n">workQueue</span><span class="o">;</span>
+</code></pre></div></div>
+
+<h4 id="工作线程集合">工作线程集合</h4>
+<p>维护一个<code class="highlighter-rouge">HashSet</code>保存所创建的工作线程，由于<code class="highlighter-rouge">HashSet</code>是非线程安全的，在使用时要加锁。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kd">final</span> <span class="n">HashSet</span><span class="o">&lt;</span><span class="n">Worker</span><span class="o">&gt;</span> <span class="n">workers</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashSet</span><span class="o">&lt;</span><span class="n">Worker</span><span class="o">&gt;();</span>
+</code></pre></div></div>
+
+<h4 id="任务拒绝handler">任务拒绝Handler</h4>
+<p><code class="highlighter-rouge">RejectedExecutionHandler</code>是拒绝任务的接口，声明了<code class="highlighter-rouge">rejectedExecution()</code>方法。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kd">volatile</span> <span class="n">RejectedExecutionHandler</span> <span class="n">handler</span><span class="o">;</span>
+</code></pre></div></div>
+<p>Handler一般有下面几种</p>
+<ul>
+  <li><code class="highlighter-rouge">AbortPolicy</code>：抛出异常（默认）</li>
+  <li><code class="highlighter-rouge">CallerRunsPolicy</code>：使用调用者所在线程执行任务</li>
+  <li><code class="highlighter-rouge">DiscardOldestPolicy</code>：从workerQueue中poll一个任务，执行当前任务</li>
+  <li><code class="highlighter-rouge">DiscardPolicy</code>：默默抛弃，什么都不做</li>
+</ul>
+
+<h4 id="线程数目">线程数目</h4>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kd">volatile</span> <span class="kt">int</span> <span class="n">corePoolSize</span><span class="o">;</span> <span class="c1">//当allowCoreThreadTimeOut是false时，线程池内维护的线程最小数目</span>
+<span class="kd">private</span> <span class="kd">volatile</span> <span class="kt">int</span> <span class="n">maximumPoolSize</span><span class="o">;</span> <span class="c1">// 线程池内会维持的最大数目</span>
+</code></pre></div></div>
+
+<h4 id="线程超时时间">线程超时时间</h4>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kd">volatile</span> <span class="kt">boolean</span> <span class="n">allowCoreThreadTimeOut</span><span class="o">;</span> <span class="c1">// 默认false，线程数小于corePoolSize的线程不会被回收</span>
+<span class="kd">private</span> <span class="kd">volatile</span> <span class="kt">long</span> <span class="n">keepAliveTime</span><span class="o">;</span> <span class="c1">// 线程数大于corePoolSize时创建的线程的空闲回收时间，allowCoreThreadTimeOut为ture时所有线程都会被回收</span>
+</code></pre></div></div>
+
+<h3 id="几个关键方法">几个关键方法</h3>
+
+<h4 id="execute">execute</h4>
+<p>执行新任务的核心方法，调用<code class="highlighter-rouge">submit</code>也会执行该方法，具体执行流程如下：</p>
+<ul>
+  <li>1.当线程池小于<code class="highlighter-rouge">corePoolSize</code>时，将创建一个新线程执行任务，即使此时线程池中存在空闲线程</li>
+  <li>2.当线程池达到<code class="highlighter-rouge">corePoolSize</code>时，任务将被放入workQueue中，等待线程池中任务调度执行</li>
+  <li>3.当<code class="highlighter-rouge">workQueue</code>已满，且<code class="highlighter-rouge">maximumPoolSize &gt; corePoolSize</code>时，创建新线程执行任务</li>
+  <li>4.当提交任务数超过<code class="highlighter-rouge">maximumPoolSize</code>时，任务由<code class="highlighter-rouge">RejectedExecutionHandler</code>处理</li>
+  <li>5.当线程池中超过<code class="highlighter-rouge">corePoolSize</code>线程，空闲时间达到<code class="highlighter-rouge">keepAliveTime</code>时，关闭空闲线程</li>
+</ul>
+
+<h4 id="addworker">addWorker</h4>
+<p><code class="highlighter-rouge">execute</code>方法需要创建新线程执行任务时会调用<code class="highlighter-rouge">addWorker</code>方法，会将任务封装为一个<code class="highlighter-rouge">Worker</code>对象，加入<code class="highlighter-rouge">HashSet</code>中。<code class="highlighter-rouge">Worker</code>是继承了<code class="highlighter-rouge">Runable</code>接口的内部类，对工作线程进行了封装。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">Worker</span> <span class="kd">extends</span> <span class="n">AbstractQueuedSynchronizer</span> <span class="kd">implements</span> <span class="n">Runnable</span>
+<span class="o">{</span>
+    <span class="kd">final</span> <span class="n">Thread</span> <span class="n">thread</span><span class="o">;</span>
+    <span class="n">Runnable</span> <span class="n">firstTask</span><span class="o">;</span>
+
+    <span class="n">Worker</span><span class="o">(</span><span class="n">Runnable</span> <span class="n">firstTask</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">setState</span><span class="o">(-</span><span class="mi">1</span><span class="o">);</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">firstTask</span> <span class="o">=</span> <span class="n">firstTask</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">thread</span> <span class="o">=</span> <span class="n">getThreadFactory</span><span class="o">().</span><span class="na">newThread</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">runWorker</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h4 id="runworker">runWorker</h4>
+<p><code class="highlighter-rouge">runWorker()</code>方法内维护一个循环，执行当前<code class="highlighter-rouge">Worker</code>对象的Task或调用<code class="highlighter-rouge">getTask()</code>方法从<code class="highlighter-rouge">workerQueue</code>中读取任务进行执行，方法中会调用两个钩子方法<code class="highlighter-rouge">beforeExecute()</code>和<code class="highlighter-rouge">afterExecute()</code>在任务执行前后进行特定工作。</p>
+
+<p>当前<code class="highlighter-rouge">Worker</code>对象没有Task或<code class="highlighter-rouge">getTask()</code>方法返回<code class="highlighter-rouge">null</code>时，会结束循环并调用<code class="highlighter-rouge">processWorkerExit()</code>方法将线程关闭。</p>
+
+<h4 id="gettask">getTask</h4>
+<p><code class="highlighter-rouge">getTask()</code>在下面几种情况将返回null：</p>
+<ul>
+  <li>当前线程数即将超过<code class="highlighter-rouge">maxPoolSize</code></li>
+  <li>线程池被关闭</li>
+  <li><code class="highlighter-rouge">allowCoreThreadTimeOut</code>为<code class="highlighter-rouge">false</code>，线程数大于<code class="highlighter-rouge">corePoolSize</code>，并且从<code class="highlighter-rouge">workerQueue</code>取数据超过了<code class="highlighter-rouge">keepAliveTime</code></li>
+  <li><code class="highlighter-rouge">allowCoreThreadTimeOut</code>为<code class="highlighter-rouge">true</code>，从<code class="highlighter-rouge">workerQueue</code>取数据超过了<code class="highlighter-rouge">keepAliveTime</code></li>
+</ul>
+
+<h4 id="shutdown和shutdownnow">shutdown和shutdownNow</h4>
+<p>关闭（销毁）线程池，<code class="highlighter-rouge">shutdown()</code>会将线程池状态设置为<code class="highlighter-rouge">SHUTDOWN</code>，拒绝新任务加入，终端空闲线程，但已在队列里的任务会继续处理。<code class="highlighter-rouge">shutdownNow()</code>方法则会强行关闭线程池，尝试将线程池状态设置为<code class="highlighter-rouge">STOP</code>，会中断所有线程。</p>
+
+<h2 id="executors中的几种常见的线程池">Executors中的几种常见的线程池</h2>
+
+<h3 id="fixedthreadpool">FixedThreadPool</h3>
+<p>指定了最大线程数，采用<code class="highlighter-rouge">LinkedBlockingQueue</code>作为workerQueue。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="n">ExecutorService</span> <span class="nf">newFixedThreadPool</span><span class="o">(</span><span class="kt">int</span> <span class="n">nThreads</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nf">ThreadPoolExecutor</span><span class="o">(</span><span class="n">nThreads</span><span class="o">,</span> <span class="n">nThreads</span><span class="o">,</span> <span class="mi">0L</span><span class="o">,</span> <span class="n">TimeUnit</span><span class="o">.</span><span class="na">MILLISECONDS</span><span class="o">,</span> <span class="k">new</span> <span class="n">LinkedBlockingQueue</span><span class="o">&lt;</span><span class="n">Runnable</span><span class="o">&gt;());</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="singlethreadexecutor">SingleThreadExecutor</h3>
+<p>只有一个线程的线程池，同样采用<code class="highlighter-rouge">LinkedBlockingQueue</code>作为workerQueue。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="n">ExecutorService</span> <span class="nf">newSingleThreadExecutor</span><span class="o">()</span> <span class="o">{</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nf">FinalizableDelegatedExecutorService</span><span class="o">(</span><span class="k">new</span> <span class="n">ThreadPoolExecutor</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="mi">1</span><span class="o">,</span> <span class="mi">0L</span><span class="o">,</span> <span class="n">TimeUnit</span><span class="o">.</span><span class="na">MILLISECONDS</span><span class="o">,</span> <span class="k">new</span> <span class="n">LinkedBlockingQueue</span><span class="o">&lt;</span><span class="n">Runnable</span><span class="o">&gt;()));</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="cachedthreadpool">CachedThreadPool</h3>
+<p>每个任务都会创建新县城执行任务，最大线程数为<code class="highlighter-rouge">Integer.MAX_VALUE</code>，采用同步阻塞队列<code class="highlighter-rouge">SynchronousQueue</code>作为workerQueue。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="n">ExecutorService</span> <span class="nf">newCachedThreadPool</span><span class="o">()</span> <span class="o">{</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nf">ThreadPoolExecutor</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="n">Integer</span><span class="o">.</span><span class="na">MAX_VALUE</span><span class="o">,</span> <span class="mi">60L</span><span class="o">,</span> <span class="n">TimeUnit</span><span class="o">.</span><span class="na">SECONDS</span><span class="o">,</span> <span class="k">new</span> <span class="n">SynchronousQueue</span><span class="o">&lt;</span><span class="n">Runnable</span><span class="o">&gt;());</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="scheduledthreadpool">ScheduledThreadPool</h3>
+<p>可以实现延迟、调度。最大线程数为<code class="highlighter-rouge">Integer.MAX_VALUE</code>，采用有序队列<code class="highlighter-rouge">DelayedWorkQueue</code>作为workerQueue（会按每个任务按照距离下次执行时间间隔的大小来排序）。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="nf">ScheduledThreadPoolExecutor</span><span class="o">(</span><span class="kt">int</span> <span class="n">corePoolSize</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kd">super</span><span class="o">(</span><span class="n">corePoolSize</span><span class="o">,</span> <span class="n">Integer</span><span class="o">.</span><span class="na">MAX_VALUE</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">NANOSECONDS</span><span class="o">,</span> <span class="k">new</span> <span class="n">DelayedWorkQueue</span><span class="o">());</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="阿里java开发文档不允许使用executors创建线程池">阿里Java开发文档不允许使用Executors创建线程池</h3>
+<p>从上面可以看到，<code class="highlighter-rouge">Executors</code>给出的几种线程池都是有弊端的：</p>
+<ul>
+  <li><code class="highlighter-rouge">FixedThreadPool</code>和<code class="highlighter-rouge">SingleThreadPool</code>：允许的请求队列长度为<code class="highlighter-rouge">Integer.MAX_VALUE</code>，可能会堆积大量的请求，从而导致 OOM</li>
+  <li><code class="highlighter-rouge">CachedThreadPool</code>和<code class="highlighter-rouge">ScheduledThreadPool</code>：允许的创建线程数量为 Integer.MAX_VALUE，可能会创建大量的线程，从而导致 OOM</li>
+</ul>
+
+<p>因此，在实际使用时需要灵活配置参数，直接用<code class="highlighter-rouge">ThreadPoolExecutor</code>创建线程池。</p>
+
+<p>(End)</p>
+
+<blockquote>
+  <p>参考资料：</p>
+  <ul>
+    <li><a href="https://juejin.im/post/5aabb948f265da237506a7f5">深入浅出Java线程池ThreadPoolExecutor</a></li>
+    <li><a href="https://juejin.im/entry/58fada5d570c350058d3aaad">深入理解 Java 线程池：ThreadPoolExecutor</a></li>
+    <li><a href="https://juejin.im/post/5c39910451882524b77b682c">朱晔的互联网架构实践心得S2E2：写业务代码最容易掉的8种坑 掘金年度征文</a></li>
+    <li><a href="http://afghl.github.io/2018/06/23/java-util-concurrent-04-executor-service.html">学习juc包 - 线程池 - ExecutorService实现原理</a></li>
+  </ul>
+</blockquote>
+
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/10/thread1/">Java并发编程 线程同步机制
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/09/gc/">JVM基础 GC及内存分配
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+        
+            </ul>
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2019/01/10/thread1/">Java并发编程 线程同步机制</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2019/01/14/excutors/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2019/01/14/excutors/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>
