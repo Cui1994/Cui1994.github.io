@@ -5,9 +5,33 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 15 Jan 2019 15:48:18 +0800</pubDate>
-    <lastBuildDate>Tue, 15 Jan 2019 15:48:18 +0800</lastBuildDate>
+    <pubDate>Wed, 16 Jan 2019 00:07:46 +0800</pubDate>
+    <lastBuildDate>Wed, 16 Jan 2019 00:07:46 +0800</lastBuildDate>
     <generator>Jekyll v3.8.4</generator>
+    
+      <item>
+        <title>Linux基础（九）I/O多路复用</title>
+        <description>
+&lt;img src=&quot;https://picsum.photos/800/300/?image=719&quot; alt=&quot;&quot; /&gt;
+
+&lt;blockquote&gt;
+  该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
+书中的编程练习这里不做展示和说明。
+&lt;/blockquote&gt;
+
+</description>
+        <pubDate>Tue, 15 Jan 2019 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2019/01/15/linux9/</link>
+        <guid isPermaLink="true">http://localhost:4000/2019/01/15/linux9/</guid>
+        
+        <category>Linux</category>
+        
+        <category>读书笔记</category>
+        
+        
+        <category>Linux</category>
+        
+      </item>
     
       <item>
         <title>JVM基础（二） 类加载过程</title>
@@ -212,30 +236,6 @@ JVM的内存分配与垃圾回收是老生常谈的话题了，这里先对GC涉
         <pubDate>Sat, 22 Dec 2018 00:00:00 +0800</pubDate>
         <link>http://localhost:4000/2018/12/22/linux6/</link>
         <guid isPermaLink="true">http://localhost:4000/2018/12/22/linux6/</guid>
-        
-        <category>Linux</category>
-        
-        <category>读书笔记</category>
-        
-        
-        <category>Linux</category>
-        
-      </item>
-    
-      <item>
-        <title>Linux基础（五）信号</title>
-        <description>
-&lt;img src=&quot;https://picsum.photos/800/300/?image=76&quot; alt=&quot;&quot; /&gt;
-
-&lt;blockquote&gt;
-  该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
-书中的编程练习这里不做展示和说明。
-&lt;/blockquote&gt;
-
-</description>
-        <pubDate>Thu, 20 Dec 2018 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2018/12/20/linux5/</link>
-        <guid isPermaLink="true">http://localhost:4000/2018/12/20/linux5/</guid>
         
         <category>Linux</category>
         

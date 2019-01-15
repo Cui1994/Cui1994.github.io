@@ -152,7 +152,45 @@ private volatile long keepAliveTime; // 线程数大于corePoolSize时创建的�
 - 5.当线程池中超过`corePoolSize`线程，空闲时间达到`keepAliveTime`时，关闭空闲线程
 
 #### addWorker
-`execute`方法需要创建新线程执行任务时会调用`addWorker`方法，会将任务封装为一个`Worker`对象，加入`HashSet`中。`Worker`是实现了`Runable`接口的内部类，对工作线程进行了封装。同时`Worker`继承了`AQS`类，其`tryLock()`方法为不可重入的独占锁，用于判断线程是否空闲以及是否可以被打断。
+`execute`方法需要创建新线程执行任务时会调用`addWorker`方法，会将任务封装为一个`Worker`对象，加入`HashSet`中并启动相应工作线程。
+```java
+// addWoker 部分代码
+try {
+    w = new Worker(firstTask);
+    final Thread t = w.thread;
+    if (t != null) {
+        final ReentrantLock mainLock = this.mainLock;
+        mainLock.lock();
+        try {
+            // Recheck while holding lock.
+            // Back out on ThreadFactory failure or if
+            // shut down before lock acquired.
+            int rs = runStateOf(ctl.get());
+
+            if (rs < SHUTDOWN ||
+                (rs == SHUTDOWN && firstTask == null)) {
+                if (t.isAlive()) // precheck that t is startable
+                    throw new IllegalThreadStateException();
+                workers.add(w);
+                int s = workers.size();
+                if (s > largestPoolSize)
+                    largestPoolSize = s;
+                workerAdded = true;
+            }
+        } finally {
+            mainLock.unlock();
+        }
+        if (workerAdded) {
+            t.start(); // 启动worker
+            workerStarted = true;
+        }
+    }
+} finally {
+    if (! workerStarted)
+        addWorkerFailed(w);
+}
+```
+`Worker`是实现了`Runable`接口的内部类，对工作线程进行了封装。同时`Worker`继承了`AQS`类，其`tryLock()`方法为不可重入的独占锁，用于判断线程是否空闲以及是否可以被打断。
 ```java
 private final class Worker extends AbstractQueuedSynchronizer implements Runnable
 {

@@ -1,0 +1,129 @@
+---
+layout: post
+category: "Linux"
+title:  "Linux基础（九）I/O多路复用"
+tags: [Linux, 读书笔记]
+---
+
+* content
+{:toc}
+
+![](https://picsum.photos/800/300/?image=719)
+
+> 该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
+> 书中的编程练习这里不做展示和说明。
+
+
+
+
+## 水平触发和边缘触发
+- **水平触发 Level Triggered**：当文件描述符上可以非阻塞地执行I/O系统调用，就认为它已经就绪
+- **边缘触发 Edge Triggered**：当文件描述符自上次状态检查以来有了新的I/O活动，就认为它已经就绪
+
+## I/O多路复用
+I/O多路复用(I/O multiplexing)允许同时检查多个文件描述符，看其中任意一个是否可以执行I/O操作。`select`和`poll`为水平触发，`epoll`支持水平触发和边缘触发。
+
+### select
+```c
+int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
+           struct timeval *timeout);
+```
+参数`readfds`、`writefds`、`exceptfds`指定了要检查的文件描述符集合，`select()`调用会修改这些集合，返回时，它们包含的就是已经处于就绪态的文件描述符集合了，因此每次调用都需要初始化它们。
+- `readfds`：检测读是否就绪的文件描述符集合
+- `writefds`：检测写是否就绪的文件描述符集合
+- `exceptfds`：检测异常情况是否发生的文件描述符集合
+- `nfds`：3个集合中所包含的最大文件描述符号+1，内核不会检查大于这个值的文件描述符是否在这些集合中
+- `timeout`：一个结构体，为select指定等待时间上限，为null时select会一直阻塞直到有文件描述符处于就绪态
+- 返回值：-1为错误，0为超时，正整数为就绪的文件描述符个数
+
+文件描述符集合`fd_set`的大小有上限，为`FD_SETSIZE`，具体数值可用过`/proc/sys/fs/file-max`文件查看，Linux中32位机一般为1024，64位为2048。
+
+
+### poll
+```c
+int poll(struct pollfd fds[], nfds_t nfds, int timeout);
+```
+不同于`select()`，`poll()`系统调用只需要提供一个链表，并为每个文件描述符标明感兴趣的事件，
+- `pollfd`结构体指定了文件描述符和事件
+```c
+struct pollfd {
+    int fd;
+    short events;
+    short revents;
+}
+```
+- `timeout`：调用超时时间，`-1`时会一直阻塞直到至少有一个文件描述符就绪
+- `nfds`：文件描述符的个数
+
+`poll()`系统调用被检查的文件描述符个数理论上没有上限。
+
+
+### select和poll存在的问题
+- 每次调用都会检查全部的文件描述符，时间会随着文件描述符的增加而增加
+- 需要在用户态和内核态之间传递一个表示所有需要被检查文件描述符的数据结构，拷贝消耗的时间随着文件描述符的个数增加而增加
+- 调用结束之后程序需要检查是哪个文件描述符处于就绪状态
+
+### epoll
+`epoll API`的核心数据结构为**epoll实例**，为一个打开的文件描述符，指向内核中的一颗红黑树，记录了两部分内容
+- **兴趣列表 interest list**：感兴趣的文件描述符列表
+- **就序列表 ready list**：处于I/O就绪态的文件描述符列表
+
+#### 创建epoll实例
+```c
+int epoll_create(int size);
+```
+`epoll_create()`调用会创建一个epoll实例并返回其文件描述符，`size`参数指定了文件描述符的个数，并不是一个上限，而是告诉内核为内部数据结构划分初始大小。
+
+#### 修改兴趣列表
+```c
+int epoll_ctl(int epfd, int op, int fd, struct epoll_event *ev);
+```
+- `epfd`：指向epoll实例的文件描述符
+- `fd`：需要操作的文件描述符
+- `op`：需要执行的操作，包括`EPOLL_CTL_ADD`、`EPOLL_CTL_MOD`、`EPOLL_CTL_DEL`
+- `ev`：指向`epoll_event`结构体的指针，定义感兴趣的事件集合和文件描述符成为就绪状态时传回给调用进程的信息
+
+```c
+struct epoll_event {
+  __uint32_t events;  /* Epoll events */
+  epoll_data_t data;  /* User data variable */
+};
+//events可以是以下几个宏的集合：
+//EPOLLIN ：表示对应的文件描述符可以读（包括对端SOCKET正常关闭）；
+//EPOLLOUT：表示对应的文件描述符可以写；
+//EPOLLPRI：表示对应的文件描述符有紧急的数据可读（这里应该表示有带外数据到来）；
+//EPOLLERR：表示对应的文件描述符发生错误；
+//EPOLLHUP：表示对应的文件描述符被挂断；
+//EPOLLET： 将EPOLL设为边缘触发(Edge Triggered)模式，默认为水平触发。
+//EPOLLONESHOT：只监听一次事件，当监听完这次事件之后，如果还需要继续监听这个socket的话，需要再次把这个socket加入到EPOLL队列里
+```
+
+#### 事件等待
+```c
+int epoll_wait(int epfd, struct epoll_event *evlist, int maxevents, int timeout);
+```
+- `evlist`：由调用程序创建，指向就绪态文件描述符的信息结构体的数组，内容由`epoll_ctl()`调用时确定
+- `maxevnts`：evlist包含元素的个数
+- `timeout`：调用阻塞的时间，-1为一直阻塞直到兴趣列表的文件描述符上有事件发生
+
+`epoll_wait()`调用在水平触发和边缘触发模式下有不同的行为：
+- 1.文件描述符fd上有输入到来
+- 2.第一次调用`epoll_wait()`，ET/LT都会告诉我们fd处于就绪状态
+- 3.第二次调用`epoll_wait()`，水平触发模式下仍然会告诉我们fd处于就绪状态，而ET则不会，因为从上一次调用以来没有新事件产生
+
+采用边缘触发后，接收到一个I/O事件需要尽可能多的在文件描述符上进行I/O操作，因此需要将待检查的文件描述符都设置为非阻塞模式。ET下epoll的工作模式基本如下：
+- 1.将所有要检查文件描述符设置为非阻塞
+- 2.调用`epoll_ctl()`构建兴趣列表
+- 3.循环处理I/O事件：
+    - a.调用`epoll_wait()`获取处就绪态的文件描述符列表
+    - b.针对每一个就绪的文件描述符，不断的进行I/O处理直到相关系统调用返回`EAGAIN`或`EWOULDBLOCK`错误
+
+#### epoll的优势
+- 1.`epoll_ctl()`对文件描述符和事件进行注册，频率较低，避免在用户态和内核态之间进行多次大数据拷贝。
+- 2.`epoll_wait()`实际上采用了共享内存，用户态和内核态共享一块内存来减少用户态和内核态之间的频繁切换。
+- 3.文件描述符就绪时采用了`callback`机制，避免对多个文件描述符进行轮训
+
+(End)
+
+>参考资料
+> - [深入理解SELECT、POLL和EPOLL](https://juejin.im/entry/5b6058fde51d45348a2ffc65)

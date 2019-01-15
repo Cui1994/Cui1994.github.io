@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Linux基础（九）I/O多路复用</title>
+    <meta name="description" content="  该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。书中的编程练习这里不做展示和说明。">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2019/01/15/linux9/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>Linux基础（九）I/O多路复用</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2019-01-15
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Linux" title="Category: Linux" rel="category">Linux</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#Linux" title="Tag: Linux" rel="tag">Linux</a-->
+        <a href="/tag/#Linux" title="Tag: Linux" rel="tag">Linux</a>&nbsp;
+    
+        <!--a href="/tag/#%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0" title="Tag: 读书笔记" rel="tag">读书笔记</a-->
+        <a href="/tag/#读书笔记" title="Tag: 读书笔记" rel="tag">读书笔记</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#水平触发和边缘触发" id="markdown-toc-水平触发和边缘触发">水平触发和边缘触发</a></li>
+  <li><a href="#io多路复用" id="markdown-toc-io多路复用">I/O多路复用</a>    <ul>
+      <li><a href="#select" id="markdown-toc-select">select</a></li>
+      <li><a href="#poll" id="markdown-toc-poll">poll</a></li>
+      <li><a href="#select和poll存在的问题" id="markdown-toc-select和poll存在的问题">select和poll存在的问题</a></li>
+      <li><a href="#epoll" id="markdown-toc-epoll">epoll</a>        <ul>
+          <li><a href="#创建epoll实例" id="markdown-toc-创建epoll实例">创建epoll实例</a></li>
+          <li><a href="#修改兴趣列表" id="markdown-toc-修改兴趣列表">修改兴趣列表</a></li>
+          <li><a href="#事件等待" id="markdown-toc-事件等待">事件等待</a></li>
+          <li><a href="#epoll的优势" id="markdown-toc-epoll的优势">epoll的优势</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p><img src="https://picsum.photos/800/300/?image=719" alt="" /></p>
+
+<blockquote>
+  <p>该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
+书中的编程练习这里不做展示和说明。</p>
+</blockquote>
+
+<h2 id="水平触发和边缘触发">水平触发和边缘触发</h2>
+<ul>
+  <li><strong>水平触发 Level Triggered</strong>：当文件描述符上可以非阻塞地执行I/O系统调用，就认为它已经就绪</li>
+  <li><strong>边缘触发 Edge Triggered</strong>：当文件描述符自上次状态检查以来有了新的I/O活动，就认为它已经就绪</li>
+</ul>
+
+<h2 id="io多路复用">I/O多路复用</h2>
+<p>I/O多路复用(I/O multiplexing)允许同时检查多个文件描述符，看其中任意一个是否可以执行I/O操作。<code class="highlighter-rouge">select</code>和<code class="highlighter-rouge">poll</code>为水平触发，<code class="highlighter-rouge">epoll</code>支持水平触发和边缘触发。</p>
+
+<h3 id="select">select</h3>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">select</span><span class="p">(</span><span class="kt">int</span> <span class="n">nfds</span><span class="p">,</span> <span class="n">fd_set</span> <span class="o">*</span><span class="n">readfds</span><span class="p">,</span> <span class="n">fd_set</span> <span class="o">*</span><span class="n">writefds</span><span class="p">,</span> <span class="n">fd_set</span> <span class="o">*</span><span class="n">exceptfds</span><span class="p">,</span>
+           <span class="k">struct</span> <span class="n">timeval</span> <span class="o">*</span><span class="n">timeout</span><span class="p">);</span>
+</code></pre></div></div>
+<p>参数<code class="highlighter-rouge">readfds</code>、<code class="highlighter-rouge">writefds</code>、<code class="highlighter-rouge">exceptfds</code>指定了要检查的文件描述符集合，<code class="highlighter-rouge">select()</code>调用会修改这些集合，返回时，它们包含的就是已经处于就绪态的文件描述符集合了，因此每次调用都需要初始化它们。</p>
+<ul>
+  <li><code class="highlighter-rouge">readfds</code>：检测读是否就绪的文件描述符集合</li>
+  <li><code class="highlighter-rouge">writefds</code>：检测写是否就绪的文件描述符集合</li>
+  <li><code class="highlighter-rouge">exceptfds</code>：检测异常情况是否发生的文件描述符集合</li>
+  <li><code class="highlighter-rouge">nfds</code>：3个集合中所包含的最大文件描述符号+1，内核不会检查大于这个值的文件描述符是否在这些集合中</li>
+  <li><code class="highlighter-rouge">timeout</code>：一个结构体，为select指定等待时间上限，为null时select会一直阻塞直到有文件描述符处于就绪态</li>
+  <li>返回值：-1为错误，0为超时，正整数为就绪的文件描述符个数</li>
+</ul>
+
+<p>文件描述符集合<code class="highlighter-rouge">fd_set</code>的大小有上限，为<code class="highlighter-rouge">FD_SETSIZE</code>，具体数值可用过<code class="highlighter-rouge">/proc/sys/fs/file-max</code>文件查看，Linux中32位机一般为1024，64位为2048。</p>
+
+<h3 id="poll">poll</h3>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">poll</span><span class="p">(</span><span class="k">struct</span> <span class="n">pollfd</span> <span class="n">fds</span><span class="p">[],</span> <span class="n">nfds_t</span> <span class="n">nfds</span><span class="p">,</span> <span class="kt">int</span> <span class="n">timeout</span><span class="p">);</span>
+</code></pre></div></div>
+<p>不同于<code class="highlighter-rouge">select()</code>，<code class="highlighter-rouge">poll()</code>系统调用只需要提供一个链表，并为每个文件描述符标明感兴趣的事件，</p>
+<ul>
+  <li><code class="highlighter-rouge">pollfd</code>结构体指定了文件描述符和事件
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="n">pollfd</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">fd</span><span class="p">;</span>
+  <span class="kt">short</span> <span class="n">events</span><span class="p">;</span>
+  <span class="kt">short</span> <span class="n">revents</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>    </div>
+  </li>
+  <li><code class="highlighter-rouge">timeout</code>：调用超时时间，<code class="highlighter-rouge">-1</code>时会一直阻塞直到至少有一个文件描述符就绪</li>
+  <li><code class="highlighter-rouge">nfds</code>：文件描述符的个数</li>
+</ul>
+
+<p><code class="highlighter-rouge">poll()</code>系统调用被检查的文件描述符个数理论上没有上限。</p>
+
+<h3 id="select和poll存在的问题">select和poll存在的问题</h3>
+<ul>
+  <li>每次调用都会检查全部的文件描述符，时间会随着文件描述符的增加而增加</li>
+  <li>需要在用户态和内核态之间传递一个表示所有需要被检查文件描述符的数据结构，拷贝消耗的时间随着文件描述符的个数增加而增加</li>
+  <li>调用结束之后程序需要检查是哪个文件描述符处于就绪状态</li>
+</ul>
+
+<h3 id="epoll">epoll</h3>
+<p><code class="highlighter-rouge">epoll API</code>的核心数据结构为<strong>epoll实例</strong>，为一个打开的文件描述符，指向内核中的一颗红黑树，记录了两部分内容</p>
+<ul>
+  <li><strong>兴趣列表 interest list</strong>：感兴趣的文件描述符列表</li>
+  <li><strong>就序列表 ready list</strong>：处于I/O就绪态的文件描述符列表</li>
+</ul>
+
+<h4 id="创建epoll实例">创建epoll实例</h4>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">epoll_create</span><span class="p">(</span><span class="kt">int</span> <span class="n">size</span><span class="p">);</span>
+</code></pre></div></div>
+<p><code class="highlighter-rouge">epoll_create()</code>调用会创建一个epoll实例并返回其文件描述符，<code class="highlighter-rouge">size</code>参数指定了文件描述符的个数，并不是一个上限，而是告诉内核为内部数据结构划分初始大小。</p>
+
+<h4 id="修改兴趣列表">修改兴趣列表</h4>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">epoll_ctl</span><span class="p">(</span><span class="kt">int</span> <span class="n">epfd</span><span class="p">,</span> <span class="kt">int</span> <span class="n">op</span><span class="p">,</span> <span class="kt">int</span> <span class="n">fd</span><span class="p">,</span> <span class="k">struct</span> <span class="n">epoll_event</span> <span class="o">*</span><span class="n">ev</span><span class="p">);</span>
+</code></pre></div></div>
+<ul>
+  <li><code class="highlighter-rouge">epfd</code>：指向epoll实例的文件描述符</li>
+  <li><code class="highlighter-rouge">fd</code>：需要操作的文件描述符</li>
+  <li><code class="highlighter-rouge">op</code>：需要执行的操作，包括<code class="highlighter-rouge">EPOLL_CTL_ADD</code>、<code class="highlighter-rouge">EPOLL_CTL_MOD</code>、<code class="highlighter-rouge">EPOLL_CTL_DEL</code></li>
+  <li><code class="highlighter-rouge">ev</code>：指向<code class="highlighter-rouge">epoll_event</code>结构体的指针，定义感兴趣的事件集合和文件描述符成为就绪状态时传回给调用进程的信息</li>
+</ul>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="n">epoll_event</span> <span class="p">{</span>
+  <span class="n">__uint32_t</span> <span class="n">events</span><span class="p">;</span>  <span class="cm">/* Epoll events */</span>
+  <span class="n">epoll_data_t</span> <span class="n">data</span><span class="p">;</span>  <span class="cm">/* User data variable */</span>
+<span class="p">};</span>
+<span class="c1">//events可以是以下几个宏的集合：</span>
+<span class="c1">//EPOLLIN ：表示对应的文件描述符可以读（包括对端SOCKET正常关闭）；</span>
+<span class="c1">//EPOLLOUT：表示对应的文件描述符可以写；</span>
+<span class="c1">//EPOLLPRI：表示对应的文件描述符有紧急的数据可读（这里应该表示有带外数据到来）；</span>
+<span class="c1">//EPOLLERR：表示对应的文件描述符发生错误；</span>
+<span class="c1">//EPOLLHUP：表示对应的文件描述符被挂断；</span>
+<span class="c1">//EPOLLET： 将EPOLL设为边缘触发(Edge Triggered)模式，默认为水平触发。</span>
+<span class="c1">//EPOLLONESHOT：只监听一次事件，当监听完这次事件之后，如果还需要继续监听这个socket的话，需要再次把这个socket加入到EPOLL队列里</span>
+</code></pre></div></div>
+
+<h4 id="事件等待">事件等待</h4>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">epoll_wait</span><span class="p">(</span><span class="kt">int</span> <span class="n">epfd</span><span class="p">,</span> <span class="k">struct</span> <span class="n">epoll_event</span> <span class="o">*</span><span class="n">evlist</span><span class="p">,</span> <span class="kt">int</span> <span class="n">maxevents</span><span class="p">,</span> <span class="kt">int</span> <span class="n">timeout</span><span class="p">);</span>
+</code></pre></div></div>
+<ul>
+  <li><code class="highlighter-rouge">evlist</code>：由调用程序创建，指向就绪态文件描述符的信息结构体的数组，内容由<code class="highlighter-rouge">epoll_ctl()</code>调用时确定</li>
+  <li><code class="highlighter-rouge">maxevnts</code>：evlist包含元素的个数</li>
+  <li><code class="highlighter-rouge">timeout</code>：调用阻塞的时间，-1为一直阻塞直到兴趣列表的文件描述符上有事件发生</li>
+</ul>
+
+<p><code class="highlighter-rouge">epoll_wait()</code>调用在水平触发和边缘触发模式下有不同的行为：</p>
+<ul>
+  <li>1.文件描述符fd上有输入到来</li>
+  <li>2.第一次调用<code class="highlighter-rouge">epoll_wait()</code>，ET/LT都会告诉我们fd处于就绪状态</li>
+  <li>3.第二次调用<code class="highlighter-rouge">epoll_wait()</code>，水平触发模式下仍然会告诉我们fd处于就绪状态，而ET则不会，因为从上一次调用以来没有新事件产生</li>
+</ul>
+
+<p>采用边缘触发后，接收到一个I/O事件需要尽可能多的在文件描述符上进行I/O操作，因此需要将待检查的文件描述符都设置为非阻塞模式。ET下epoll的工作模式基本如下：</p>
+<ul>
+  <li>1.将所有要检查文件描述符设置为非阻塞</li>
+  <li>2.调用<code class="highlighter-rouge">epoll_ctl()</code>构建兴趣列表</li>
+  <li>3.循环处理I/O事件：
+    <ul>
+      <li>a.调用<code class="highlighter-rouge">epoll_wait()</code>获取处就绪态的文件描述符列表</li>
+      <li>b.针对每一个就绪的文件描述符，不断的进行I/O处理直到相关系统调用返回<code class="highlighter-rouge">EAGAIN</code>或<code class="highlighter-rouge">EWOULDBLOCK</code>错误</li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="epoll的优势">epoll的优势</h4>
+<ul>
+  <li>1.<code class="highlighter-rouge">epoll_ctl()</code>对文件描述符和事件进行注册，频率较低，避免在用户态和内核态之间进行多次大数据拷贝。</li>
+  <li>2.<code class="highlighter-rouge">epoll_wait()</code>实际上采用了共享内存，用户态和内核态共享一块内存来减少用户态和内核态之间的频繁切换。</li>
+  <li>3.文件描述符就绪时采用了<code class="highlighter-rouge">callback</code>机制，避免对多个文件描述符进行轮训</li>
+</ul>
+
+<p>(End)</p>
+
+<blockquote>
+  <p>参考资料</p>
+  <ul>
+    <li><a href="https://juejin.im/entry/5b6058fde51d45348a2ffc65">深入理解SELECT、POLL和EPOLL</a></li>
+  </ul>
+</blockquote>
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2018/12/24/linux8/">Linux基础（八）管道与FIFO
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2018/12/23/linux7/">Linux基础（七）一张图了解进程间通信IPC
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2018/12/22/linux6/">Linux基础（六）作业控制与Deamon进程
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2018/12/20/linux5/">Linux基础（五）信号
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+        
+            </ul>
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2019/01/15/classload/">JVM基础（二） 类加载过程</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2019/01/15/linux9/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2019/01/15/linux9/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>
