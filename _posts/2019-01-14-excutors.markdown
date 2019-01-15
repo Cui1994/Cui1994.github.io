@@ -152,7 +152,7 @@ private volatile long keepAliveTime; // 线程数大于corePoolSize时创建的�
 - 5.当线程池中超过`corePoolSize`线程，空闲时间达到`keepAliveTime`时，关闭空闲线程
 
 #### addWorker
-`execute`方法需要创建新线程执行任务时会调用`addWorker`方法，会将任务封装为一个`Worker`对象，加入`HashSet`中。`Worker`是继承了`Runable`接口的内部类，对工作线程进行了封装。
+`execute`方法需要创建新线程执行任务时会调用`addWorker`方法，会将任务封装为一个`Worker`对象，加入`HashSet`中。`Worker`是实现了`Runable`接口的内部类，对工作线程进行了封装。同时`Worker`继承了`AQS`类，其`tryLock()`方法为不可重入的独占锁，用于判断线程是否空闲以及是否可以被打断。
 ```java
 private final class Worker extends AbstractQueuedSynchronizer implements Runnable
 {
@@ -162,7 +162,7 @@ private final class Worker extends AbstractQueuedSynchronizer implements Runnabl
     Worker(Runnable firstTask) {
         setState(-1);
         this.firstTask = firstTask;
-        this.thread = getThreadFactory().newThread(this);
+        this.thread = getThreadFactory().newThread(this); // Worker类本身实现了Runnable接口，线程调用start会直接触发runWorker
     }
 
     public void run() {
@@ -175,6 +175,22 @@ private final class Worker extends AbstractQueuedSynchronizer implements Runnabl
 `runWorker()`方法内维护一个循环，执行当前`Worker`对象的Task或调用`getTask()`方法从`workerQueue`中读取任务进行执行，方法中会调用两个钩子方法`beforeExecute()`和`afterExecute()`在任务执行前后进行特定工作。
 
 当前`Worker`对象没有Task或`getTask()`方法返回`null`时，会结束循环并调用`processWorkerExit()`方法将线程关闭。
+```java
+final void runWorker(Worker w) {
+    Thread wt = Thread.currentThread();
+    Runnable task = w.firstTask;
+    w.firstTask = null;
+    w.unlock(); // allow interrupts
+    try {
+        while (task != null || (task = getTask()) != null) {
+            // ...
+        }
+    } finally {
+        processWorkerExit(w, completedAbruptly);
+    }
+}
+
+```
 
 #### getTask
 `getTask()`在下面几种情况将返回null：
@@ -184,7 +200,40 @@ private final class Worker extends AbstractQueuedSynchronizer implements Runnabl
 - `allowCoreThreadTimeOut`为`true`，从`workerQueue`取数据超过了`keepAliveTime`
 
 #### shutdown和shutdownNow
-关闭（销毁）线程池，`shutdown()`会将线程池状态设置为`SHUTDOWN`，拒绝新任务加入，终端空闲线程，但已在队列里的任务会继续处理。`shutdownNow()`方法则会强行关闭线程池，尝试将线程池状态设置为`STOP`，会中断所有线程。
+关闭（销毁）线程池，`shutdown()`会将线程池状态设置为`SHUTDOWN`，拒绝新任务加入，终端空闲线程，但已在队列里的任务会继续处理。
+```java
+public void shutdown() {
+    final ReentrantLock mainLock = this.mainLock;
+    mainLock.lock();
+    try {
+        checkShutdownAccess();
+        advanceRunState(SHUTDOWN);
+        interruptIdleWorkers(); // 中断空闲线程
+        onShutdown(); // hook for ScheduledThreadPoolExecutor
+    } finally {
+        mainLock.unlock();
+    }
+    tryTerminate();
+}
+```
+`shutdownNow()`方法则会强行关闭线程池，尝试将线程池状态设置为`STOP`，会中断所有线程。
+```java
+public List<Runnable> shutdownNow() {
+    List<Runnable> tasks;
+    final ReentrantLock mainLock = this.mainLock;
+    mainLock.lock();
+    try {
+        checkShutdownAccess();
+        advanceRunState(STOP);
+        interruptWorkers(); // 中断所有线程
+        tasks = drainQueue(); // 取出队列中没有被执行的任务
+    } finally {
+        mainLock.unlock();
+    }
+    tryTerminate();
+    return tasks;
+}
+```
 
 ## Executors中的几种常见的线程池
 

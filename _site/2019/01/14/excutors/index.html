@@ -365,7 +365,7 @@
 </ul>
 
 <h4 id="addworker">addWorker</h4>
-<p><code class="highlighter-rouge">execute</code>方法需要创建新线程执行任务时会调用<code class="highlighter-rouge">addWorker</code>方法，会将任务封装为一个<code class="highlighter-rouge">Worker</code>对象，加入<code class="highlighter-rouge">HashSet</code>中。<code class="highlighter-rouge">Worker</code>是继承了<code class="highlighter-rouge">Runable</code>接口的内部类，对工作线程进行了封装。</p>
+<p><code class="highlighter-rouge">execute</code>方法需要创建新线程执行任务时会调用<code class="highlighter-rouge">addWorker</code>方法，会将任务封装为一个<code class="highlighter-rouge">Worker</code>对象，加入<code class="highlighter-rouge">HashSet</code>中。<code class="highlighter-rouge">Worker</code>是实现了<code class="highlighter-rouge">Runable</code>接口的内部类，对工作线程进行了封装。同时<code class="highlighter-rouge">Worker</code>继承了<code class="highlighter-rouge">AQS</code>类，其<code class="highlighter-rouge">tryLock()</code>方法为不可重入的独占锁，用于判断线程是否空闲以及是否可以被打断。</p>
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">Worker</span> <span class="kd">extends</span> <span class="n">AbstractQueuedSynchronizer</span> <span class="kd">implements</span> <span class="n">Runnable</span>
 <span class="o">{</span>
     <span class="kd">final</span> <span class="n">Thread</span> <span class="n">thread</span><span class="o">;</span>
@@ -374,7 +374,7 @@
     <span class="n">Worker</span><span class="o">(</span><span class="n">Runnable</span> <span class="n">firstTask</span><span class="o">)</span> <span class="o">{</span>
         <span class="n">setState</span><span class="o">(-</span><span class="mi">1</span><span class="o">);</span>
         <span class="k">this</span><span class="o">.</span><span class="na">firstTask</span> <span class="o">=</span> <span class="n">firstTask</span><span class="o">;</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">thread</span> <span class="o">=</span> <span class="n">getThreadFactory</span><span class="o">().</span><span class="na">newThread</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">thread</span> <span class="o">=</span> <span class="n">getThreadFactory</span><span class="o">().</span><span class="na">newThread</span><span class="o">(</span><span class="k">this</span><span class="o">);</span> <span class="c1">// Worker类本身实现了Runnable接口，线程调用start会直接触发runWorker</span>
     <span class="o">}</span>
 
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">()</span> <span class="o">{</span>
@@ -387,6 +387,21 @@
 <p><code class="highlighter-rouge">runWorker()</code>方法内维护一个循环，执行当前<code class="highlighter-rouge">Worker</code>对象的Task或调用<code class="highlighter-rouge">getTask()</code>方法从<code class="highlighter-rouge">workerQueue</code>中读取任务进行执行，方法中会调用两个钩子方法<code class="highlighter-rouge">beforeExecute()</code>和<code class="highlighter-rouge">afterExecute()</code>在任务执行前后进行特定工作。</p>
 
 <p>当前<code class="highlighter-rouge">Worker</code>对象没有Task或<code class="highlighter-rouge">getTask()</code>方法返回<code class="highlighter-rouge">null</code>时，会结束循环并调用<code class="highlighter-rouge">processWorkerExit()</code>方法将线程关闭。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">final</span> <span class="kt">void</span> <span class="nf">runWorker</span><span class="o">(</span><span class="n">Worker</span> <span class="n">w</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">Thread</span> <span class="n">wt</span> <span class="o">=</span> <span class="n">Thread</span><span class="o">.</span><span class="na">currentThread</span><span class="o">();</span>
+    <span class="n">Runnable</span> <span class="n">task</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="na">firstTask</span><span class="o">;</span>
+    <span class="n">w</span><span class="o">.</span><span class="na">firstTask</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+    <span class="n">w</span><span class="o">.</span><span class="na">unlock</span><span class="o">();</span> <span class="c1">// allow interrupts</span>
+    <span class="k">try</span> <span class="o">{</span>
+        <span class="k">while</span> <span class="o">(</span><span class="n">task</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">||</span> <span class="o">(</span><span class="n">task</span> <span class="o">=</span> <span class="n">getTask</span><span class="o">())</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="c1">// ...</span>
+        <span class="o">}</span>
+    <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+        <span class="n">processWorkerExit</span><span class="o">(</span><span class="n">w</span><span class="o">,</span> <span class="n">completedAbruptly</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
 
 <h4 id="gettask">getTask</h4>
 <p><code class="highlighter-rouge">getTask()</code>在下面几种情况将返回null：</p>
@@ -398,7 +413,38 @@
 </ul>
 
 <h4 id="shutdown和shutdownnow">shutdown和shutdownNow</h4>
-<p>关闭（销毁）线程池，<code class="highlighter-rouge">shutdown()</code>会将线程池状态设置为<code class="highlighter-rouge">SHUTDOWN</code>，拒绝新任务加入，终端空闲线程，但已在队列里的任务会继续处理。<code class="highlighter-rouge">shutdownNow()</code>方法则会强行关闭线程池，尝试将线程池状态设置为<code class="highlighter-rouge">STOP</code>，会中断所有线程。</p>
+<p>关闭（销毁）线程池，<code class="highlighter-rouge">shutdown()</code>会将线程池状态设置为<code class="highlighter-rouge">SHUTDOWN</code>，拒绝新任务加入，终端空闲线程，但已在队列里的任务会继续处理。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">shutdown</span><span class="o">()</span> <span class="o">{</span>
+    <span class="kd">final</span> <span class="n">ReentrantLock</span> <span class="n">mainLock</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">mainLock</span><span class="o">;</span>
+    <span class="n">mainLock</span><span class="o">.</span><span class="na">lock</span><span class="o">();</span>
+    <span class="k">try</span> <span class="o">{</span>
+        <span class="n">checkShutdownAccess</span><span class="o">();</span>
+        <span class="n">advanceRunState</span><span class="o">(</span><span class="n">SHUTDOWN</span><span class="o">);</span>
+        <span class="n">interruptIdleWorkers</span><span class="o">();</span> <span class="c1">// 中断空闲线程</span>
+        <span class="n">onShutdown</span><span class="o">();</span> <span class="c1">// hook for ScheduledThreadPoolExecutor</span>
+    <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+        <span class="n">mainLock</span><span class="o">.</span><span class="na">unlock</span><span class="o">();</span>
+    <span class="o">}</span>
+    <span class="n">tryTerminate</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p><code class="highlighter-rouge">shutdownNow()</code>方法则会强行关闭线程池，尝试将线程池状态设置为<code class="highlighter-rouge">STOP</code>，会中断所有线程。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">Runnable</span><span class="o">&gt;</span> <span class="nf">shutdownNow</span><span class="o">()</span> <span class="o">{</span>
+    <span class="n">List</span><span class="o">&lt;</span><span class="n">Runnable</span><span class="o">&gt;</span> <span class="n">tasks</span><span class="o">;</span>
+    <span class="kd">final</span> <span class="n">ReentrantLock</span> <span class="n">mainLock</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">mainLock</span><span class="o">;</span>
+    <span class="n">mainLock</span><span class="o">.</span><span class="na">lock</span><span class="o">();</span>
+    <span class="k">try</span> <span class="o">{</span>
+        <span class="n">checkShutdownAccess</span><span class="o">();</span>
+        <span class="n">advanceRunState</span><span class="o">(</span><span class="n">STOP</span><span class="o">);</span>
+        <span class="n">interruptWorkers</span><span class="o">();</span> <span class="c1">// 中断所有线程</span>
+        <span class="n">tasks</span> <span class="o">=</span> <span class="n">drainQueue</span><span class="o">();</span> <span class="c1">// 取出队列中没有被执行的任务</span>
+    <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+        <span class="n">mainLock</span><span class="o">.</span><span class="na">unlock</span><span class="o">();</span>
+    <span class="o">}</span>
+    <span class="n">tryTerminate</span><span class="o">();</span>
+    <span class="k">return</span> <span class="n">tasks</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
 
 <h2 id="executors中的几种常见的线程池">Executors中的几种常见的线程池</h2>
 
@@ -464,6 +510,48 @@
                         
                         <h2 id="similar_posts">Similar Posts</h2>
                         <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/15/classload/">JVM基础（二） 类加载过程
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
                         
                         <li class="relatedPost">
                             <a href="/2019/01/10/thread1/">Java并发编程 线程同步机制
@@ -755,39 +843,6 @@
                 
             
         
-            
-            
-                
-                    
-                
-                    
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-                    
-                
-                    
-                
-            
-        
         
             </ul>
         
@@ -800,6 +855,8 @@
     </div>
     <div class="nex">
 
+        
+        <p><strong>下一篇</strong> <a href="/2019/01/15/classload/">JVM基础（二） 类加载过程</a></p>
         
     </div>
 </div>

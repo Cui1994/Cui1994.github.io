@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>JVM基础（二） 类加载过程</title>
+    <meta name="description" content="Java中类的加载、连接都是在程序运行时完成的，虚拟机将class文件加载到内存，进行校验、解析和初始化最终形成可以被虚拟机使用的Java对象，即类加载过程。">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2019/01/15/classload/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>JVM基础（二） 类加载过程</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2019-01-15
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Java" title="Category: Java" rel="category">Java</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a-->
+        <a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a>&nbsp;
+    
+        <!--a href="/tag/#JVM" title="Tag: JVM" rel="tag">JVM</a-->
+        <a href="/tag/#JVM" title="Tag: JVM" rel="tag">JVM</a>&nbsp;
+    
+        <!--a href="/tag/#%E6%BA%90%E7%A0%81" title="Tag: 源码" rel="tag">源码</a-->
+        <a href="/tag/#源码" title="Tag: 源码" rel="tag">源码</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#类的生命周期" id="markdown-toc-类的生命周期">类的生命周期</a>    <ul>
+      <li><a href="#何时加载" id="markdown-toc-何时加载">何时加载</a></li>
+      <li><a href="#何时初始化" id="markdown-toc-何时初始化">何时初始化</a></li>
+    </ul>
+  </li>
+  <li><a href="#加载" id="markdown-toc-加载">加载</a>    <ul>
+      <li><a href="#类加载器" id="markdown-toc-类加载器">类加载器</a>        <ul>
+          <li><a href="#分类" id="markdown-toc-分类">分类</a></li>
+          <li><a href="#双亲委派模型" id="markdown-toc-双亲委派模型">双亲委派模型</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><a href="#连接" id="markdown-toc-连接">连接</a>    <ul>
+      <li><a href="#验证" id="markdown-toc-验证">验证</a></li>
+      <li><a href="#准备" id="markdown-toc-准备">准备</a></li>
+      <li><a href="#解析" id="markdown-toc-解析">解析</a></li>
+    </ul>
+  </li>
+  <li><a href="#初始化" id="markdown-toc-初始化">初始化</a></li>
+</ul>
+
+<p><img src="https://picsum.photos/800/300/?image=628" alt="" />
+Java中类的加载、连接都是在程序运行时完成的，虚拟机将class文件加载到内存，进行校验、解析和初始化最终形成可以被虚拟机使用的Java对象，即类加载过程。</p>
+
+<h2 id="类的生命周期">类的生命周期</h2>
+<p>类在JVM的生命周期主要包括几个阶段：<strong>加载</strong>、<strong>连接</strong>、<strong>初始化</strong>、<strong>使用</strong>和<strong>卸载</strong>，其中连接部分又可细分为<strong>验证</strong>、<strong>准备</strong>和<strong>解析</strong>。</p>
+
+<h3 id="何时加载">何时加载</h3>
+<p>加载时机并没有明确规定，由虚拟机自行掌握</p>
+
+<h3 id="何时初始化">何时初始化</h3>
+<p>JVM规定<strong>有且只有</strong>下面几种情况发生时会对类进行初始化，而加载、连接操作自然也在其之前完成。</p>
+<ul>
+  <li>读到下面四条指令：
+    <ul>
+      <li><code class="highlighter-rouge">new</code> 创建一个对象实例</li>
+      <li><code class="highlighter-rouge">getstatic</code> 读取一个类的静态变量（用final static修饰的静态变量除外，这部分会直接进入常量池）</li>
+      <li><code class="highlighter-rouge">setstatic</code> 设置一个类的静态变量</li>
+      <li><code class="highlighter-rouge">invokestatic</code> 调用一个类的静态方法</li>
+    </ul>
+  </li>
+  <li>使用<code class="highlighter-rouge">java.lang.reflect</code>包里的方法进行反射调用</li>
+  <li>初始化一个类时，如果父类还没有初始化需要对父类进行初始化</li>
+  <li>用户指定的执行主类，虚拟机要对其进行初始化</li>
+</ul>
+
+<h2 id="加载">加载</h2>
+<p>加载阶段完成下面几件事情：</p>
+<ul>
+  <li>通过类的全限定名获得类的二进制文件</li>
+  <li>将字节流所代表的静态存储结构转化为<strong>方法区的运行时数据结构</strong></li>
+  <li>在<strong>堆</strong>中生成一个代表这个类的<code class="highlighter-rouge">java.lang.Class</code>对象，作为方法区数据的访问入口</li>
+</ul>
+
+<h3 id="类加载器">类加载器</h3>
+<p>Java将类加载的工作交给JVM处理，既可以使用系统提供的类加载器进行加载，也可以用自定义的类加载器加载。</p>
+<h4 id="分类">分类</h4>
+<p>JVM提供了三个类加载器</p>
+<ul>
+  <li><strong>启动类加载器 Bootstrap ClassLoader</strong>：负责将存放在<code class="highlighter-rouge">&lt;JAVA_HOME&gt;\lib</code>目录下的或者被<code class="highlighter-rouge">-Xbootclasspath</code>指定的路径中的，可以被JVM识别的类库加载到虚拟机内存中。
+    <blockquote>
+      <p>启动类加载器不能被Java代码引用，会返回null。</p>
+    </blockquote>
+  </li>
+  <li><strong>扩展类加载器 Extension ClassLoader</strong>：<code class="highlighter-rouge">&lt;JAVA_HOME&gt;\lib\ext</code>目录下，或者被<code class="highlighter-rouge">java.ext.dirs</code>系统变量指定的路径下的类。</li>
+  <li><strong>系统类加载器 Application ClassLoader</strong>：也叫应用程序类加载器，加载用户目录<code class="highlighter-rouge">classpath</code>下的类，是程序中默认的类加载器。</li>
+</ul>
+
+<p><img src="https://i.loli.net/2019/01/15/5c3d836b3d7df.png" alt="" /></p>
+
+<h4 id="双亲委派模型">双亲委派模型</h4>
+<p>对于任何一个类，需要<strong>由类和它的加载器确定其在JVM的唯一性</strong>，因此类加载需要依赖双亲委派模型。</p>
+
+<p>除了最顶层的启动类加载器外，其他类加载器都应该有自己的父类加载器，通过组合实现。</p>
+
+<p>双亲委派模型的具体工作模式是：<strong>如果一个类加载器收到了类加载的请求，它不会先自己处理，而是委派给父类加载器进行处理，只有当福类加载器不能加载这个类（搜索范围内没有找到所需的类），子类才会尝试自己加载。</strong>
+<img src="https://i.loli.net/2019/01/15/5c3d836d111e9.png" alt="" /></p>
+
+<p>JVM中类都是通过<code class="highlighter-rouge">java.lang.ClassLoader</code>中的<code class="highlighter-rouge">loadClass()</code>方法进行加载的，源码通俗易懂，首先调用<code class="highlighter-rouge">findLoadedClass()</code>方法检查类是否已经被加载，之后调用父类的<code class="highlighter-rouge">loadClass()</code>方法，如果父类为null则调用Bootstrap类加载器进行加载，若还未加载成功则调用自己的<code class="highlighter-rouge">findClass</code>进行加载。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">protected</span> <span class="n">Class</span><span class="o">&lt;?&gt;</span> <span class="n">loadClass</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">resolve</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ClassNotFoundException</span>
+<span class="o">{</span>
+    <span class="kd">synchronized</span> <span class="o">(</span><span class="n">getClassLoadingLock</span><span class="o">(</span><span class="n">name</span><span class="o">))</span> <span class="o">{</span>
+        <span class="c1">// First, check if the class has already been loaded</span>
+        <span class="n">Class</span><span class="o">&lt;?&gt;</span> <span class="n">c</span> <span class="o">=</span> <span class="n">findLoadedClass</span><span class="o">(</span><span class="n">name</span><span class="o">);</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">c</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="kt">long</span> <span class="n">t0</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">nanoTime</span><span class="o">();</span>
+            <span class="k">try</span> <span class="o">{</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">parent</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">c</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="na">loadClass</span><span class="o">(</span><span class="n">name</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+                <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+                    <span class="n">c</span> <span class="o">=</span> <span class="n">findBootstrapClassOrNull</span><span class="o">(</span><span class="n">name</span><span class="o">);</span>
+                <span class="o">}</span>
+            <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">ClassNotFoundException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+                <span class="c1">// ClassNotFoundException thrown if class not found</span>
+                <span class="c1">// from the non-null parent class loader</span>
+            <span class="o">}</span>
+
+            <span class="k">if</span> <span class="o">(</span><span class="n">c</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                <span class="c1">// If still not found, then invoke findClass in order</span>
+                <span class="c1">// to find the class.</span>
+                <span class="kt">long</span> <span class="n">t1</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">nanoTime</span><span class="o">();</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">findClass</span><span class="o">(</span><span class="n">name</span><span class="o">);</span>
+                <span class="c1">// this is the defining class loader; record the stats</span>
+                <span class="n">sun</span><span class="o">.</span><span class="na">misc</span><span class="o">.</span><span class="na">PerfCounter</span><span class="o">.</span><span class="na">getParentDelegationTime</span><span class="o">().</span><span class="na">addTime</span><span class="o">(</span><span class="n">t1</span> <span class="o">-</span> <span class="n">t0</span><span class="o">);</span>
+                <span class="n">sun</span><span class="o">.</span><span class="na">misc</span><span class="o">.</span><span class="na">PerfCounter</span><span class="o">.</span><span class="na">getFindClassTime</span><span class="o">().</span><span class="na">addElapsedTimeFrom</span><span class="o">(</span><span class="n">t1</span><span class="o">);</span>
+                <span class="n">sun</span><span class="o">.</span><span class="na">misc</span><span class="o">.</span><span class="na">PerfCounter</span><span class="o">.</span><span class="na">getFindClasses</span><span class="o">().</span><span class="na">increment</span><span class="o">();</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">resolve</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">resolveClass</span><span class="o">(</span><span class="n">c</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="n">c</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="连接">连接</h2>
+<p>该阶段又可细分为验证、准备和解析。加载和连接阶段是交叉进行的，可能加载阶段还未结束，连接阶段就已经开始。</p>
+
+<h3 id="验证">验证</h3>
+<p>保证class文件中包含的字节流符合JVM的格式要求，要进行下面几个check项：</p>
+<ul>
+  <li><strong>文件格式验证</strong>：是否符合class文件格式规范</li>
+  <li><strong>元数据验证</strong>：是否存在不符合java语义规范的元数据（对数据类型进行校验）</li>
+  <li><strong>字节码验证</strong>：对方法体进行校验，较为复杂这里不展开</li>
+  <li><strong>符号引用验证</strong>：验证符号引用是否可以转化为直接引用，为解析阶段做准备</li>
+</ul>
+
+<h3 id="准备">准备</h3>
+<p>为<strong>类变量</strong>分配内存并设置默认值（零值，并非初始值），这些内存都是在<strong>方法区</strong>中分配的。（不包括用final static修饰的ConstantValue）</p>
+
+<h3 id="解析">解析</h3>
+<p>将常量池中的<strong>符号引用</strong>翻译为<strong>直接引用</strong>的过程</p>
+<ul>
+  <li><strong>符号引用</strong>：以一组符号来描述所引用的目标，可以使任何字面值，引用的目标可能不在内存中</li>
+  <li><strong>直接引用</strong>：目标的指针、相对偏移量或能间接定位到目标的句柄，引用的目标必定存在于内存</li>
+</ul>
+
+<p>解析主要包括<strong>类或接口解析</strong>、<strong>字段解析</strong>、<strong>类方法解析</strong>和<strong>接口方法解析</strong>，如果解析失败，即找不到对应的方法或字段则会抛出<code class="highlighter-rouge">java.lang.NoSuchMethodError</code>或<code class="highlighter-rouge">java.lang.NoSuchFieldError</code>。</p>
+
+<h2 id="初始化">初始化</h2>
+<p>初始化是执行<strong>类构造器<code class="highlighter-rouge">&lt;clinit&gt;()</code></strong>方法的过程，这个方法有以下几个特点：</p>
+<ul>
+  <li>它是由编译器自动收集类中静态变量的赋值语句和静态语句块中的语句合并产生的，顺序取决于代码中的顺序。</li>
+  <li>不需要显式调用父类的该方法，JVM会保证在子类<code class="highlighter-rouge">&lt;clinit&gt;()</code>方法执行前，父类的该方法已经执行。</li>
+  <li>它不是必须的，如果没有静态变量和方法，就没有类构造器。</li>
+  <li>JVM不会调用接口父类的该方法，接口类没有静态语句块。</li>
+  <li>JVM会保证该方法在多线程环境下正确被加锁和同步。</li>
+</ul>
+
+<p>(End)</p>
+
+<blockquote>
+  <p>参考资料：</p>
+  <ul>
+    <li>《深入理解Java虚拟机》</li>
+  </ul>
+</blockquote>
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/14/excutors/">Java核心类库学习（一） 线程池
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/10/thread1/">Java并发编程 线程同步机制
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/09/gc/">JVM基础 GC及内存分配
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+        
+            </ul>
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2019/01/14/excutors/">Java核心类库学习（一） 线程池</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2019/01/15/classload/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2019/01/15/classload/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>
