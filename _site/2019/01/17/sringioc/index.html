@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Spring（一）IoC</title>
+    <meta name="description" content="对Spring IoC相关的知识做点笔记，涉及内容有Ioc概念、Spring Ioc容器、注入方式、容器启动方式以及Bean的生命周期。本篇不涉及源码的解读，只是介绍相关接口的功能和继承关系以及其实现类，大部分源于王福强的《Spring揭秘》一书，少部分源自其他博文。">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2019/01/17/sringioc/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>Spring（一）IoC</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2019-01-17
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Java" title="Category: Java" rel="category">Java</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a-->
+        <a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a>&nbsp;
+    
+        <!--a href="/tag/#Spring" title="Tag: Spring" rel="tag">Spring</a-->
+        <a href="/tag/#Spring" title="Tag: Spring" rel="tag">Spring</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#ioc" id="markdown-toc-ioc">IoC</a>    <ul>
+      <li><a href="#ioc-service-provider" id="markdown-toc-ioc-service-provider">IoC Service Provider</a></li>
+    </ul>
+  </li>
+  <li><a href="#beanfactory" id="markdown-toc-beanfactory">BeanFactory</a>    <ul>
+      <li><a href="#主要顶层接口" id="markdown-toc-主要顶层接口">主要顶层接口</a></li>
+      <li><a href="#容器启动" id="markdown-toc-容器启动">容器启动</a></li>
+      <li><a href="#bean的作用域" id="markdown-toc-bean的作用域">Bean的作用域</a></li>
+      <li><a href="#bean的实例化" id="markdown-toc-bean的实例化">Bean的实例化</a>        <ul>
+          <li><a href="#1实例化" id="markdown-toc-1实例化">1.实例化</a></li>
+          <li><a href="#2设置属性及依赖" id="markdown-toc-2设置属性及依赖">2.设置属性及依赖</a></li>
+          <li><a href="#3检查aware接口并设置相关依赖" id="markdown-toc-3检查aware接口并设置相关依赖">3.检查Aware接口并设置相关依赖</a></li>
+          <li><a href="#4beanpostprocessor" id="markdown-toc-4beanpostprocessor">4.BeanPostProcessor</a></li>
+          <li><a href="#5initializationbean和init-method" id="markdown-toc-5initializationbean和init-method">5.InitializationBean和init-method</a></li>
+          <li><a href="#6disposablebean与destory-method" id="markdown-toc-6disposablebean与destory-method">6.DisposableBean与destory-method</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><a href="#基于注解的注入" id="markdown-toc-基于注解的注入">基于注解的注入</a></li>
+  <li><a href="#applicationcontext" id="markdown-toc-applicationcontext">ApplicationContext</a></li>
+</ul>
+
+<p><img src="https://picsum.photos/800/300/?image=594" alt="" />
+对Spring IoC相关的知识做点笔记，涉及内容有Ioc概念、Spring Ioc容器、注入方式、容器启动方式以及Bean的生命周期。本篇不涉及源码的解读，只是介绍相关接口的功能和继承关系以及其实现类，大部分源于王福强的《Spring揭秘》一书，少部分源自其他博文。</p>
+
+<h2 id="ioc">IoC</h2>
+<p><strong>控制反转Inversion of Control</strong>是一种思想，也叫<strong>依赖注入Dependency Injection</strong>，简单来说就是将所有的被注入对象和依赖对象交由<strong>IoC Service Provider</strong>来管理，控制对象也由被注入对象变为了IoC Service Provider。
+<img src="https://i.loli.net/2019/01/17/5c409d2805ec2.png" alt="" /></p>
+
+<p>一般依赖注入的方式：</p>
+<ul>
+  <li><strong>构造器注入</strong>：即将被依赖对象作为被注入对象的构造器参数</li>
+  <li><strong>setter方法注入</strong>：为被依赖对象提供<code class="highlighter-rouge">setter</code>方法</li>
+  <li><strong>接口注入</strong>：需要被注入对象实现一个接口，在接口提供的方法中将被依赖对象作为参数注入。（已经不再使用）</li>
+</ul>
+
+<h3 id="ioc-service-provider">IoC Service Provider</h3>
+<p><strong>IoC Service Provider</strong>的定义很宽泛，凡是能够实现<strong>将依赖对象和被注入对象进行绑定</strong>的角色都可以成为IoC Service Provider，它可以是一段代码、一组类、Ioc框架或者像Spring这样的IoC容器。它的职责主要由两个：</p>
+<ul>
+  <li><strong>业务对象的构建管理</strong></li>
+  <li><strong>业务对象的依赖绑定</strong></li>
+</ul>
+
+<p>IoC Service Provider需要一些东西来记录对象之间的绑定关系，称为注册对象管理信息，这些信息可以是以下几种：</p>
+<ul>
+  <li><strong>直接编码</strong></li>
+  <li><strong>配置文件</strong></li>
+  <li><strong>元数据</strong>：这部分稍微解释下，是指直接通过注解或其他方式标明依赖对象，而绑定关系则由其他类实现，这些类就成为被注入对象的元数据</li>
+</ul>
+
+<h2 id="beanfactory">BeanFactory</h2>
+<p>Spring的Ioc容器是一个提供IoC支持的轻量级容器，除了IoC外其还提供了诸如AOP等其他支持，本篇不进行展开，只关注其IoC部分。Spring提供了两种容器类型：</p>
+<ul>
+  <li><strong>BeanFactory</strong></li>
+  <li><strong>ApplicationContext</strong></li>
+</ul>
+
+<p><img src="https://i.loli.net/2019/01/17/5c40a42e34c3d.png" alt="" />
+ApplicationContext间接继承自BeanFactory，除了BeanFactory外其还继承了其他接口，实现了更高级的功能。两者最大的不同之处在于<strong>BeanFactory容器中管理的对象采用延迟初始化的策略，在被请求到时才会初始化一个对象实例，而ApplicationContext在容器启动之后会初始化所有的对象实例并完成绑定</strong>，这一特性导致在两个容器中Bean的生命周期有所不同，在下面介绍时会标注出来。</p>
+
+<p>下面介绍BeanFactory相关功能的实现接口，ApplicationContext特有的功能接口将在之后列出。</p>
+
+<h3 id="主要顶层接口">主要顶层接口</h3>
+<ul>
+  <li><strong><code class="highlighter-rouge">BeanFactory</code></strong>：定义了访问容器内管理的相关Bean实例的查询方法。</li>
+  <li><strong><code class="highlighter-rouge">BeanDefinition</code></strong>：每个受管理的对象，容器内都有一个BeanDefinition的实例，负责保存对象的所有必要信息，包括class类型、是否是抽象类、构造方法及参数、其他属性。其主要有两个实现类，<code class="highlighter-rouge">RootBeanDefinition</code>和<code class="highlighter-rouge">ChildBeanDefinition</code>。</li>
+  <li><strong><code class="highlighter-rouge">BeanDefinitionRegistry</code></strong>：与BeanDefinition为组合关系，抽象了Bean的注册管理逻辑。</li>
+</ul>
+
+<p>BeanFactory的实现类都会同时实现<code class="highlighter-rouge">BeanFactory</code>接口和<code class="highlighter-rouge">BeanDefinitionRegistry</code>接口。</p>
+
+<h3 id="容器启动">容器启动</h3>
+<p>容器启动阶段需要做下面几件事：</p>
+<ul>
+  <li>1.通过某种途径加载Configuration MetaData（可以理解为<code class="highlighter-rouge">Resource</code>）</li>
+  <li>2.从Configuration MetaData中进行分析和解析，将解析到的信息映射到<code class="highlighter-rouge">BeanDefinition</code>上，需要依赖相关的工具类（<code class="highlighter-rouge">BeanDefinitionReader</code>的实现类）</li>
+  <li>3.将<code class="highlighter-rouge">BeanDefinition</code>注册到容器中</li>
+</ul>
+
+<p>容器启动阶段有一个主要接口<code class="highlighter-rouge">BeanFactoryPostProcessor</code>：它会在容器实例化相应对象之前对<code class="highlighter-rouge">BeanDefinition</code>信息做最后的修改，相当于启动阶段的最后一步。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">BeanFactoryPostProcessor</span> <span class="o">{</span>
+    <span class="kt">void</span> <span class="nf">postProcessBeanFactory</span><span class="o">(</span><span class="n">ConfigurableListableBeanFactory</span> <span class="n">beanFactory</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">BeansException</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>对于BeanFactory容器，需要手动调用<code class="highlighter-rouge">BeanFactoryPostProcessor</code>的<code class="highlighter-rouge">postProcessBeanFactory()</code>方法将其应用到容器，对于ApplicationContext容器，则会自动识别配置文件中的<code class="highlighter-rouge">BeanFactoryPostProcessor</code>类并应用它。</p>
+
+<p>spring提供了下面几个实现类：</p>
+<ul>
+  <li>PropertyPlaceholderConfigurer：允许我们用占位符<code class="highlighter-rouge">${}</code>在properties文件中加载一些变量，有三个模式，可以通过<code class="highlighter-rouge">setSystemPropertiesMode</code>来变更，默认为<code class="highlighter-rouge">SYSTEM_PROPERTIES_ MODE_FALLBACK</code>，如果找不到所需要的属性会在System Properties中寻找（即启动命令中指定的property）
+    <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="nt">&lt;bean</span> <span class="na">class=</span><span class="s">"org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"locations"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;list&gt;</span>
+              <span class="nt">&lt;value&gt;</span>properties_path<span class="nt">&lt;/value&gt;</span>
+          <span class="nt">&lt;/list&gt;</span>
+      <span class="nt">&lt;/property&gt;</span>
+  <span class="nt">&lt;/bean&gt;</span>
+</code></pre></div>    </div>
+  </li>
+  <li>PropertyOverrideConfigurer：对容器中已定义的bean的属性进行替换，通过配置文件</li>
+  <li>CustomEditorConfigurer：配置从字符串到具体对象转换过程中的信息，如日期等</li>
+</ul>
+
+<h3 id="bean的作用域">Bean的作用域</h3>
+<p>Bean是有作用域的，超出作用域的Bean将被销毁，对应配置文件中bean的<code class="highlighter-rouge">scope</code>属性。非Web容器中，Bean有两种作用域</p>
+<ul>
+  <li><strong>singleton</strong>：在spring中只存在一个bean实例，初始化后将一直存活到容器退出，与容器几乎相同的寿命。</li>
+  <li><strong>prototype</strong>：每次收到bean实例请求的时候都会重新生成一个新的实例对象，生成之后返回给请求方，容器即不再拥有对象的引用，请求方自己来负责对象实例生命周期的管理。</li>
+</ul>
+
+<p>对于Web容器，还新增了<code class="highlighter-rouge">request</code>、<code class="highlighter-rouge">session</code>和<code class="highlighter-rouge">global session</code>三种作用域，这里不做展开。</p>
+
+<h3 id="bean的实例化">Bean的实例化</h3>
+<p>容器启动之后仅仅拥有对象的BeanDefinition来保存实例化对象需要的信息，Bean的实例化只有在请求<code class="highlighter-rouge">BeanFactory</code>的<code class="highlighter-rouge">getBean()</code>方法之后才进行，当然这一步可能是应用程序显式调用，也可能是由容器隐式调用的。（ApplicationContext容器就是在容器启动之后在<code class="highlighter-rouge">refresh()</code>方法中隐式调用注册对象的<code class="highlighter-rouge">getBean()</code>方法）。</p>
+
+<p>不同于一般对象，<strong>Spring给其管理的对象以统一的生命周期</strong>，不再是「new完被使用，脱离作用域后被回收」的命运。Bean的生命周期如下所示：
+<img src="https://i.loli.net/2019/01/18/5c4140d0da250.png" alt="" /></p>
+
+<h4 id="1实例化">1.实例化</h4>
+<p>容器采用策略模式实例化对象，这一步只是进行简单的初始化，并未进行依赖注入。返回<code class="highlighter-rouge">BeanWarpper</code>对象而非对象实例，为了方便第二步的属性设置。</p>
+<ul>
+  <li><code class="highlighter-rouge">InstantiationStrategy</code>接口定义了实例化策略，<code class="highlighter-rouge">CglibSubclassingInstantiationStrategy</code>是其默认的实现类，采用CGLIB动态字节码生成功能。</li>
+</ul>
+
+<h4 id="2设置属性及依赖">2.设置属性及依赖</h4>
+<p>根据BeanDefinition中保存的信息对第一步返回的<code class="highlighter-rouge">BeanWrapper</code>对象调用<code class="highlighter-rouge">setPropertyValue()</code>方法设置属性和依赖对象，即IoC注入。</p>
+<ul>
+  <li><code class="highlighter-rouge">BeanWrapper</code>接口间接继承了<code class="highlighter-rouge">PropertyAccessor</code>、<code class="highlighter-rouge">PropertyEditorRegistry</code>和<code class="highlighter-rouge">TypeConverter</code>，提供了一系列类型转换和设置对象属性的方法。</li>
+</ul>
+
+<h4 id="3检查aware接口并设置相关依赖">3.检查Aware接口并设置相关依赖</h4>
+<p>容器会检查<strong>实例对象是否实现了相关Aware接口</strong>，如果是，会为对象注入相关的依赖。对于BeanFactory容器有下面三个Aware接口：</p>
+<ul>
+  <li><strong><code class="highlighter-rouge">BeanNameAware</code></strong>：将配置文件中bean的name属性注入实例对象</li>
+  <li><strong><code class="highlighter-rouge">BeanClassLoaderAware</code></strong>：将bean的ClassLoader注入实例对象，默认为<code class="highlighter-rouge">org.springframework.util.ClassUtils</code>类的Classloader</li>
+  <li><strong><code class="highlighter-rouge">BeanFactoryAware</code></strong>：将bean的BeanFactory容器引用注入实例对象</li>
+</ul>
+
+<p>对于ApplicationContext容器，则新增了下面几个Aware方法，都会将容器自身引用注入到对象实例，不同于上面几个方法的实现机理，下面的方法是通过<code class="highlighter-rouge">BeanPostProcessor</code>方式实现的，之后会提到。</p>
+<ul>
+  <li><code class="highlighter-rouge">ResourceLoaderAware</code></li>
+  <li><code class="highlighter-rouge">ApplicationEventPublisherAware</code></li>
+  <li><code class="highlighter-rouge">MessageSourceAware</code></li>
+  <li><code class="highlighter-rouge">ApplicationContextAware</code></li>
+</ul>
+
+<h4 id="4beanpostprocessor">4.BeanPostProcessor</h4>
+<p>为实例注册一个处理器，与之前的<code class="highlighter-rouge">BeanFactoryPostProcessor</code>接口类似，对于BeanFactory容器，需要手动调用容器的<code class="highlighter-rouge">addBeanPostProcessor()</code>方法将其实现类应用到容器，而ApplicationContext则可以自动识别配置文件中配置的<code class="highlighter-rouge">BeanPostProcessor</code>的实现类并将其应用到容器。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">BeanPostProcessor</span> <span class="o">{</span>
+    <span class="n">Object</span> <span class="nf">postProcessBeforeInitialization</span><span class="o">(</span><span class="n">Object</span> <span class="n">bean</span><span class="o">,</span> <span class="n">String</span> <span class="n">beanName</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">BeansException</span><span class="o">;</span>
+    <span class="n">Object</span> <span class="nf">postProcessAfterInitialization</span><span class="o">(</span><span class="n">Object</span> <span class="n">bean</span><span class="o">,</span> <span class="n">String</span> <span class="n">beanName</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">BeansException</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p><code class="highlighter-rouge">BeanPostProcessor</code>接口定义了两个方法，分别在下面要提到的<code class="highlighter-rouge">InitilizationBean</code>和<code class="highlighter-rouge">init-method</code>的之前和之后进行，称作<strong>前置处理</strong>和<strong>后置处理</strong>。这两个接口将Bean实例作为参数传入，因此可以对Bean的属性进行任意操作。</p>
+<ul>
+  <li><code class="highlighter-rouge">ApplicationContextAwareProcessor</code>就是其中一个实现类，其<code class="highlighter-rouge">postProcessBeforeInitialization()</code>方法会检查并设置Aware依赖。
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="kd">private</span> <span class="kt">void</span> <span class="nf">invokeAwareInterfaces</span><span class="o">(</span><span class="n">Object</span> <span class="n">bean</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">if</span> <span class="o">(</span><span class="n">bean</span> <span class="k">instanceof</span> <span class="n">Aware</span><span class="o">)</span> <span class="o">{</span>
+          <span class="k">if</span> <span class="o">(</span><span class="n">bean</span> <span class="k">instanceof</span> <span class="n">ResourceLoaderAware</span><span class="o">)</span> <span class="o">{</span>
+              <span class="o">((</span><span class="n">ResourceLoaderAware</span><span class="o">)</span> <span class="n">bean</span><span class="o">).</span><span class="na">setResourceLoader</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">applicationContext</span><span class="o">);</span>
+          <span class="o">}</span>
+          <span class="k">if</span> <span class="o">(</span><span class="n">bean</span> <span class="k">instanceof</span> <span class="n">ApplicationEventPublisherAware</span><span class="o">)</span> <span class="o">{</span>
+              <span class="o">((</span><span class="n">ApplicationEventPublisherAware</span><span class="o">)</span> <span class="n">bean</span><span class="o">).</span><span class="na">setApplicationEventPublisher</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">applicationContext</span><span class="o">);</span>
+          <span class="o">}</span>
+          <span class="k">if</span> <span class="o">(</span><span class="n">bean</span> <span class="k">instanceof</span> <span class="n">MessageSourceAware</span><span class="o">)</span> <span class="o">{</span>
+              <span class="o">((</span><span class="n">MessageSourceAware</span><span class="o">)</span> <span class="n">bean</span><span class="o">).</span><span class="na">setMessageSource</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">applicationContext</span><span class="o">);</span>
+          <span class="o">}</span>
+          <span class="k">if</span> <span class="o">(</span><span class="n">bean</span> <span class="k">instanceof</span> <span class="n">ApplicationContextAware</span><span class="o">)</span> <span class="o">{</span>
+              <span class="o">((</span><span class="n">ApplicationContextAware</span><span class="o">)</span> <span class="n">bean</span><span class="o">).</span><span class="na">setApplicationContext</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">applicationContext</span><span class="o">);</span>
+          <span class="o">}</span>
+      <span class="o">}</span>
+  <span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<h4 id="5initializationbean和init-method">5.InitializationBean和init-method</h4>
+<p>在前置处理结束之后容器会检查对象是否实现了<code class="highlighter-rouge">InitializationBean</code>接口，这个接口只定义了一个方法<code class="highlighter-rouge">afterPropertiesSet()</code>，由于没有传入Bean实例，因此只能进行一些额外的逻辑而不能对Bean对象属性进行操作。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">InitializingBean</span> <span class="o">{</span>
+    <span class="kt">void</span> <span class="nf">afterPropertiesSet</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">Exception</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>这个接口对业务对象有侵入性，spring为配置文件中的bean提供了一个<code class="highlighter-rouge">init-method</code>属性，可以为对象设置初始化方法，作用与<code class="highlighter-rouge">afterPropertiesSet()</code>类似。</p>
+
+<h4 id="6disposablebean与destory-method">6.DisposableBean与destory-method</h4>
+<p>在Bean实例被销毁之前会检查对象是否实现了<code class="highlighter-rouge">DisposableBean</code>接口，同初始化时类似，spring为bean添加了<code class="highlighter-rouge">destory-method</code>属性，为对象提供了自定义销毁的逻辑。需要注意的是，如果是<code class="highlighter-rouge">prototype</code>作用域下的实例，则无法执行自毁逻辑。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">DisposableBean</span> <span class="o">{</span>
+    <span class="kt">void</span> <span class="nf">destroy</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">Exception</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>容器需要明确指定这些自定义销毁的逻辑在什么时候被执行，否则实例将不会执行这些自毁逻辑而直接被销毁。</p>
+<ul>
+  <li>对于BeanFactory容器，需要手动执行容器的<code class="highlighter-rouge">destroySingletons()</code>方法销毁容器中管理的所有singleton类型的对象实例。</li>
+  <li>对于ApplicationContext容器，则需要调用容器的<code class="highlighter-rouge">registerShutdownHook()</code>方法执行bean的自毁逻辑，该方法会调用<code class="highlighter-rouge">Runtime</code>类的<code class="highlighter-rouge">addShutdownHook()</code>方法调用相应bean的销毁逻辑。</li>
+</ul>
+
+<h2 id="基于注解的注入">基于注解的注入</h2>
+<p>spring2.5之后提供了基于注解的注入方式，实际上还是采用<code class="highlighter-rouge">BeanPostProcessor</code>的方式，容器应用了特定的<code class="highlighter-rouge">BeanPostProcessor</code>，就可以使用相应的注解实现注入。</p>
+
+<p><strong><code class="highlighter-rouge">AutowiredAnnotationBeanPostProcessor</code></strong>：</p>
+<ul>
+  <li><strong>Autowired</strong>：按照类型匹配，可以实现属性、构造器或者方法的自动注入</li>
+  <li><strong>Qualifier</strong>：当容器内找到多个相同类型的实例时，需要用Qualifier指定bean的<code class="highlighter-rouge">id</code>或者<code class="highlighter-rouge">name</code>属性</li>
+</ul>
+
+<p><strong><code class="highlighter-rouge">CommonAnnotationBeanPostProcessor</code></strong>：</p>
+<ul>
+  <li><strong>Resource</strong>：基于<code class="highlighter-rouge">BeanName</code>的查找方式实现自动注入</li>
+  <li><strong>PostConstruct</strong>：类似于<code class="highlighter-rouge">init-method</code>和<code class="highlighter-rouge">BeanInitialization</code></li>
+  <li><strong>PostDestroy</strong>：类似于<code class="highlighter-rouge">destroy-method</code>和<code class="highlighter-rouge">DisposableBean</code></li>
+</ul>
+
+<p>上面两个<code class="highlighter-rouge">BeanPostProcessor</code>指定了容器中Bean的依赖关系，配置文件中的<code class="highlighter-rouge">&lt;context:annotation-config/&gt;</code>可以实现上面两个<code class="highlighter-rouge">BeanPostProcessor</code>的注册应用，不仅如此，它还同时应用了<code class="highlighter-rouge">PersistenceAnnotationBeanPostProcessor</code>和<code class="highlighter-rouge">RequiredAnnotationBeanPostProcessor</code>。</p>
+
+<p>要实现Bean的自动装载，将其从配置文件中消失，则需要依赖<strong><code class="highlighter-rouge">@Component</code></strong>等注解，通过classpath-scanning功能实现，在容器启动时，它会从某一顶层（base package）开始扫描，提取相应注解的类的BeanDefinition信息，构建相应的BeanDefinition并将其添加进容器。不但如此，它还会将上面提到的两种<code class="highlighter-rouge">BeanPostProcessor</code>应用到容器中，满足依赖注入的需求。</p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;context:component-scan</span> <span class="na">base-package=</span><span class="s">"org.mypackage"</span><span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<h2 id="applicationcontext">ApplicationContext</h2>
+<p>相比于BeanFactory，ApplicationContext进一步扩展了基本容器的功能外（包括对<code class="highlighter-rouge">BeanFactoryPostProcessor</code>、<code class="highlighter-rouge">BeanPostProcessor</code>及其他特殊类型bean的自动识别，容器启动后自动初始化实例bean），还提供了其他更为先进的功能。ApplicationContext常用的实现类主要有下面三个：</p>
+<ul>
+  <li><strong><code class="highlighter-rouge">FileSystemXmlApplicationContext</code></strong>：默认从文件系统加载bean及相关资源。</li>
+  <li><strong><code class="highlighter-rouge">ClassPathXmlApplicationContext</code></strong>：默认从classpath加载bean及相关资源。</li>
+  <li><strong><code class="highlighter-rouge">XmlWebApplicationContext</code></strong>：基于Web应用程序。</li>
+</ul>
+
+<p>下面是ApplicationContext特有的功能，这里不做展开</p>
+<ul>
+  <li>统一资源定位</li>
+  <li>国际化信息支持</li>
+  <li>容器内事件发布</li>
+  <li>多模块加载的简化</li>
+</ul>
+
+<p>(End)</p>
+
+<blockquote>
+  <p>参考资料：</p>
+  <ul>
+    <li><a href="https://www.kancloud.cn/yuanbing1010/spring4-x/313301">spring文档翻译</a></li>
+    <li>《Spring揭秘》</li>
+  </ul>
+</blockquote>
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/15/classload/">JVM基础（二） 类加载过程
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/14/excutors/">Java核心类库学习（一） 线程池
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/10/thread1/">Java并发编程 线程同步机制
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/09/gc/">JVM基础 GC及内存分配
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+            
+        
+        
+            </ul>
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2019/01/15/linux9/">Linux基础（九）I/O多路复用</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2019/01/17/sringioc/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2019/01/17/sringioc/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>

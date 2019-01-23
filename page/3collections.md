@@ -19,13 +19,13 @@ type: page
 
 * [《领域驱动设计》](https://book.douban.com/subject/26819666/)
 
-*
-
 ## 博文
 
 * [进击的Java新人系列](https://zhuanlan.zhihu.com/p/24393775?refer=hinus)
 
 * [JoeCao微服务系列](https://github.com/JoeCao/JoeCao.github.io/issues/3)
+
+* [Spring4all](http://www.spring4all.com/)
 
 ## 应用
 
@@ -47,6 +47,8 @@ type: page
 * [git push 卡住不动的问题 Git push hangs on POST git-receive-pack](https://stackoverflow.com/questions/10790232/hanging-at-post-git-receive-pack-chunked)
 
 * [安装独立MAT及在MAC下运行报错的问题](https://mahl1990.iteye.com/blog/2410197)
+
+* [Maven依赖冲突的处理方法](https://my.oschina.net/LucasZhu/blog/1556772)
 
 
 ## Comments

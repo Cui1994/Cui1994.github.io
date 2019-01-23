@@ -5,9 +5,29 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Wed, 16 Jan 2019 00:07:46 +0800</pubDate>
-    <lastBuildDate>Wed, 16 Jan 2019 00:07:46 +0800</lastBuildDate>
+    <pubDate>Wed, 23 Jan 2019 11:36:10 +0800</pubDate>
+    <lastBuildDate>Wed, 23 Jan 2019 11:36:10 +0800</lastBuildDate>
     <generator>Jekyll v3.8.4</generator>
+    
+      <item>
+        <title>Spring（一）IoC</title>
+        <description>
+&lt;img src=&quot;https://picsum.photos/800/300/?image=594&quot; alt=&quot;&quot; /&gt;
+对Spring IoC相关的知识做点笔记，涉及内容有Ioc概念、Spring Ioc容器、注入方式、容器启动方式以及Bean的生命周期。本篇不涉及源码的解读，只是介绍相关接口的功能和继承关系以及其实现类，大部分源于王福强的《Spring揭秘》一书，少部分源自其他博文。
+
+</description>
+        <pubDate>Thu, 17 Jan 2019 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2019/01/17/sringioc/</link>
+        <guid isPermaLink="true">http://localhost:4000/2019/01/17/sringioc/</guid>
+        
+        <category>Java</category>
+        
+        <category>Spring</category>
+        
+        
+        <category>Java</category>
+        
+      </item>
     
       <item>
         <title>Linux基础（九）I/O多路复用</title>
@@ -212,30 +232,6 @@ JVM的内存分配与垃圾回收是老生常谈的话题了，这里先对GC涉
         <pubDate>Sun, 23 Dec 2018 00:00:00 +0800</pubDate>
         <link>http://localhost:4000/2018/12/23/linux7/</link>
         <guid isPermaLink="true">http://localhost:4000/2018/12/23/linux7/</guid>
-        
-        <category>Linux</category>
-        
-        <category>读书笔记</category>
-        
-        
-        <category>Linux</category>
-        
-      </item>
-    
-      <item>
-        <title>Linux基础（六）作业控制与Deamon进程</title>
-        <description>
-&lt;img src=&quot;https://picsum.photos/800/300/?image=857&quot; alt=&quot;&quot; /&gt;
-
-&lt;blockquote&gt;
-  该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
-书中的编程练习这里不做展示和说明。
-&lt;/blockquote&gt;
-
-</description>
-        <pubDate>Sat, 22 Dec 2018 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2018/12/22/linux6/</link>
-        <guid isPermaLink="true">http://localhost:4000/2018/12/22/linux6/</guid>
         
         <category>Linux</category>
         
