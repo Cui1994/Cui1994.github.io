@@ -264,6 +264,10 @@
   <li><strong>在每个 volatile 读操作之后插入一个 LoadStore Barriers</strong></li>
 </ul>
 
+<p><img src="https://i.loli.net/2019/01/24/5c49d0a404e42.png" alt="" /></p>
+
+<p><img src="https://i.loli.net/2019/01/24/5c49d0aebfe74.png" alt="" /></p>
+
 <p>由于内存屏障的存在，编译器和处理器不会对 volatile 读与 volatile 读后面的任意内存操作重排序；不会对 volatile 写与 volatile 写前面的任意内存操作重排序。</p>
 
 <p>内存屏障的插入策略在不通处理器上有不同的实现，如<code class="highlighter-rouge">x86</code>处理器就只会在 volatile 写操作之后插入 StroeLoad Barriers</p>
@@ -278,6 +282,8 @@
 <p>在一个事务执行总线事务时，总线会禁止其他处理器与主存进行数据传输，简单来说就是<strong>在任意时间点，最多只能有一个处理器能访问内存</strong>，因此在同一个事务中的内存读/写操作都是原子性的。</p>
 
 <p>在32位处理器上，JVM会将64位 long/double 类型变量的读/写操作拆分成两个32位的读/写操作来执行，而两个操作可能会被分到不同的总线事务中，不再具有原子性。</p>
+
+<p><img src="https://i.loli.net/2019/01/24/5c49d15940926.png" alt="" /></p>
 
 <p>volatile 会在64位变量的读/写操作前后加入特定的内存屏障，保证两个32位的读/写操作完成之前没有新的读/写操作，保证了其原子性。</p>
 
