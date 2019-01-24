@@ -6,15 +6,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Java并发编程 线程同步机制</title>
-    <meta name="description" content="对Java在并发环境下线程安全的实现方式做点笔记。">
+    <title>JMM小结</title>
+    <meta name="description" content="在上一篇Java并发编程 线程同步机制中提到了几种Java线程同步机制，实际上，Java并发编程的前提是Java的内存模型JMM，这里补一下这方面的知识，对 volatile 、锁和 final 的语义做进一步的理解。">
 
     <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
     <link rel="icon" href="/favicon.ico?" type="image/x-icon">
     <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
     <link rel="stylesheet" href="/css/main.css ">
-    <link rel="canonical" href="http://localhost:4000/2019/01/10/thread1/">
+    <link rel="canonical" href="http://localhost:4000/2019/01/24/jmm/">
     <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
 
 
@@ -118,11 +118,11 @@
 
         <div class="page clearfix" post>
     <div class="left">
-        <h1>Java并发编程 线程同步机制</h1>
+        <h1>JMM小结</h1>
         <div class="label">
 
             <div class="label-card">
-                <i class="fa fa-calendar"></i>2019-01-10
+                <i class="fa fa-calendar"></i>2019-01-24
             </div>
 
             <div class="label-card">
@@ -162,14 +162,14 @@
         <!--a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a-->
         <a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a>&nbsp;
     
-        <!--a href="/tag/#%E5%A4%9A%E7%BA%BF%E7%A8%8B" title="Tag: 多线程" rel="tag">多线程</a-->
-        <a href="/tag/#多线程" title="Tag: 多线程" rel="tag">多线程</a>&nbsp;
-    
         <!--a href="/tag/#%E5%B9%B6%E5%8F%91" title="Tag: 并发" rel="tag">并发</a-->
         <a href="/tag/#并发" title="Tag: 并发" rel="tag">并发</a>&nbsp;
     
-        <!--a href="/tag/#%E7%AC%94%E8%AE%B0" title="Tag: 笔记" rel="tag">笔记</a-->
-        <a href="/tag/#笔记" title="Tag: 笔记" rel="tag">笔记</a>
+        <!--a href="/tag/#JMM" title="Tag: JMM" rel="tag">JMM</a-->
+        <a href="/tag/#JMM" title="Tag: JMM" rel="tag">JMM</a>&nbsp;
+    
+        <!--a href="/tag/#%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C" title="Tag: 内存屏障" rel="tag">内存屏障</a-->
+        <a href="/tag/#内存屏障" title="Tag: 内存屏障" rel="tag">内存屏障</a>
     
   
 
@@ -181,164 +181,157 @@
         <hr>
         <article itemscope itemtype="http://schema.org/BlogPosting">
         <ul id="markdown-toc">
-  <li><a href="#基础知识" id="markdown-toc-基础知识">基础知识</a>    <ul>
-      <li><a href="#线程生命周期" id="markdown-toc-线程生命周期">线程生命周期</a></li>
-      <li><a href="#竞态" id="markdown-toc-竞态">竞态</a></li>
-      <li><a href="#线程安全" id="markdown-toc-线程安全">线程安全</a>        <ul>
-          <li><a href="#原子性-atomic" id="markdown-toc-原子性-atomic"><strong>原子性 Atomic</strong></a></li>
-          <li><a href="#可见性-visibility" id="markdown-toc-可见性-visibility"><strong>可见性 Visibility</strong></a></li>
-          <li><a href="#有序性-odering" id="markdown-toc-有序性-odering"><strong>有序性 Odering</strong></a></li>
-        </ul>
-      </li>
-      <li><a href="#上下文切换" id="markdown-toc-上下文切换">上下文切换</a></li>
+  <li><a href="#一些概念" id="markdown-toc-一些概念">一些概念</a>    <ul>
+      <li><a href="#重排序" id="markdown-toc-重排序">重排序</a></li>
+      <li><a href="#内存屏障" id="markdown-toc-内存屏障">内存屏障</a></li>
+      <li><a href="#happen-before" id="markdown-toc-happen-before">happen-before</a></li>
     </ul>
   </li>
-  <li><a href="#java的线程同步机制" id="markdown-toc-java的线程同步机制">Java的线程同步机制</a>    <ul>
-      <li><a href="#锁-lock" id="markdown-toc-锁-lock">锁 Lock</a></li>
-      <li><a href="#volatile" id="markdown-toc-volatile">volatile</a></li>
-      <li><a href="#cas" id="markdown-toc-cas">CAS</a></li>
-      <li><a href="#安全发布" id="markdown-toc-安全发布">安全发布</a></li>
+  <li><a href="#volatile-语义" id="markdown-toc-volatile-语义">volatile 语义</a>    <ul>
+      <li><a href="#volatile-为什么可以保证-longdouble-类型写操作的原子性" id="markdown-toc-volatile-为什么可以保证-longdouble-类型写操作的原子性">volatile 为什么可以保证 long/double 类型写操作的原子性</a></li>
     </ul>
   </li>
+  <li><a href="#锁的语义" id="markdown-toc-锁的语义">锁的语义</a></li>
+  <li><a href="#final的语义" id="markdown-toc-final的语义">final的语义</a></li>
 </ul>
 
-<p><img src="https://picsum.photos/800/300/?image=1047" alt="" />
-对Java在并发环境下线程安全的实现方式做点笔记。</p>
+<p><img src="https://picsum.photos/800/300/?image=177" alt="" />
+在上一篇<a href="https://cui1994.github.io/2019/01/10/thread1/">Java并发编程 线程同步机制</a>中提到了几种Java线程同步机制，实际上，Java并发编程的前提是Java的内存模型JMM，这里补一下这方面的知识，对 volatile 、锁和 final 的语义做进一步的理解。</p>
 
-<h2 id="基础知识">基础知识</h2>
-<p>先介绍一些Java线程相关的基础概念</p>
+<h2 id="一些概念">一些概念</h2>
+<p>Java内存模型（JMM）决定了一个线程对共享变量的修改何时对其他线程可见。从抽象上来说，JMM定义了线程与主存的关系：<strong>每个线程都有一个私有的本地内存（并不真实存在，涵盖了对缓存、写缓冲区、寄存器和其他硬件及编译器优化），本地内存中保存了线程读/写共享变量的副本。</strong></p>
 
-<h3 id="线程生命周期">线程生命周期</h3>
+<p><strong>顺序一致模型</strong>是一个理论参考模型，要求一个线程内的操作完全按程序顺序执行，并且所有线程只能看到单一的执行顺序，每个操作都必须原子执行并对所有线程可见。</p>
 
-<p>Java中线程也是一个对象，由<code class="highlighter-rouge">Thread</code>类创建，其状态<code class="highlighter-rouge">STATE</code>有：</p>
+<p>JMM在设计时参照了顺序一致模型，但完全实现顺序一致模型会牺牲性能优势，因此做了适当放松：</p>
 <ul>
-  <li><strong>NEW</strong> 已创建未启动</li>
-  <li><strong>RUNABLE</strong>：已获得CPU资源（RUNNING）和可被CPU调度（READY）状态</li>
-  <li><strong>BLOCKED</strong>：阻塞状态，进行I/O调用和请求被其他线程占有的锁</li>
-  <li><strong>WAITING</strong>：等待其他线程特定的操作</li>
-  <li><strong>TIMED_WATING</strong>：并非无限制等待，到达一定时间后变为RUNABLE状态</li>
-  <li><strong>TERMINATED</strong>：终止</li>
+  <li>不保证一个线程内的操作按顺序执行</li>
+  <li>不保证所有线程看到一致的执行顺序</li>
+  <li>不保证所有操作原子执行</li>
 </ul>
 
-<p>线程生命周期如下：
-<img src="https://i.loli.net/2019/01/10/5c3745b60784c.png" alt="" /></p>
-
-<h3 id="竞态">竞态</h3>
-<p><strong>相同输入得不到相同输入，计算结果与时间有关的状态即为竞态。</strong></p>
-
-<p>竞态产生的原因一般是<strong>多个线程在不加控制的条件下并发更新、读取了同一个共享变量</strong>，引发竞态的模式主要有两种：</p>
+<h3 id="重排序">重排序</h3>
+<p>执行时为了提高性能，编译器和处理器会对指令进行重排序，常见重排序分为三种：</p>
 <ul>
-  <li>read-and-modify</li>
-  <li>check-then-action</li>
+  <li><strong>编译器优化的重排序</strong>：编译器在不改变单线程语义的前提下可以对程序指令进行重排序</li>
+  <li><strong>指令级并行重排序</strong>：处理器采用指令级并行技术（ILP），来实现多条指令的重叠，在没有数据依赖的前提下对指令进行重排序</li>
+  <li><strong>内存系统重排序</strong>：处理器采用缓存和读/写缓冲区，加载和存储操作看上去是乱序执行</li>
 </ul>
 
-<h3 id="线程安全">线程安全</h3>
-<p><strong>一个类在单线程下运行正常，在多线程环境下也能运行正常，</strong>就称这个类是线程安全的。如果一个类是线程安全的，就不会引发竞态。标准库中一些常见的类都不是线程安全的，如<code class="highlighter-rouge">ArrayList</code>、<code class="highlighter-rouge">HashMap</code>、<code class="highlighter-rouge">SimpleDateFormat</code>。</p>
+<p>对于编译器的重排序，JMM的编译器规则会禁止特定的编译器优化的重排序；对于处理器的重排序，JMM则要求编译器在生成字节指令序列时在指定位置插入<strong>内存屏障（Memory Barriers）</strong>来禁止特定的处理器重排序，来实现一致的内存可见性的保证。</p>
 
-<p>线程安全需要保证三个条件：原子性、可见性和有序性。</p>
+<p>编译器和处理器会在没有数据依赖的前提下进行重排序，但仅仅是单线程环境下的数据依赖，并不能应用到多线程环境。</p>
 
-<h5 id="原子性-atomic"><strong>原子性 Atomic</strong></h5>
-<p>线程读写某个变量的操作，从其他线程看不存在中间状态，要么执行发生，要么未发生，就称其满足原子性。</p>
-
-<p>Java原子性的方式主要是：</p>
+<h3 id="内存屏障">内存屏障</h3>
+<p>内存屏障是一组指令，特定的内存屏障可以禁止处理器对特定的读/写操作进行重排序，一般有下面几种：</p>
 <ul>
-  <li>锁（指代码中的锁，也叫软件锁）</li>
-  <li>CAS（硬件锁）</li>
+  <li><strong>LoadLoad Barriers</strong>：确保屏障前的 Load 指令先于之后的 Load 指令</li>
+  <li><strong>StoreStore Barriers</strong>：确保屏障前的 Store 操作对其他处理器可见（刷新到内存）先于之后的 Store 指令</li>
+  <li><strong>LoadStore Barriers</strong>：确保 Load 操作先于之后的 Store 操作刷新到内存</li>
+  <li><strong>StoreLoad Barriers</strong>：确保Store操作刷新到内存先于之后的 Load 指令。会使之前的所有 Store 和 Load 指令完成后，再执行之后的指令，需要刷新所有写缓冲的内容到内存中，开销较大</li>
+</ul>
+
+<p>并不是所有的处理器都支持四种内存屏障，由于现代处理器都会使用写缓冲，导致写操作只对当前线程可见，因此都会允许写-读的重排序，StoreLoad Barriers 内存屏障也基本在所有处理器上实现，而其他内存屏障的实现与否则与处理器内存有关，如<code class="highlighter-rouge">x86</code>处理器就不支持其他类型的内存屏障。</p>
+
+<h3 id="happen-before">happen-before</h3>
+<p><code class="highlighter-rouge">JSR-133</code>内存模型提出了<strong>happen-before</strong>的概念，用来阐述操作之间的内存可见性。需要注意的是，happen-before 指的是前面的操作结果对后面操作的<strong>可见</strong>，而不是前面的操作先于后面操作执行。</p>
+
+<p>happen-before 规则一共8条，这里列出重要的几条：</p>
+<ul>
+  <li><strong>程序顺序规则</strong>：同一个线程中的每个操作，happen-before于线程之后的任一后续操作</li>
+  <li><strong>monitor锁规则</strong>：对于一个 monitor 的 unlock 操作，happen-before 于 monitor 的 lock 操作</li>
+  <li><strong>线程结束规则</strong>：对一个线程的 join 操作，被 join 的线程中的任一操作 happen-before 于 join 的返回</li>
+  <li><strong>volatile变量规则</strong>：对一个 volatile 变量的写操作，happen-before 于该变量的后续的读操作</li>
+  <li><strong>传递性规则</strong>：如果A happen-before 于 B，B happen-before 于 C，那么A happen-before 于 C</li>
+</ul>
+
+<h2 id="volatile-语义">volatile 语义</h2>
+<p>写 volatile 变量的内存语义：</p>
+<ul>
+  <li><strong>当写一个 volatile 变量时，JMM会把该线程对应的本地内存中的共享变量刷新到主内存</strong></li>
+</ul>
+
+<p>读 volatile 变量的内存语义：</p>
+<ul>
+  <li><strong>当读一个 volatile 变量时，JMM会把该线程对应的本地内存置为无效，线程接下来将从主内存中读取共享变量</strong></li>
+</ul>
+
+<p>为了实现volatile的内存语义，编译器在生成字节码时，会在指令序列中插入内存屏障来禁止特定类型的处理器重排序，这里JMM采取的是保守策略：</p>
+<ul>
+  <li><strong>在每个 volatile 写操作之前插入一个 StroeStore Barriers</strong></li>
+  <li><strong>在每个 volatile 写操作之后插入一个 StoreLoad Barriers</strong></li>
+  <li><strong>在每个 volatile 读操作之后插入一个 LoadLoad Barriers</strong></li>
+  <li><strong>在每个 volatile 读操作之后插入一个 LoadStore Barriers</strong></li>
+</ul>
+
+<p>由于内存屏障的存在，编译器和处理器不会对 volatile 读与 volatile 读后面的任意内存操作重排序；不会对 volatile 写与 volatile 写前面的任意内存操作重排序。</p>
+
+<p>内存屏障的插入策略在不通处理器上有不同的实现，如<code class="highlighter-rouge">x86</code>处理器就只会在 volatile 写操作之后插入 StroeLoad Barriers</p>
+
+<h3 id="volatile-为什么可以保证-longdouble-类型写操作的原子性">volatile 为什么可以保证 long/double 类型写操作的原子性</h3>
+<p>首先了解为什么JMM不能保证 long/double 基本类型写操作的原子性：</p>
+<ul>
+  <li>计算机中处理器和内存通过<strong>总线</strong>传输数据，数据传输过程中的一系列步骤称作<strong>总线事务</strong></li>
+  <li>从主存到处理器的传输称作<strong>读事务</strong>，从处理器到主存的传输称为<strong>写事务</strong></li>
+</ul>
+
+<p>在一个事务执行总线事务时，总线会禁止其他处理器与主存进行数据传输，简单来说就是<strong>在任意时间点，最多只能有一个处理器能访问内存</strong>，因此在同一个事务中的内存读/写操作都是原子性的。</p>
+
+<p>在32位处理器上，JVM会将64位 long/double 类型变量的读/写操作拆分成两个32位的读/写操作来执行，而两个操作可能会被分到不同的总线事务中，不再具有原子性。</p>
+
+<p>volatile 会在64位变量的读/写操作前后加入特定的内存屏障，保证两个32位的读/写操作完成之前没有新的读/写操作，保证了其原子性。</p>
+
+<h2 id="锁的语义">锁的语义</h2>
+<p>释放锁的内存语义：</p>
+<ul>
+  <li><strong>当线程释放锁时，JMM 会把该线程对应的本地内存中的共享变量刷新到主内存中</strong></li>
+</ul>
+
+<p>获取锁的内存语义：</p>
+<ul>
+  <li><strong>当线程获取锁时，JMM 会把该线程对应的本地内存置为无效，临界区内的代码必须要在主存中获取共享变量的值</strong></li>
+</ul>
+
+<p>锁的释放与 volatile 写有相同的内存语义，锁的获取与 volatile 读有相同的内存语义。</p>
+
+<p>下面以<code class="highlighter-rouge">ReentrantLock</code>为例了解锁的内存语义的实现。<code class="highlighter-rouge">ReentrantLock</code>的实现依赖<code class="highlighter-rouge">AbstractQueuedSynchronizer</code>(AQS)，AQS中使用一个整型 volatile 变量（<code class="highlighter-rouge">state</code>）来同步状态。</p>
+<ul>
+  <li><strong>公平锁获取锁时，首先会去读这个 volatile 变量；非公平锁获取锁时，会通过 CAS 更新这个变量。</strong></li>
+  <li><strong>释放锁时，会在最后写这个 volatile 变量</strong></li>
 </ul>
 
 <blockquote>
-  <p>Java中对基本类型的写操作，除了long和double外都是原子性的。</p>
+  <p>CAS同时实现了 volatile 变量读/写的内存语义，实现方式为 native 方法会在多处理器环境下为 <code class="highlighter-rouge">cmpxchg</code> 指令前加上 <code class="highlighter-rouge">lock</code> 前缀，这个前缀会禁止该指令与之前和之后的读和写指令重排序，并且把写缓冲区中的所有数据刷新到内存中。这里不做展开。</p>
 </blockquote>
 
-<h5 id="可见性-visibility"><strong>可见性 Visibility</strong></h5>
-<p>线程对共享变量的更新对其他线程可见，即其他线程在线程更新之后立即可以读到最新值，就称其满足可见性。</p>
+<p>根据 happen-before 的传递性规则，<strong>释放锁的线程在写 volatile 之前可见的共享变量，在获取锁的线程读取同一个 volatile 变量后对获取锁的线程可见。</strong></p>
 
-<p>下面两个问题会影响可见性：</p>
+<h2 id="final的语义">final的语义</h2>
+<p>对于 final 域的变量，编译器和处理器遵循下面两个重排规则：</p>
 <ul>
-  <li>编译优化，如将<code class="highlighter-rouge">while</code>循环内的判断优化至循环外。</li>
-  <li>计算机存储结构，处理器会缓存一些变量的更新。</li>
+  <li><strong>在构造函数中对一个 final 域的写入，与随后把这个被构造的对象赋予一个引用变量，这两个操作不能被重排</strong></li>
+  <li><strong>初次读取一个包含 final 域的对象的引用，与随后读这个 final 域，这两个操作不能被重排</strong></li>
 </ul>
 
-<blockquote>
-  <p>CPU有自己的缓存单元，包括寄存器 Registerr，高速缓存 Cache，写缓冲器 Store Buffer，无效化队列 Invalidate Queue</p>
-</blockquote>
-
-<p>Java的一些同步机制会使CPU缓存同步，即使CPU可以读到另一个CPU上的缓存：</p>
+<p>对于 final 修饰的普通类型：</p>
 <ul>
-  <li><strong>写线程冲刷处理器缓存</strong>：更新一个变量后使处理器对变量的修改写入Cache或RAM中，而不是停留在Store Cache</li>
-  <li><strong>读线程刷新处理器缓存</strong>：读取一个变量的值时，如果其他处理器已经更新，需要进行缓存同步</li>
+  <li><strong>JMM 禁止将写 final 域的操作重排到构造函数之外，通过在写 final 域的操作之后，构造函数 return 之前插入一个 StroeStore 内存屏障</strong></li>
+  <li><strong>JMM 禁止将初次读 final 域的操作与初次读对象引用的操作进行重排序，通过在读 final 域的操作之前插入一个 LoadLoad 内存屏障</strong></li>
 </ul>
 
-<h5 id="有序性-odering"><strong>有序性 Odering</strong></h5>
-<p>线程执行的内存访问操作在其他线程看来没有发生变化，就称其满足有序性。<strong>重排序</strong>会影响有序性。</p>
-
-<h3 id="上下文切换">上下文切换</h3>
-<p>一个线程被暂停，另一个线程获取CPU控制权的过程，称作上下文切换。切换过程包括<strong>线程切出 Switch out</strong>和<strong>线程切入 Switch in</strong>。</p>
-
-<p>线程在进行上下文切换时需要在<strong>内存</strong>中读取或保存自己的运行状态，包括<strong>通用寄存器</strong>的内容和<strong>程序计数器</strong>的内容。</p>
-
-<p>上下文切换可分为两种方式：</p>
+<p>对于 final 修饰的引用类型，则会增加下面的规则：</p>
 <ul>
-  <li><strong>自发性上下文切换</strong>：线程主动让出CPU控制权，如调用<code class="highlighter-rouge">wait</code>/<code class="highlighter-rouge">sleep</code>/<code class="highlighter-rouge">yield</code>/<code class="highlighter-rouge">join</code>/<code class="highlighter-rouge">park</code>、进行I/O操作或请求其他线程持有的锁。</li>
-  <li><strong>非自发性上下文切换</strong>：线程的CPU时间片耗尽或被其他高优先级线程（如GC）夺取CPU控制权。</li>
+  <li><strong>JMM 禁止将写 final 引用对象的成员域的写入，与随后在构造函数外将对象的引用赋予一个引用变量，这两个操作不能被重排序</strong></li>
 </ul>
 
-<p>上下文切换时有开销的：</p>
-<ul>
-  <li>直接开销：<strong>CPU调度</strong>的开销和<strong>保存/恢复上下文</strong>的开销。</li>
-  <li>间接开销：高速缓存重新加载和高速缓存被冲刷（Flush到二级缓冲）。</li>
-</ul>
-
-<h2 id="java的线程同步机制">Java的线程同步机制</h2>
-<p>每种同步机制需要分析其是否满足原子性、可见性和有序性，是否存在上下文切换开销。</p>
-
-<h3 id="锁-lock">锁 Lock</h3>
-<p>Java中锁的实现有两种</p>
-<ul>
-  <li>内部锁：<code class="highlighter-rouge">synchronize</code>关键字</li>
-  <li>显式锁：<code class="highlighter-rouge">java.concurrent.locks.Lock</code>接口的实现类</li>
-</ul>
-
-<p>用锁实现线程同步可以满足原子性、可见性、有序性，存在上下文开销</p>
-<ul>
-  <li>原子性：被锁同步的代码块称作<strong>临界区</strong>，同一时间只有一个线程可以访问临界区。</li>
-  <li>可见性：Java中获得锁（Acquire）刷新处理器缓存，释放锁（Release）会冲刷处理器缓存。</li>
-  <li>有序性：临界区内的指令不会被重排序到临界区外。</li>
-  <li>上下文切换开销：请求被其他线程持有的锁会发生上下文切换。</li>
-</ul>
-
-<h3 id="volatile">volatile</h3>
-<p>用<code class="highlighter-rouge">volatile</code>修饰的变量满足可见性、有序性和写操作的原子性，但不具有计算的原子性，不存在上下文切换。</p>
-<ul>
-  <li>可见性：变量不会被缓存在Store Cache中，即写操作之后会冲刷处理器缓存，读操作之前会刷新处理器缓存。</li>
-  <li>有序性：编译器不会对该变量上的操作与其他内存操作进行重排序。</li>
-  <li>原子性：不具有自增等计算的原子性</li>
-</ul>
-
-<h3 id="cas">CAS</h3>
-<p><code class="highlighter-rouge">java.util.concurrent.atomic</code>中的原子类借助CAS实现了可见性和原子性，它的计算实现基于一种乐观锁的思想：<strong>执行某种操作，如果不成功就一直执行直到成功为止</strong>。这里借助一段源码加强理解。</p>
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kt">int</span> <span class="nf">getAndAddInt</span><span class="o">(</span><span class="n">Object</span> <span class="n">var1</span><span class="o">,</span> <span class="kt">long</span> <span class="n">var2</span><span class="o">,</span> <span class="kt">int</span> <span class="n">var4</span><span class="o">)</span> <span class="o">{</span>
-    <span class="kt">int</span> <span class="n">var5</span><span class="o">;</span>
-    <span class="k">do</span> <span class="o">{</span>
-        <span class="n">var5</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">getIntVolatile</span><span class="o">(</span><span class="n">var1</span><span class="o">,</span> <span class="n">var2</span><span class="o">);</span>
-    <span class="o">}</span> <span class="k">while</span><span class="o">(!</span><span class="k">this</span><span class="o">.</span><span class="na">compareAndSwapInt</span><span class="o">(</span><span class="n">var1</span><span class="o">,</span> <span class="n">var2</span><span class="o">,</span> <span class="n">var5</span><span class="o">,</span> <span class="n">var5</span> <span class="o">+</span> <span class="n">var4</span><span class="o">));</span>
-
-    <span class="k">return</span> <span class="n">var5</span><span class="o">;</span>
-<span class="o">}</span>
-</code></pre></div></div>
-<p>CAS的问题是<code class="highlighter-rouge">ABA</code>问题，可以借助<code class="highlighter-rouge">AtomicStampedReference</code>类解决。</p>
-
-<h3 id="安全发布">安全发布</h3>
-<p>安全发布一个对象有以下几种方式：</p>
-<ul>
-  <li>在静态初始化函数中初始化一个对象的引用<code class="highlighter-rouge">static</code></li>
-  <li>将某个对象的引用保存在<code class="highlighter-rouge">volatile</code>类型的域或<code class="highlighter-rouge">AtomicReference</code>对象中</li>
-  <li>将对象的引用保存在正确构造对象的<code class="highlighter-rouge">final</code>类型的域中</li>
-  <li>将对象的引用保存在由锁保护的域中</li>
-</ul>
+<p>写 final 域的重排序规则可以确保：<strong>在引用变量为任意线程可见之前，该引用变量指向的对象的 final 域已经在构造函数中被正确初始化过了。</strong>但如果对象在构造函数内逸出，则不能保证 final 域被初始化，因为构造函数内的指令可以被重排序。</p>
 
 <p>(End)</p>
 
+<blockquote>
+  <p>参考资料：
+<a href="https://www.infoq.cn/article/java-memory-model-1">InfoQ 程晓明 深入理解 Java 内存模型</a></p>
+</blockquote>
 
         </article>
         <hr>
@@ -352,58 +345,6 @@
                         
                         <h2 id="similar_posts">Similar Posts</h2>
                         <ul>
-                        
-                        <li class="relatedPost">
-                            <a href="/2019/01/24/jmm/">JMM小结
-                            
-                            </a>
-                        </li>
-                        
-                        
-                    
-                
-                    
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-                    
-                
-                    
-                
-            
-        
-            
-            
-                
-                    
                         
                         <li class="relatedPost">
                             <a href="/2019/01/17/sringioc/">Spring（一）IoC
@@ -504,6 +445,58 @@
                         
                         <li class="relatedPost">
                             <a href="/2019/01/14/excutors/">Java核心类库学习（一） 线程池
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/10/thread1/">Java并发编程 线程同步机制
                             
                             </a>
                         </li>
@@ -730,13 +723,11 @@
         <div class="post-recent">
     <div class="pre">
         
-        <p><strong>上一篇</strong> <a href="/2019/01/09/gc/">JVM基础 GC及内存分配</a></p>
+        <p><strong>上一篇</strong> <a href="/2019/01/17/sringioc/">Spring（一）IoC</a></p>
         
     </div>
     <div class="nex">
 
-        
-        <p><strong>下一篇</strong> <a href="/2019/01/14/excutors/">Java核心类库学习（一） 线程池</a></p>
         
     </div>
 </div>
@@ -754,8 +745,8 @@
      */
 
     var disqus_config = function() {
-        this.page.url = 'http://localhost:4000/2019/01/10/thread1/'; // Replace PAGE_URL with your page's canonical URL variable
-        this.page.identifier = 'http://localhost:4000/2019/01/10/thread1/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+        this.page.url = 'http://localhost:4000/2019/01/24/jmm/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2019/01/24/jmm/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
     };
 
     (function() { // DON'T EDIT BELOW THIS LINE

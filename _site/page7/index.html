@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
     <link rel="stylesheet" href="/css/main.css ">
-    <link rel="canonical" href="http://localhost:4000/page2/">
+    <link rel="canonical" href="http://localhost:4000/page7/">
     <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
 
 
@@ -125,11 +125,11 @@
             
               <li>
                 <h2>
-                  <a class="post-link" href="/2019/01/09/gc/">JVM基础 GC及内存分配</a>
+                  <a class="post-link" href="/2017/01/11/celery/">项目中引入celery</a>
                 </h2>
                 <div class="label">
                     <div class="label-card">
-                        <i class="fa fa-calendar"></i>2019-01-09
+                        <i class="fa fa-calendar"></i>2017-01-11
                     </div>
                     <div class="label-card">
                         
@@ -147,7 +147,7 @@
   <i class="fa fa-th-list"></i>
   
     
-        <a href="/category/#Java" title="Category: Java" rel="category">Java</a>
+        <a href="/category/#直播通" title="Category: 直播通" rel="category">直播通</a>
     
   
 
@@ -164,11 +164,9 @@
   <i class="fa fa-tags"></i>
   
     
-        <a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a>&nbsp;
+        <a href="/tag/#celery" title="Tag: celery" rel="tag">celery</a>&nbsp;
     
-        <a href="/tag/#JVM" title="Tag: JVM" rel="tag">JVM</a>&nbsp;
-    
-        <a href="/tag/#GC" title="Tag: GC" rel="tag">GC</a>
+        <a href="/tag/#直播通" title="Tag: 直播通" rel="tag">直播通</a>
     
   
 
@@ -178,354 +176,12 @@
                 </div>
                 <div class="excerpt">
                     
-<p><img src="https://picsum.photos/800/300/?image=328" alt="" />
-JVM的内存分配与垃圾回收是老生常谈的话题了，这里先对GC涉及的知识进行整理，主要内容有JVM内存布局、GC算法、垃圾回收器以及JVM的内存分配。</p>
+<p>捣鼓了两天自己的直播通项目，终于大概有了雏形，在主页的视图函数中集成了爬虫，爬取用户关注主播的在线hangtag。但在运行时发现打开主页时延迟明显，有时候竟然长达数秒，突然想起了之前了解到的celery，试试能不能解决这一问题。</p>
 
 
                 </div>
                 <div class="read-all">
-                    <a  href="/2019/01/09/gc/"><i class="fa fa-newspaper-o"></i>Read All</a>
-                </div>
-                <hr>
-              </li>
-            
-              <li>
-                <h2>
-                  <a class="post-link" href="/2019/01/08/yididuohuo/">饿厂的异地多活实践</a>
-                </h2>
-                <div class="label">
-                    <div class="label-card">
-                        <i class="fa fa-calendar"></i>2019-01-08
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-
-                    <div class="label-card">
-                    
-
-
-<!-- <span class="point">•</span> -->
-<span class="categories">
-  <i class="fa fa-th-list"></i>
-  
-    
-        <a href="/category/#服务架构" title="Category: 服务架构" rel="category">服务架构</a>
-    
-  
-
-  <!-- <span class="point">•</span> -->
-</span>
-
-
-                    </div>
-
-                    <div class="label-card">
-                    
-<!-- <span class="point">•</span> -->
-<span class="pageTag">
-  <i class="fa fa-tags"></i>
-  
-    
-        <a href="/tag/#分布式" title="Tag: 分布式" rel="tag">分布式</a>&nbsp;
-    
-        <a href="/tag/#架构" title="Tag: 架构" rel="tag">架构</a>&nbsp;
-    
-        <a href="/tag/#异地多活" title="Tag: 异地多活" rel="tag">异地多活</a>
-    
-  
-
-</span>
-
-                    </div>
-                </div>
-                <div class="excerpt">
-                    
-<p><img src="https://picsum.photos/800/300/?image=692" alt="" />
-饿厂于17年顺利完成了异地多活改造。改造的目的一是当时每天的订单量已经达到千万级，北京的机房无法扩容；二是机房级别的故障时有发生，每次都会造成很大损失，需要地理级别的容灾。<a href="https://cui1994.github.io/2019/01/07/cap1/">上篇文章</a>的最后已经提到过，异地多活的复杂度和实现成本都是很高的，饿厂也不例外，除了中间件的建设，各业务方都需要进行多活改造。作为在饿厂搬了一年砖的业务小白，这里整理一下饿厂异地多活建设中所解决的问题和解决问题的方法。</p>
-
-
-                </div>
-                <div class="read-all">
-                    <a  href="/2019/01/08/yididuohuo/"><i class="fa fa-newspaper-o"></i>Read All</a>
-                </div>
-                <hr>
-              </li>
-            
-              <li>
-                <h2>
-                  <a class="post-link" href="/2019/01/07/cap1/">分布式系统架构浅析</a>
-                </h2>
-                <div class="label">
-                    <div class="label-card">
-                        <i class="fa fa-calendar"></i>2019-01-07
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-
-                    <div class="label-card">
-                    
-
-
-<!-- <span class="point">•</span> -->
-<span class="categories">
-  <i class="fa fa-th-list"></i>
-  
-    
-        <a href="/category/#服务架构" title="Category: 服务架构" rel="category">服务架构</a>
-    
-  
-
-  <!-- <span class="point">•</span> -->
-</span>
-
-
-                    </div>
-
-                    <div class="label-card">
-                    
-<!-- <span class="point">•</span> -->
-<span class="pageTag">
-  <i class="fa fa-tags"></i>
-  
-    
-        <a href="/tag/#分布式" title="Tag: 分布式" rel="tag">分布式</a>&nbsp;
-    
-        <a href="/tag/#CAP" title="Tag: CAP" rel="tag">CAP</a>&nbsp;
-    
-        <a href="/tag/#架构" title="Tag: 架构" rel="tag">架构</a>&nbsp;
-    
-        <a href="/tag/#SOA" title="Tag: SOA" rel="tag">SOA</a>&nbsp;
-    
-        <a href="/tag/#异地多活" title="Tag: 异地多活" rel="tag">异地多活</a>
-    
-  
-
-</span>
-
-                    </div>
-                </div>
-                <div class="excerpt">
-                    
-<p><img src="https://picsum.photos/800/300/?image=586" alt="" /></p>
-
-<p>看了几本分布式系统架构的书和文章，对分布式系统的架构认知清晰了些。之前只知道分布式系统「要这样做」，但对「为什么这样做」和「这样做解决什么问题」一直懵懵懂懂，这次结合书中所讲、前人经验和一点点自己的理解，对分布式系统架构中所涉及的一些关键知识做一些归纳。</p>
-
-
-                </div>
-                <div class="read-all">
-                    <a  href="/2019/01/07/cap1/"><i class="fa fa-newspaper-o"></i>Read All</a>
-                </div>
-                <hr>
-              </li>
-            
-              <li>
-                <h2>
-                  <a class="post-link" href="/2018/12/24/linux8/">Linux基础（八）管道与FIFO</a>
-                </h2>
-                <div class="label">
-                    <div class="label-card">
-                        <i class="fa fa-calendar"></i>2018-12-24
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-
-                    <div class="label-card">
-                    
-
-
-<!-- <span class="point">•</span> -->
-<span class="categories">
-  <i class="fa fa-th-list"></i>
-  
-    
-        <a href="/category/#Linux" title="Category: Linux" rel="category">Linux</a>
-    
-  
-
-  <!-- <span class="point">•</span> -->
-</span>
-
-
-                    </div>
-
-                    <div class="label-card">
-                    
-<!-- <span class="point">•</span> -->
-<span class="pageTag">
-  <i class="fa fa-tags"></i>
-  
-    
-        <a href="/tag/#Linux" title="Tag: Linux" rel="tag">Linux</a>&nbsp;
-    
-        <a href="/tag/#读书笔记" title="Tag: 读书笔记" rel="tag">读书笔记</a>
-    
-  
-
-</span>
-
-                    </div>
-                </div>
-                <div class="excerpt">
-                    
-<p><img src="https://picsum.photos/800/300/?image=155" alt="" /></p>
-
-<blockquote>
-  <p>该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
-书中的编程练习这里不做展示和说明。</p>
-</blockquote>
-
-
-                </div>
-                <div class="read-all">
-                    <a  href="/2018/12/24/linux8/"><i class="fa fa-newspaper-o"></i>Read All</a>
-                </div>
-                <hr>
-              </li>
-            
-              <li>
-                <h2>
-                  <a class="post-link" href="/2018/12/23/linux7/">Linux基础（七）一张图了解进程间通信IPC</a>
-                </h2>
-                <div class="label">
-                    <div class="label-card">
-                        <i class="fa fa-calendar"></i>2018-12-23
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-
-                    <div class="label-card">
-                    
-
-
-<!-- <span class="point">•</span> -->
-<span class="categories">
-  <i class="fa fa-th-list"></i>
-  
-    
-        <a href="/category/#Linux" title="Category: Linux" rel="category">Linux</a>
-    
-  
-
-  <!-- <span class="point">•</span> -->
-</span>
-
-
-                    </div>
-
-                    <div class="label-card">
-                    
-<!-- <span class="point">•</span> -->
-<span class="pageTag">
-  <i class="fa fa-tags"></i>
-  
-    
-        <a href="/tag/#Linux" title="Tag: Linux" rel="tag">Linux</a>&nbsp;
-    
-        <a href="/tag/#读书笔记" title="Tag: 读书笔记" rel="tag">读书笔记</a>
-    
-  
-
-</span>
-
-                    </div>
-                </div>
-                <div class="excerpt">
-                    
-<p><img src="https://picsum.photos/800/300/?image=490" alt="" /></p>
-
-<blockquote>
-  <p>该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
-书中的编程练习这里不做展示和说明。</p>
-</blockquote>
-
-
-                </div>
-                <div class="read-all">
-                    <a  href="/2018/12/23/linux7/"><i class="fa fa-newspaper-o"></i>Read All</a>
-                </div>
-                <hr>
-              </li>
-            
-              <li>
-                <h2>
-                  <a class="post-link" href="/2018/12/22/linux6/">Linux基础（六）作业控制与Deamon进程</a>
-                </h2>
-                <div class="label">
-                    <div class="label-card">
-                        <i class="fa fa-calendar"></i>2018-12-22
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-
-                    <div class="label-card">
-                    
-
-
-<!-- <span class="point">•</span> -->
-<span class="categories">
-  <i class="fa fa-th-list"></i>
-  
-    
-        <a href="/category/#Linux" title="Category: Linux" rel="category">Linux</a>
-    
-  
-
-  <!-- <span class="point">•</span> -->
-</span>
-
-
-                    </div>
-
-                    <div class="label-card">
-                    
-<!-- <span class="point">•</span> -->
-<span class="pageTag">
-  <i class="fa fa-tags"></i>
-  
-    
-        <a href="/tag/#Linux" title="Tag: Linux" rel="tag">Linux</a>&nbsp;
-    
-        <a href="/tag/#读书笔记" title="Tag: 读书笔记" rel="tag">读书笔记</a>
-    
-  
-
-</span>
-
-                    </div>
-                </div>
-                <div class="excerpt">
-                    
-<p><img src="https://picsum.photos/800/300/?image=857" alt="" /></p>
-
-<blockquote>
-  <p>该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
-书中的编程练习这里不做展示和说明。</p>
-</blockquote>
-
-
-                </div>
-                <div class="read-all">
-                    <a  href="/2018/12/22/linux6/"><i class="fa fa-newspaper-o"></i>Read All</a>
+                    <a  href="/2017/01/11/celery/"><i class="fa fa-newspaper-o"></i>Read All</a>
                 </div>
                 <hr>
               </li>
@@ -538,12 +194,12 @@ JVM的内存分配与垃圾回收是老生常谈的话题了，这里先对GC涉
         <div class="pagination">
           
             <a href="/index.html" class="previous"><i class="fa fa-angle-double-left"></i></a>
-            <a href="/" class="previous"><i class="fa fa-angle-left"></i></a>
+            <a href="/page6" class="previous"><i class="fa fa-angle-left"></i></a>
           
-          <span class="page_number ">2/7</span>
+          <span class="page_number ">7/7</span>
           
-            <a href="/page3" class="next"><i class="fa fa-angle-right"></i></a>
-            <a href="/page7" class="next"><i class="fa fa-angle-double-right"></i></a>
+            <span class="next disable"><i class="fa fa-angle-right"></i></span>
+            <span class="next disable"><i class="fa fa-angle-double-right"></i></span>
           
         </div>
     </div>
