@@ -1,0 +1,202 @@
+---
+layout: post
+category: "Python"
+title:  "Gunicorn源码阅读(二) Master进程"
+tags: [Gunicorn, Python, 源码]
+---
+
+* content
+{:toc}
+
+![](https://picsum.photos/800/300/?image=61)
+
+
+
+
+## Master 进程
+Gunicorn 的 master 进程是一个 loop，它的职责是监听信号事件并管理worker。
+
+进入`run()`方法后首先会调用`start()`，这个方法做了两件事：
+- 1.注册信号处理函数
+- 2.创建 listerners
+
+```python
+def init_signals(self):
+    """\
+    Initialize master signal handling. Most of the signals
+    are queued. Child signals only wake up the master.
+    """
+    # close old PIPE
+    if self.PIPE:
+        [os.close(p) for p in self.PIPE]
+
+    # initialize the pipe
+    self.PIPE = pair = os.pipe()
+    for p in pair:
+        util.set_non_blocking(p)
+        util.close_on_exec(p)
+
+    self.log.close_on_exec()
+
+    # initialize all signals
+    [signal.signal(s, self.signal) for s in self.SIGNALS]
+    signal.signal(signal.SIGCHLD, self.handle_chld)
+
+def signal(self, sig, frame):
+    if len(self.SIG_QUEUE) < 5:
+        self.SIG_QUEUE.append(sig)
+        self.wakeup()
+```
+在`init_signals()`方法中注册了信号处理函数，首先会关闭已经打开的管道，初始化新的管道。为所有信号注册默认的信号处置函数`signal()`，这个函数会将信号到信号事件队列`SIG_QUEUE`，并唤醒自身，交由 master 的进程的 loop 去处理对应的信号，后面会提到唤醒的工作机制。
+
+此外，`SIGCHILD`会直接注册信号处置函数`handle_chld`，处理 worker 退出产生的僵尸进程。方法是循环调用`waitpid(-1, WNOHANG)`直到不再返回 pid。
+```python
+def handle_chld(self, sig, frame):
+    "SIGCHLD handling"
+    self.reap_workers()
+    self.wakeup()
+
+def reap_workers(self):
+    """\
+    Reap workers to avoid zombie processes
+    """
+    try:
+        while True:
+            wpid, status = os.waitpid(-1, os.WNOHANG)
+            if not wpid:
+                break
+         # ...
+```
+
+之后通过`create_sockets()`方法通过配置的地址或者文件描述符来创建 socket，根据配置的地址格式判断创建 socket 的类型。这些 sockets 储存在`LISTENERS`中，最终会被 worker 进程继承，但 woker 真正 listen 的 socket 并非是 master 进程中锁创建的 socket，而是会自行创建 socket 进行监听，这个行为由`reuseport`参数决定，现在已默认为`True`。
+
+```python
+def manage_workers(self):
+    """\
+    Maintain the number of workers by spawning or killing
+    as required.
+    """
+    if len(self.WORKERS.keys()) < self.num_workers:
+        self.spawn_workers()
+
+    workers = self.WORKERS.items()
+    workers = sorted(workers, key=lambda w: w[1].age)
+    while len(workers) > self.num_workers:
+        (pid, _) = workers.pop(0)
+        self.kill_worker(pid, signal.SIGTERM)
+```
+`start()`方法之后调用了`manage_workers()`方法，维护`num_workers`个 woker，通过`spawn_workers()`或者`murder_workers()`方法来调整woker的数量。
+
+```python
+def spawn_worker(self):
+    self.worker_age += 1
+    worker = self.worker_class(self.worker_age, self.pid, self.LISTENERS,
+                               self.app, self.timeout / 2.0,
+                               self.cfg, self.log)
+    self.cfg.pre_fork(self, worker)
+    pid = os.fork()
+    if pid != 0:
+        self.WORKERS[pid] = worker
+        return pid
+
+    # Process Child
+    worker_pid = os.getpid()
+    try:
+        util._setproctitle("worker [%s]" % self.proc_name)
+        self.log.info("Booting worker with pid: %s", worker_pid)
+        if self.cfg.reuseport:
+            self.cfg.post_fork_when_reuseport(self, worker)
+        self.cfg.post_fork(self, worker)
+        worker.init_process()
+        sys.exit(0)
+    except
+        # ...
+```
+`spawn_woker()`方法会实例化 worker ，默认的`worker_class`为`gunicorn.workers.sync.SyncWorker`，之后会通过调用`pre_fork()`方法在实例化之前做一些额外的工作，这部分通过`gunicorn.config.PreFork`实现。
+- 父进程将 woker 实例添加进`WORKERS`中后返回
+- 子进程将会执行`init_process()`方法来进行，这部分将会在之后的 woker 部分进行说明
+
+```python
+def murder_workers(self):
+    """\
+    Kill unused/idle workers
+    """
+    if not self.timeout:
+        return
+    workers = list(self.WORKERS.items())
+    for (pid, worker) in workers:
+        try:
+            if time.time() - worker.tmp.last_update() <= self.timeout:
+                continue
+        except ValueError:
+            continue
+
+        if not worker.aborted:
+            self.log.critical("WORKER TIMEOUT (pid:%s)", pid)
+            worker.aborted = True
+            self.kill_worker(pid, signal.SIGABRT)
+        else:
+            self.kill_worker(pid, signal.SIGKILL)
+```
+`murder_workers()`会 kill 掉「空闲」的进程，这个「空闲」的判断方法是**检查 woker 进程的`tmp`属性的更新时间距现在是否超过设定的`timeout`**，这个`tmp`属性是一个`WorkerTmp`实例，在 master 进程实例化`Worker`的时候创建，维护着一个指向临时文件的文件描述符，worker 进程更改这个文件的权限来刷新最后更新时间，后面讲 worker 部分时会提到。
+
+```python
+def run(self):
+# ...
+    while True:
+        try:
+            sig = self.SIG_QUEUE.pop(0) if len(self.SIG_QUEUE) else None
+            if sig is None:
+                self.sleep()
+                self.murder_workers()
+                self.manage_workers()
+                continue
+
+            if sig not in self.SIG_NAMES:
+                self.log.info("Ignoring unknown signal: %s", sig)
+                continue
+
+            signame = self.SIG_NAMES.get(sig)
+            handler = getattr(self, "handle_%s" % signame, None)
+            if not handler:
+                self.log.error("Unhandled signal: %s", signame)
+                continue
+            self.cfg.on_signal(self, sig)
+            self.log.info("Handling signal: %s", signame)
+            handler()
+            self.wakeup()
+        except
+        # ...
+```
+接下来进入`run()`方法的 loop 流程，会从`SIG_QUEUE`中取出信号，之后进行调用对应的信号处置函数`handle_xxx()`，如果`SIG_QUEUE`中没有需要处理的信号，则会调用`sleep()`方法进入休眠状态。
+
+```python
+def sleep(self):
+    try:
+        ready = select.select([self.PIPE[0]], [], [], 1.0)
+        if not ready[0]:
+            return
+        while os.read(self.PIPE[0], 1):
+            pass
+    except:
+        # ...
+
+def wakeup(self):
+    try:
+        os.write(self.PIPE[1], b'.')
+    except IOError as e:
+        if e.errno not in [errno.EAGAIN, errno.EINTR]:
+            raise
+```
+`sleep()`方法会调用`select()`来检查管道中是否有数据可读，这里指定`timeout`参数为1s，为了将没有信号时的 master 进程中 loop 的循环频率保持在一个定值，否则会使 CPU 飙升。与之对应的`wakeup()`方法会向管道的写入端`PIPE[1]`写入数据。至此，master 进程部分结束。
+
+## 总结
+Gunicorn 的 Master 进程不接收任何客户端请求，它的职责仅仅是接收信号管理和控制 Worker 进程，其中和 Worker 进程的互通通过`SIGCHILD`信号和`WorkerTmp`文件来进行，将 Worker 进程的数量维护在一个定值并定期杀掉空闲进程。
+
+Master 进程中的 PIPE 用来进行`wakeup`和`sleep`，方式为向 PIPE 中写入字节，这样使得有信号到来时 Master 进程可以立即进行相应的行为，而其他时间其 loop 的频率不至于过快而消耗过多资源。
+
+(End)
+
+> 参考资料：
+> - [gunicorn源码解析](https://github.com/Junnplus/blog/issues/9)
+

@@ -5,9 +5,30 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Thu, 24 Jan 2019 22:53:38 +0800</pubDate>
-    <lastBuildDate>Thu, 24 Jan 2019 22:53:38 +0800</lastBuildDate>
+    <pubDate>Fri, 15 Feb 2019 10:33:50 +0800</pubDate>
+    <lastBuildDate>Fri, 15 Feb 2019 10:33:50 +0800</lastBuildDate>
     <generator>Jekyll v3.8.4</generator>
+    
+      <item>
+        <title>Gunicorn源码阅读(二) Master进程</title>
+        <description>
+&lt;img src=&quot;https://picsum.photos/800/300/?image=61&quot; alt=&quot;&quot; /&gt;
+
+</description>
+        <pubDate>Fri, 25 Jan 2019 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2019/01/25/gunicorn2/</link>
+        <guid isPermaLink="true">http://localhost:4000/2019/01/25/gunicorn2/</guid>
+        
+        <category>Gunicorn</category>
+        
+        <category>Python</category>
+        
+        <category>源码</category>
+        
+        
+        <category>Python</category>
+        
+      </item>
     
       <item>
         <title>JMM小结</title>
@@ -215,30 +236,6 @@ JVM的内存分配与垃圾回收是老生常谈的话题了，这里先对GC涉
         
         
         <category>服务架构</category>
-        
-      </item>
-    
-      <item>
-        <title>Linux基础（八）管道与FIFO</title>
-        <description>
-&lt;img src=&quot;https://picsum.photos/800/300/?image=155&quot; alt=&quot;&quot; /&gt;
-
-&lt;blockquote&gt;
-  该系列文章为《Linux/Unix系统编程手册》的学习笔记，由于该书太过冗长，属于工具书的类别，这里对书中的一些核心内容加以提炼和整理。
-书中的编程练习这里不做展示和说明。
-&lt;/blockquote&gt;
-
-</description>
-        <pubDate>Mon, 24 Dec 2018 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2018/12/24/linux8/</link>
-        <guid isPermaLink="true">http://localhost:4000/2018/12/24/linux8/</guid>
-        
-        <category>Linux</category>
-        
-        <category>读书笔记</category>
-        
-        
-        <category>Linux</category>
         
       </item>
     

@@ -125,6 +125,73 @@
             
               <li>
                 <h2>
+                  <a class="post-link" href="/2018/01/17/yewu2/">Python Web 基础向（二） 操作数据库</a>
+                </h2>
+                <div class="label">
+                    <div class="label-card">
+                        <i class="fa fa-calendar"></i>2018-01-17
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+
+                    <div class="label-card">
+                    
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Python Web" title="Category: Python Web" rel="category">Python Web</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+                    </div>
+
+                    <div class="label-card">
+                    
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <a href="/tag/#ORM" title="Tag: ORM" rel="tag">ORM</a>&nbsp;
+    
+        <a href="/tag/#sql" title="Tag: sql" rel="tag">sql</a>
+    
+  
+
+</span>
+
+                    </div>
+                </div>
+                <div class="excerpt">
+                    
+<p>从这篇文章开始，将对上文中所提起及的各抽象层进行进一步阐述，涉及互联网业务代码中的各项基本操作。本文以MySQL为例操作关系型数据库。</p>
+
+<p>注: 此系列文章依托Flask框架介绍，但涉及框架内容较少，具有一定普适性。</p>
+
+<p><img src="https://i.loli.net/2018/11/26/5bfc01b1f2b0a.png" alt="" /></p>
+
+
+                </div>
+                <div class="read-all">
+                    <a  href="/2018/01/17/yewu2/"><i class="fa fa-newspaper-o"></i>Read All</a>
+                </div>
+                <hr>
+              </li>
+            
+              <li>
+                <h2>
                   <a class="post-link" href="/2018/01/16/yewu1/">Python Web 基础向（一） 项目结构</a>
                 </h2>
                 <div class="label">
@@ -434,212 +501,6 @@
                 <hr>
               </li>
             
-              <li>
-                <h2>
-                  <a class="post-link" href="/2017/01/15/gunicorn/">项目部署路上的坑</a>
-                </h2>
-                <div class="label">
-                    <div class="label-card">
-                        <i class="fa fa-calendar"></i>2017-01-15
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-
-                    <div class="label-card">
-                    
-
-
-<!-- <span class="point">•</span> -->
-<span class="categories">
-  <i class="fa fa-th-list"></i>
-  
-    
-        <a href="/category/#直播通" title="Category: 直播通" rel="category">直播通</a>
-    
-  
-
-  <!-- <span class="point">•</span> -->
-</span>
-
-
-                    </div>
-
-                    <div class="label-card">
-                    
-<!-- <span class="point">•</span> -->
-<span class="pageTag">
-  <i class="fa fa-tags"></i>
-  
-    
-        <a href="/tag/#直播通" title="Tag: 直播通" rel="tag">直播通</a>
-    
-  
-
-</span>
-
-                    </div>
-                </div>
-                <div class="excerpt">
-                    <p>直播通项目终于更新上线了，看到自己的第一个Web应用在服务器上正常运作并且各项功能正常，内心一阵暗爽。看了一眼时间，从有想法到最终项目上线，一共用了大概一周左右时间，作为一个简单的flask应用，这点时间不算长也不算短，其中部署只花了一晚上就弄好了，在这里要感谢已经工作的老友提供思路，虽然部署的时候也踩过不少坑，但确实少走了许多弯路。所谓前人栽树后人？哈？</p>
-
-<h2 id="服务器选择">服务器选择</h2>
-<p>这里直接选择了朋友推荐的腾讯云，一路低配，在选择内存时担心1G内存不够选了2G（心疼），最终抛过代金券还是花了90大洋。不过，值！</p>
-
-<h2 id="部署思路">部署思路</h2>
-<p>这里有两种思路可供选择，</p>
-
-<ul>
-  <li>gunicorn + supervisor + nginx, 部署流程简单清晰，但听说性能不好。</li>
-  <li>朋友推荐的gunicorn + pm2方案，但看了一眼pm2，全部时node.js相关的代码，超纲了啊！</li>
-</ul>
-
-<p>我的目的是让自。己的项目尽快跑起来，因此，选择了有较多参考资料和前人经验的第一种思路，第二种的话，以后在说吧。</p>
-
-<h2 id="开始部署">开始部署</h2>
-
-<h3 id="部署准备">部署准备</h3>
-<p>好，登录服务器，输入用户名和密码登录Linux（这里选择和我平时用的一样的Ubuntu 16.04 64位机），先按照网上的教程将python和虚拟环境弄好，之后git clone代码。等等，者一大堆错误是什么，又是用户权限又是链接错误，折腾了许久未果，于是退而求其此，直接将本地代码复制到服务器上：</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ scp -r easySee ubuntu@www.mydomain.com:/var/www/easySee
-</code></pre></div></div>
-<p>刚开始不清楚这行代码的作用，照葫芦画瓢，于是很自然的在easySee目录下又嵌套了一个同名文件，好low。不过既然是自己的服务器，就先这样吧。之后在虚拟环境中安装requirements中的需求模块，部署准备完成。</p>
-
-<h3 id="gunicorn">Gunicorn</h3>
-
-<h4 id="是什么">是什么</h4>
-<p>关于这部分内容，在部署的时候时完全没有考虑的，因为目的就是让项目尽快跑起来嘛。但不求甚解终归不是好的学习方法，还是要了解以下部署的每个部分是什么，能干嘛，于是补了这部分知识。</p>
-
-<p>gunicorn是一个Python WSGI UNIX的HTTP服务器，是一个per-fork worker模型。换句话说，Gunicorn一般用来管理多个进程，有进程挂了Gunicorn就可以把它拉起来，防止服务器长时间停止服务，还可以动态调整worker的数量，请求多的时候增加worker的数量，请求少的时候减少，这就是所谓的per-fork模型，也是Gunicorn的主要优点。其他优点还有能与各种web框架兼容，只需要非常简单的执行，轻量级的资源消耗以及很快的响应速度。</p>
-
-<h4 id="怎么用">怎么用</h4>
-
-<ul>
-  <li>安装
-    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(venv) $ pip install gunicorn
-</code></pre></div>    </div>
-  </li>
-  <li>运行(在项目根目录下)</li>
-</ul>
-
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(venv) $ gunicorn -w 4 -b 127.0.0.1:8080 manage:app
-</code></pre></div></div>
-
-<p>在本机上输入服务器ip及端口号后，马上看到了自己的应用。Yeah！这其实就是gunicorn的好处吧，根本不需要什么配置文件，一格指令就能将它启动。</p>
-
-<p>tip: 这里网上教程说还需要添加一个wsgi.py的文件替换掉manage.py，并特别注明wsgi.py和manage.py没有半毛钱关系。然而我的试验结果是，这两个完全就是一模一样的嘛-，- ,先这样吧，出了问题再说。</p>
-
-<h3 id="nignx">Nignx</h3>
-
-<h4 id="是什么-1">是什么</h4>
-<p>一个完整的代理请求过程为：客户端首先与代理服务器创建链接，接着根据代理服务器所使用的代理协议，请求对目标服务器创建链接或者获得目标服务器的指定资源。Web代理服务器（proxy）是网络的中间实体，代理位于Web客户端与Web服务器之间，扮演中间人的角色。HTTP的代理服务器即是Web服务器，又是Web客户端。</p>
-
-<p>正向代理时一个介于客户端与原始服务器之间的服务器，为了从原始服务器获得内容，客户端向代理发送一个请求并指定目标，然后代理向原始服务器转交请求并将获得的内容返回给客户端。</p>
-
-<p>反向代理服务器：在服务器端接受客户端的请求，然后把请求分给具体的服务器进行处理，再将服务器的响应结果返回给客户端。</p>
-
-<p>Nginx(“engine x”)是一款高性能的HTTP和反向代理服务器软件，既可以托管网站，进行HTTP服务，也可以作为反向代理服务器使用。</p>
-
-<p>那么在Gunicorn前部署一层Nginx的目的是什么呢？</p>
-
-<ul>
-  <li>负载均衡。</li>
-  <li>静态文件支持</li>
-  <li>伪静态化并缓存，减少动态请求数量</li>
-  <li>依赖于nginx强大的功能和性能，可以做到访问控制，限速，限制链接数等。</li>
-</ul>
-
-<p>也就是说，nginx可以缓冲请求和响应，也能缓存客户端发起的请求，这个过程时nginx擅长处理的，可以有效提高Gunicorn的处理能力。</p>
-
-<h4 id="怎么用-1">怎么用</h4>
-<p>这里同样参照教程，安装完成后，直接进入Nginx的配置文件</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo vim /etc/nginx/site-avalidable/default
-</code></pre></div></div>
-<p>当然，如果你怕搞错（就像我一样），可以先将配置文件备份</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo cp /etc/nginx/site-avalidable/default /etc/nginx/site-avalidable/default.bak
-</code></pre></div></div>
-
-<p>之后将default暴力修改成下面的内容：</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>server {
-    listen 80;
-    server_name 119.29.3.128; # 这是HOST机器的地址也
-    location / {
-        proxy_pass http://127.0.0.1:8080; # 这里是指向 gunicorn host 的服务地址
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-  }
-</code></pre></div></div>
-
-<p>之后保存，重启Nignx服务器</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo service nginx restart
-</code></pre></div></div>
-
-<h3 id="supervisor">supervisor</h3>
-<h4 id="是什么-2">是什么</h4>
-<p>Supervisor是一个用Python写的进程管理工具，可以很方便的用来启动，重启，关闭进程（不仅仅是Python进程），还可以很方便的管理多个进程，同时启动同时关闭等等。因此将gunicorn用supervisor来包装，很方便的管理进程运行，并且可以防止gunicorn服务器挂掉。而且如果项目中需要多进程运行时，也可以用supervisor来配置。</p>
-
-<h4 id="怎么用-2">怎么用</h4>
-<p>安装后首先将原始配置文件重定向到程序根目录：</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ echo_supervisor_conf&gt;supervisor.conf
-</code></pre></div></div>
-
-<p>其实也可以不用进行这个步骤，但是每次打开supervisor服务时都要输入配置文件目录比较麻烦。
-之后打开<code class="highlighter-rouge">supervisor.conf</code>，在最后加上自己的进程信息：</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[program:easySee]
-command=/home/ubuntu/venv/bin/gunicorn -w 4 -b 0.0.0.0:8080 manage:app     ; supervisor启动命令
-directory=/var/www/easySee/easySee                                         ; 项目的文件夹路径
-startsecs=0                                                                ; 启动时间
-stopwaitsecs=0                                                             ; 终止等待时间
-autostart=false                                                            ; 是否自动启动
-autorestart=true                                                           ; 是否自动重启
-stdout_logfile=/.../app/data/log/gunicorn.log                              ; log 日志
-stderr_logfile=/.../app/data/log/gunicorn.err                              ; 错误日志
-[program:XXXXX]                                                            ; 用于多进程
-</code></pre></div></div>
-
-<p>之后启动supervisor</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ supervisord -c supervisor.conf
-</code></pre></div></div>
-
-<p>之后的事不多说了，操作命令：</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>supervisord -c supervisor.conf                             通过配置文件启动supervisor
-supervisorctl -c supervisor.conf status                    察看supervisor的状态
-supervisorctl -c supervisor.conf reload                    重新载入 配置文件
-supervisorctl -c supervisor.conf start [all]|[appname]     启动指定/所有 supervisor管理的程序进程
-supervisorctl -c supervisor.conf stop [all]|[appname]      关闭指定/所有 supervisor管理的程序进程
-</code></pre></div></div>
-
-<p>这里要说下自己部署时出现的问题，在supervisor已经启动的状态下修改了配置文件，又不知道reload这个命令，于是想重新导入supervisor文件启动时出现了错误，提示端口正在被监听，这里给出解决方法：</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ps -ef | grep supervisord
-</code></pre></div></div>
-
-<p>然后看到</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root   2503  1  0 Nov19 ?  00:03:23 /usr/bin/python /usr/bin/supervisord
-root   21337 2556  0 18:15 pts/8   00:00:00 grep --color=auto supervisord
-</code></pre></div></div>
-
-<p>再执行：</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kill -s SIGTERM 2503
-</code></pre></div></div>
-<p>即可。</p>
-
-<h3 id="再说一点">再说一点</h3>
-<p>写到这里，把部署期间的所有流程和问题处理基本又复习了一遍，主要用到的部分也大概知道都有什么作用了，再深入了解的话大概就到运维的范畴了，这次真的可以浅尝辄止了。</p>
-
-<p>部署并没有想象中的恐怖，只是折腾的时间要久一点罢了。CS这东西还真就全凭折腾，耐下性子干就是了，之后及时回头看看，收获颇丰呢。</p>
-
-<p>就这样啦。</p>
-
-                </div>
-                <div class="read-all">
-                    <a  href="/2017/01/15/gunicorn/"><i class="fa fa-newspaper-o"></i>Read All</a>
-                </div>
-                <hr>
-              </li>
-            
         </ul>
 
 
@@ -667,6 +528,8 @@ root   21337 2556  0 18:15 pts/8   00:00:00 grep --color=auto supervisord
                 </div>
                 <ul class="content-ul" recent>
                     
+                        <li><a href="/2019/01/25/gunicorn2/">Gunicorn源码阅读(二) Master进程</a></li>
+                    
                         <li><a href="/2019/01/24/jmm/">JMM小结</a></li>
                     
                         <li><a href="/2019/01/17/sringioc/">Spring（一）IoC</a></li>
@@ -684,8 +547,6 @@ root   21337 2556  0 18:15 pts/8   00:00:00 grep --color=auto supervisord
                         <li><a href="/2019/01/08/yididuohuo/">饿厂的异地多活实践</a></li>
                     
                         <li><a href="/2019/01/07/cap1/">分布式系统架构浅析</a></li>
-                    
-                        <li><a href="/2018/12/24/linux8/">Linux基础（八）管道与FIFO</a></li>
                     
                 </ul>
             </div>
@@ -712,7 +573,7 @@ root   21337 2556  0 18:15 pts/8   00:00:00 grep --color=auto supervisord
                             <span class="name">
                                 Python
                             </span>
-                            <span class="badge">4</span>
+                            <span class="badge">5</span>
                         </a>
                     </li>
                     
@@ -985,7 +846,7 @@ root   21337 2556  0 18:15 pts/8   00:00:00 grep --color=auto supervisord
                       
                       
                       
-                      <a href="/tag/#Python" style="font-size: 11.5pt; color: #777;">Python</a>
+                      <a href="/tag/#Python" style="font-size: 12.5pt; color: #666;">Python</a>
                     
                       
                       
@@ -1020,7 +881,7 @@ root   21337 2556  0 18:15 pts/8   00:00:00 grep --color=auto supervisord
                       
                       
                       
-                      <a href="/tag/#Gunicorn" style="font-size: 9pt; color: #999;">Gunicorn</a>
+                      <a href="/tag/#Gunicorn" style="font-size: 10pt; color: #888;">Gunicorn</a>
                     
                       
                       
@@ -1125,7 +986,7 @@ root   21337 2556  0 18:15 pts/8   00:00:00 grep --color=auto supervisord
                       
                       
                       
-                      <a href="/tag/#源码" style="font-size: 10pt; color: #888;">源码</a>
+                      <a href="/tag/#源码" style="font-size: 11.5pt; color: #777;">源码</a>
                     
                       
                       

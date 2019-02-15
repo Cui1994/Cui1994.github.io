@@ -8,7 +8,7 @@ tags: [Python, SQLAlchemy, MySQL]
 * content
 {:toc}
 
-![](https://picsum.photos/800/300/?random)
+![](https://picsum.photos/800/300/?image=257)
 
 SQLAlchemy作为一款强大而又实用的ORM框架，越来越频繁的出现在各类Python项目中。如果你是一名Python开发工程师，肯定可以熟练的写出SQLAlchemy的查询语句来满足自己的业务需求。然而，SQLAlchemy背后的知识你又了解多少呢？它是什么时候与数据库建立连接的呢？又是怎样的连接方式呢？SQLAlchemy中的`Session`与数据库的`Transaction`是一回事吗？如何优雅地管理SQLAlchemy的连接与事务呢？本文将结合[SQLAlchemy文档](https://docs.sqlalchemy.org/en/latest/orm/tutorial.html)解答这些问题。
 

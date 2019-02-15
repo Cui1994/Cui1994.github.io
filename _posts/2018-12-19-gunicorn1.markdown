@@ -16,6 +16,9 @@ Gunicorn是一个实现了WSGI协议的HTTP Server，它采用了Pre-fork worker
 
 
 
+
+> 注：本系列文章所用 gunicorn 版本为`19.3.0`
+
 ## WSGI
 
 WSGI全称为Web Server Gateway Interface，是一种网关协议，定义Web Server与Web Application通信的规范。实现WSGI协议需要同时实现WSGI Server与WSGI Application两端。

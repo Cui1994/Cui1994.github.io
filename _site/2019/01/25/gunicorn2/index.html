@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Gunicorn源码阅读(二) Master进程</title>
+    <meta name="description" content="">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2019/01/25/gunicorn2/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>Gunicorn源码阅读(二) Master进程</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2019-01-25
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Python" title="Category: Python" rel="category">Python</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#Gunicorn" title="Tag: Gunicorn" rel="tag">Gunicorn</a-->
+        <a href="/tag/#Gunicorn" title="Tag: Gunicorn" rel="tag">Gunicorn</a>&nbsp;
+    
+        <!--a href="/tag/#Python" title="Tag: Python" rel="tag">Python</a-->
+        <a href="/tag/#Python" title="Tag: Python" rel="tag">Python</a>&nbsp;
+    
+        <!--a href="/tag/#%E6%BA%90%E7%A0%81" title="Tag: 源码" rel="tag">源码</a-->
+        <a href="/tag/#源码" title="Tag: 源码" rel="tag">源码</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#master-进程" id="markdown-toc-master-进程">Master 进程</a></li>
+  <li><a href="#总结" id="markdown-toc-总结">总结</a></li>
+</ul>
+
+<p><img src="https://picsum.photos/800/300/?image=61" alt="" /></p>
+
+<h2 id="master-进程">Master 进程</h2>
+<p>Gunicorn 的 master 进程是一个 loop，它的职责是监听信号事件并管理worker。</p>
+
+<p>进入<code class="highlighter-rouge">run()</code>方法后首先会调用<code class="highlighter-rouge">start()</code>，这个方法做了两件事：</p>
+<ul>
+  <li>1.注册信号处理函数</li>
+  <li>2.创建 listerners</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">init_signals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="s">"""</span><span class="se">\
+</span><span class="s">    Initialize master signal handling. Most of the signals
+    are queued. Child signals only wake up the master.
+    """</span>
+    <span class="c1"># close old PIPE
+</span>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">PIPE</span><span class="p">:</span>
+        <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">PIPE</span><span class="p">]</span>
+
+    <span class="c1"># initialize the pipe
+</span>    <span class="bp">self</span><span class="o">.</span><span class="n">PIPE</span> <span class="o">=</span> <span class="n">pair</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">pipe</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pair</span><span class="p">:</span>
+        <span class="n">util</span><span class="o">.</span><span class="n">set_non_blocking</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">util</span><span class="o">.</span><span class="n">close_on_exec</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">close_on_exec</span><span class="p">()</span>
+
+    <span class="c1"># initialize all signals
+</span>    <span class="p">[</span><span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">signal</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">SIGNALS</span><span class="p">]</span>
+    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGCHLD</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_chld</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">signal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sig</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SIG_QUEUE</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SIG_QUEUE</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sig</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wakeup</span><span class="p">()</span>
+</code></pre></div></div>
+<p>在<code class="highlighter-rouge">init_signals()</code>方法中注册了信号处理函数，首先会关闭已经打开的管道，初始化新的管道。为所有信号注册默认的信号处置函数<code class="highlighter-rouge">signal()</code>，这个函数会将信号到信号事件队列<code class="highlighter-rouge">SIG_QUEUE</code>，并唤醒自身，交由 master 的进程的 loop 去处理对应的信号，后面会提到唤醒的工作机制。</p>
+
+<p>此外，<code class="highlighter-rouge">SIGCHILD</code>会直接注册信号处置函数<code class="highlighter-rouge">handle_chld</code>，处理 worker 退出产生的僵尸进程。方法是循环调用<code class="highlighter-rouge">waitpid(-1, WNOHANG)</code>直到不再返回 pid。</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">handle_chld</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sig</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+    <span class="s">"SIGCHLD handling"</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">reap_workers</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">wakeup</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">reap_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="s">"""</span><span class="se">\
+</span><span class="s">    Reap workers to avoid zombie processes
+    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">wpid</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">waitpid</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">WNOHANG</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">wpid</span><span class="p">:</span>
+                <span class="k">break</span>
+         <span class="c1"># ...
+</span></code></pre></div></div>
+
+<p>之后通过<code class="highlighter-rouge">create_sockets()</code>方法通过配置的地址或者文件描述符来创建 socket，根据配置的地址格式判断创建 socket 的类型。这些 sockets 储存在<code class="highlighter-rouge">LISTENERS</code>中，最终会被 worker 进程继承，但 woker 真正 listen 的 socket 并非是 master 进程中锁创建的 socket，而是会自行创建 socket 进行监听，这个行为由<code class="highlighter-rouge">reuseport</code>参数决定，现在已默认为<code class="highlighter-rouge">True</code>。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">manage_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="s">"""</span><span class="se">\
+</span><span class="s">    Maintain the number of workers by spawning or killing
+    as required.
+    """</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">WORKERS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spawn_workers</span><span class="p">()</span>
+
+    <span class="n">workers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">WORKERS</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="n">workers</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">workers</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">age</span><span class="p">)</span>
+    <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">workers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span><span class="p">:</span>
+        <span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="o">=</span> <span class="n">workers</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kill_worker</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">)</span>
+</code></pre></div></div>
+<p><code class="highlighter-rouge">start()</code>方法之后调用了<code class="highlighter-rouge">manage_workers()</code>方法，维护<code class="highlighter-rouge">num_workers</code>个 woker，通过<code class="highlighter-rouge">spawn_workers()</code>或者<code class="highlighter-rouge">murder_workers()</code>方法来调整woker的数量。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">spawn_worker</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">worker_age</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">worker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">worker_class</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">worker_age</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">LISTENERS</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">pre_fork</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">worker</span><span class="p">)</span>
+    <span class="n">pid</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">pid</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">WORKERS</span><span class="p">[</span><span class="n">pid</span><span class="p">]</span> <span class="o">=</span> <span class="n">worker</span>
+        <span class="k">return</span> <span class="n">pid</span>
+
+    <span class="c1"># Process Child
+</span>    <span class="n">worker_pid</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">util</span><span class="o">.</span><span class="n">_setproctitle</span><span class="p">(</span><span class="s">"worker [</span><span class="si">%</span><span class="s">s]"</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">proc_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Booting worker with pid: </span><span class="si">%</span><span class="s">s"</span><span class="p">,</span> <span class="n">worker_pid</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">reuseport</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">post_fork_when_reuseport</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">worker</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">post_fork</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">worker</span><span class="p">)</span>
+        <span class="n">worker</span><span class="o">.</span><span class="n">init_process</span><span class="p">()</span>
+        <span class="n">sys</span><span class="o">.</span><span class="nb">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">except</span>
+        <span class="c1"># ...
+</span></code></pre></div></div>
+<p><code class="highlighter-rouge">spawn_woker()</code>方法会实例化 worker ，默认的<code class="highlighter-rouge">worker_class</code>为<code class="highlighter-rouge">gunicorn.workers.sync.SyncWorker</code>，之后会通过调用<code class="highlighter-rouge">pre_fork()</code>方法在实例化之前做一些额外的工作，这部分通过<code class="highlighter-rouge">gunicorn.config.PreFork</code>实现。</p>
+<ul>
+  <li>父进程将 woker 实例添加进<code class="highlighter-rouge">WORKERS</code>中后返回</li>
+  <li>子进程将会执行<code class="highlighter-rouge">init_process()</code>方法来进行，这部分将会在之后的 woker 部分进行说明</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">murder_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="s">"""</span><span class="se">\
+</span><span class="s">    Kill unused/idle workers
+    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">workers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">WORKERS</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">worker</span><span class="p">)</span> <span class="ow">in</span> <span class="n">workers</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">worker</span><span class="o">.</span><span class="n">tmp</span><span class="o">.</span><span class="n">last_update</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">:</span>
+                <span class="k">continue</span>
+        <span class="k">except</span> <span class="nb">ValueError</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">worker</span><span class="o">.</span><span class="n">aborted</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s">"WORKER TIMEOUT (pid:</span><span class="si">%</span><span class="s">s)"</span><span class="p">,</span> <span class="n">pid</span><span class="p">)</span>
+            <span class="n">worker</span><span class="o">.</span><span class="n">aborted</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kill_worker</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIGABRT</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kill_worker</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIGKILL</span><span class="p">)</span>
+</code></pre></div></div>
+<p><code class="highlighter-rouge">murder_workers()</code>会 kill 掉「空闲」的进程，这个「空闲」的判断方法是<strong>检查 woker 进程的<code class="highlighter-rouge">tmp</code>属性的更新时间距现在是否超过设定的<code class="highlighter-rouge">timeout</code></strong>，这个<code class="highlighter-rouge">tmp</code>属性是一个<code class="highlighter-rouge">WorkerTmp</code>实例，在 master 进程实例化<code class="highlighter-rouge">Worker</code>的时候创建，维护着一个指向临时文件的文件描述符，worker 进程更改这个文件的权限来刷新最后更新时间，后面讲 worker 部分时会提到。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="c1"># ...
+</span>    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SIG_QUEUE</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SIG_QUEUE</span><span class="p">)</span> <span class="k">else</span> <span class="bp">None</span>
+            <span class="k">if</span> <span class="n">sig</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">murder_workers</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">manage_workers</span><span class="p">()</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">sig</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">SIG_NAMES</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Ignoring unknown signal: </span><span class="si">%</span><span class="s">s"</span><span class="p">,</span> <span class="n">sig</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="n">signame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SIG_NAMES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sig</span><span class="p">)</span>
+            <span class="n">handler</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">"handle_</span><span class="si">%</span><span class="s">s"</span> <span class="o">%</span> <span class="n">signame</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">handler</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">"Unhandled signal: </span><span class="si">%</span><span class="s">s"</span><span class="p">,</span> <span class="n">signame</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">on_signal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sig</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Handling signal: </span><span class="si">%</span><span class="s">s"</span><span class="p">,</span> <span class="n">signame</span><span class="p">)</span>
+            <span class="n">handler</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wakeup</span><span class="p">()</span>
+        <span class="k">except</span>
+        <span class="c1"># ...
+</span></code></pre></div></div>
+<p>接下来进入<code class="highlighter-rouge">run()</code>方法的 loop 流程，会从<code class="highlighter-rouge">SIG_QUEUE</code>中取出信号，之后进行调用对应的信号处置函数<code class="highlighter-rouge">handle_xxx()</code>，如果<code class="highlighter-rouge">SIG_QUEUE</code>中没有需要处理的信号，则会调用<code class="highlighter-rouge">sleep()</code>方法进入休眠状态。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">sleep</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ready</span> <span class="o">=</span> <span class="n">select</span><span class="o">.</span><span class="n">select</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">PIPE</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ready</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">return</span>
+        <span class="k">while</span> <span class="n">os</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PIPE</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">pass</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="c1"># ...
+</span>
+<span class="k">def</span> <span class="nf">wakeup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PIPE</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">b</span><span class="s">'.'</span><span class="p">)</span>
+    <span class="k">except</span> <span class="nb">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">errno</span><span class="o">.</span><span class="n">EAGAIN</span><span class="p">,</span> <span class="n">errno</span><span class="o">.</span><span class="n">EINTR</span><span class="p">]:</span>
+            <span class="k">raise</span>
+</code></pre></div></div>
+<p><code class="highlighter-rouge">sleep()</code>方法会调用<code class="highlighter-rouge">select()</code>来检查管道中是否有数据可读，这里指定<code class="highlighter-rouge">timeout</code>参数为1s，为了将没有信号时的 master 进程中 loop 的循环频率保持在一个定值，否则会使 CPU 飙升。与之对应的<code class="highlighter-rouge">wakeup()</code>方法会向管道的写入端<code class="highlighter-rouge">PIPE[1]</code>写入数据。至此，master 进程部分结束。</p>
+
+<h2 id="总结">总结</h2>
+<p>Gunicorn 的 Master 进程不接收任何客户端请求，它的职责仅仅是接收信号管理和控制 Worker 进程，其中和 Worker 进程的互通通过<code class="highlighter-rouge">SIGCHILD</code>信号和<code class="highlighter-rouge">WorkerTmp</code>文件来进行，将 Worker 进程的数量维护在一个定值并定期杀掉空闲进程。</p>
+
+<p>Master 进程中的 PIPE 用来进行<code class="highlighter-rouge">wakeup</code>和<code class="highlighter-rouge">sleep</code>，方式为向 PIPE 中写入字节，这样使得有信号到来时 Master 进程可以立即进行相应的行为，而其他时间其 loop 的频率不至于过快而消耗过多资源。</p>
+
+<p>(End)</p>
+
+<blockquote>
+  <p>参考资料：</p>
+  <ul>
+    <li><a href="https://github.com/Junnplus/blog/issues/9">gunicorn源码解析</a></li>
+  </ul>
+</blockquote>
+
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/15/classload/">JVM基础（二） 类加载过程
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/14/excutors/">Java核心类库学习（一） 线程池
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+        
+            </ul>
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2019/01/24/jmm/">JMM小结</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2019/01/25/gunicorn2/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2019/01/25/gunicorn2/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>
