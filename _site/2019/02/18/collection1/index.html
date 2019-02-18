@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Java核心类库学习（二）Collection</title>
+    <meta name="description" content="Java中的集合分为三类，Set、Map 和 List，它们都处于java.util包中，每个接口都有各自实现。这其中 Set 和 List 继承自 Collection，本文将介绍 Collection 接口以及一些常用 Collection 的实现。">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2019/02/18/collection1/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>Java核心类库学习（二）Collection</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2019-02-18
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Java" title="Category: Java" rel="category">Java</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a-->
+        <a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a>&nbsp;
+    
+        <!--a href="/tag/#%E6%BA%90%E7%A0%81" title="Tag: 源码" rel="tag">源码</a-->
+        <a href="/tag/#源码" title="Tag: 源码" rel="tag">源码</a>&nbsp;
+    
+        <!--a href="/tag/#Collection" title="Tag: Collection" rel="tag">Collection</a-->
+        <a href="/tag/#Collection" title="Tag: Collection" rel="tag">Collection</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#collection" id="markdown-toc-collection">Collection</a>    <ul>
+      <li><a href="#iterable" id="markdown-toc-iterable">Iterable</a></li>
+      <li><a href="#iterator" id="markdown-toc-iterator">Iterator</a></li>
+      <li><a href="#collection-1" id="markdown-toc-collection-1">Collection</a></li>
+    </ul>
+  </li>
+  <li><a href="#list" id="markdown-toc-list">List</a>    <ul>
+      <li><a href="#abstractlist" id="markdown-toc-abstractlist">AbstractList</a></li>
+      <li><a href="#modcount" id="markdown-toc-modcount">modCount</a></li>
+    </ul>
+  </li>
+  <li><a href="#arraylist" id="markdown-toc-arraylist">ArrayList</a>    <ul>
+      <li><a href="#初始化" id="markdown-toc-初始化">初始化</a></li>
+      <li><a href="#重写" id="markdown-toc-重写">重写</a></li>
+      <li><a href="#动态扩容" id="markdown-toc-动态扩容">动态扩容</a></li>
+      <li><a href="#vector" id="markdown-toc-vector">Vector</a></li>
+    </ul>
+  </li>
+  <li><a href="#queue" id="markdown-toc-queue">Queue</a>    <ul>
+      <li><a href="#abstractqueue" id="markdown-toc-abstractqueue">AbstractQueue</a></li>
+      <li><a href="#deque" id="markdown-toc-deque">Deque</a></li>
+    </ul>
+  </li>
+  <li><a href="#arraydeque" id="markdown-toc-arraydeque">ArrayDeque</a>    <ul>
+      <li><a href="#初始化-1" id="markdown-toc-初始化-1">初始化</a></li>
+      <li><a href="#add" id="markdown-toc-add">add</a></li>
+      <li><a href="#动态扩容-1" id="markdown-toc-动态扩容-1">动态扩容</a></li>
+    </ul>
+  </li>
+  <li><a href="#linkedlist" id="markdown-toc-linkedlist">LinkedList</a>    <ul>
+      <li><a href="#初始化-2" id="markdown-toc-初始化-2">初始化</a></li>
+      <li><a href="#内部方法" id="markdown-toc-内部方法">内部方法</a></li>
+      <li><a href="#性能" id="markdown-toc-性能">性能</a></li>
+    </ul>
+  </li>
+</ul>
+
+<p><img src="https://picsum.photos/800/300/?image=743" alt="" /></p>
+
+<p>Java中的集合分为三类，Set、Map 和 List，它们都处于<code class="highlighter-rouge">java.util</code>包中，每个接口都有各自实现。这其中 Set 和 List 继承自 Collection，本文将介绍 Collection 接口以及一些常用 Collection 的实现。</p>
+
+<h2 id="collection">Collection</h2>
+
+<h3 id="iterable">Iterable</h3>
+
+<p>要让一个 Java 对象提供<code class="highlighter-rouge">foreach</code>循环，只要实现<code class="highlighter-rouge">Iterable</code>接口，并调用它的<code class="highlighter-rouge">iterator</code>生成一个<code class="highlighter-rouge">Iterator</code>即可。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Iterable</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="n">Iterator</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="nf">iterator</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="iterator">Iterator</h3>
+<p>提供了遍历 Collection 集合元素的统一编程接口，Collection 没有<code class="highlighter-rouge">get()</code>方法获取指定位置的元素，只能通过 Iterator 遍历。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Iterator</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="kt">boolean</span> <span class="nf">hasNext</span><span class="o">();</span>
+    <span class="n">E</span> <span class="nf">next</span><span class="o">();</span>
+    <span class="k">default</span> <span class="kt">void</span> <span class="nf">remove</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nf">UnsupportedOperationException</span><span class="o">(</span><span class="s">"remove"</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="collection-1">Collection</h3>
+<p>继承自<code class="highlighter-rouge">Iterable</code>，提供一些通用的集合方法。<code class="highlighter-rouge">List</code>、<code class="highlighter-rouge">Queue</code>和<code class="highlighter-rouge">Set</code>接口均继承自<code class="highlighter-rouge">Collection</code>接口。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Collection</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">Iterable</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="kt">int</span> <span class="nf">size</span><span class="o">();</span>
+    <span class="kt">boolean</span> <span class="nf">isEmpty</span><span class="o">();</span>
+    <span class="kt">boolean</span> <span class="nf">contains</span><span class="o">(</span><span class="n">Object</span> <span class="n">o</span><span class="o">);</span>
+    <span class="kt">boolean</span> <span class="nf">add</span><span class="o">(</span><span class="n">E</span><span class="o">,</span> <span class="n">a</span><span class="o">)</span>
+    <span class="kt">boolean</span> <span class="nf">remove</span><span class="o">(</span><span class="n">Object</span> <span class="n">o</span><span class="o">);</span>
+    <span class="kt">void</span> <span class="nf">clear</span><span class="o">();</span>
+    <span class="kt">boolean</span> <span class="nf">addAll</span><span class="o">(</span><span class="n">Collection</span><span class="o">&lt;?</span> <span class="kd">extends</span> <span class="n">E</span><span class="o">&gt;</span> <span class="n">c</span><span class="o">);</span>
+    <span class="kt">boolean</span> <span class="nf">removeAll</span><span class="o">(</span><span class="n">Collection</span><span class="o">&lt;?&gt;</span> <span class="n">c</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span><span class="o">[]</span> <span class="nf">toArray</span><span class="o">(</span><span class="n">T</span><span class="o">[]</span> <span class="n">a</span><span class="o">)</span> <span class="o">{}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>有一个公共的抽象实现类<code class="highlighter-rouge">AbstractCollection</code>，实现了如<code class="highlighter-rouge">isEmpty()</code>、<code class="highlighter-rouge">contains()</code>、<code class="highlighter-rouge">clear()</code>、<code class="highlighter-rouge">remove()</code>等方法。集合的实现类一般会继承自这个抽象类，根据其可变还是不可变实现对应的方法：</p>
+<ul>
+  <li>不可变集合只需实现<code class="highlighter-rouge">size()</code>和<code class="highlighter-rouge">iterator()</code>接口，并且返回的 Iterator 需要实现<code class="highlighter-rouge">hashNext()</code>和<code class="highlighter-rouge">next()</code>方法。</li>
+  <li>可变集合则还需要实现<code class="highlighter-rouge">add()</code>方法，返回的 Iterator 需要实现<code class="highlighter-rouge">remove()</code>方法。</li>
+</ul>
+
+<p><code class="highlighter-rouge">toArray()</code>方法也在这里实现，具体流程如下：</p>
+<ol>
+  <li>根据集合<code class="highlighter-rouge">size()</code>返回的大小创建一个新的数组</li>
+  <li>通过<code class="highlighter-rouge">next()</code>将集合内的元素加入数组</li>
+  <li>数组大小够用，则将数组已经填充元素的部分复制一个新的数组返回；若不够用则进行<code class="highlighter-rouge">finishToArray</code>动态扩容，扩容为1.5倍大小<code class="highlighter-rouge">int newCap = cap + (cap &gt;&gt; 1) + 1</code>。</li>
+</ol>
+
+<h2 id="list">List</h2>
+<p>是<code class="highlighter-rouge">Collection</code>对线性表的扩充，提供了针对指定位置（index）元素操作的方法。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="n">E</span> <span class="nf">get</span><span class="o">(</span><span class="kt">int</span> <span class="n">index</span><span class="o">);</span>
+    <span class="n">E</span> <span class="nf">set</span><span class="o">(</span><span class="kt">int</span> <span class="n">index</span><span class="o">,</span> <span class="n">E</span> <span class="n">element</span><span class="o">);</span>
+    <span class="kt">void</span> <span class="nf">add</span><span class="o">(</span><span class="kt">int</span> <span class="n">index</span><span class="o">,</span> <span class="n">E</span> <span class="n">element</span><span class="o">);</span>
+    <span class="n">E</span> <span class="nf">remove</span><span class="o">(</span><span class="kt">int</span> <span class="n">index</span><span class="o">);</span>
+    <span class="kt">int</span> <span class="nf">indexOf</span><span class="o">(</span><span class="n">Object</span> <span class="n">o</span><span class="o">);</span>
+    <span class="kt">int</span> <span class="nf">lastIndexOf</span><span class="o">(</span><span class="n">Object</span> <span class="n">o</span><span class="o">);</span>
+    <span class="n">ListIterator</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="nf">listIterator</span><span class="o">(</span><span class="kt">int</span> <span class="n">index</span><span class="o">);</span>
+    <span class="n">List</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="nf">subList</span><span class="o">(</span><span class="kt">int</span> <span class="n">fromIndex</span><span class="o">,</span> <span class="kt">int</span> <span class="n">toIndex</span><span class="o">);</span>
+    <span class="k">default</span> <span class="kt">void</span> <span class="nf">sort</span><span class="o">(</span><span class="n">Comparator</span><span class="o">&lt;?</span> <span class="kd">super</span> <span class="n">E</span><span class="o">&gt;</span> <span class="n">c</span><span class="o">)</span> <span class="o">{};</span>
+</code></pre></div></div>
+
+<h3 id="abstractlist">AbstractList</h3>
+
+<p><code class="highlighter-rouge">AbstarctList</code>是<code class="highlighter-rouge">List</code>的一个抽象实现类，继承自<code class="highlighter-rouge">AbstractCollection</code>并实现了<code class="highlighter-rouge">List</code>接口。同<code class="highlighter-rouge">AbstractCollection</code>，针对可变与不可变集合，只需要实现相应的方法即可：</p>
+<ul>
+  <li>不可变集合只需要实现<code class="highlighter-rouge">size()</code>和<code class="highlighter-rouge">get()</code>方法</li>
+  <li>可变集合则需要实现<code class="highlighter-rouge">set()</code>方法，如果支持动态扩容则需要实现<code class="highlighter-rouge">add()</code>和<code class="highlighter-rouge">remove()</code>方法。</li>
+</ul>
+
+<p><code class="highlighter-rouge">AbstractList</code>对<code class="highlighter-rouge">iterator</code>方法的实现很简单，在内部定义了一个<code class="highlighter-rouge">Iterator</code>类，在方法中将其实例化并返回。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="n">Iterator</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="nf">iterator</span><span class="o">()</span> <span class="o">{</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nf">Itr</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>此外，它还定义了<code class="highlighter-rouge">ListIterator</code>类，继承自<code class="highlighter-rouge">Iterator</code>，增加了向前遍历的功能，在<code class="highlighter-rouge">indexOf()</code>实现中用到了它。</p>
+
+<p><code class="highlighter-rouge">subList()</code>的实现也同样采用内部类<code class="highlighter-rouge">SubList</code>，它继承自<code class="highlighter-rouge">AbstractList</code>，增加了一些 index 范围的校验。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="nf">subList</span><span class="o">(</span><span class="kt">int</span> <span class="n">fromIndex</span><span class="o">,</span> <span class="kt">int</span> <span class="n">toIndex</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">subListRangeCheck</span><span class="o">(</span><span class="n">fromIndex</span><span class="o">,</span> <span class="n">toIndex</span><span class="o">,</span> <span class="n">size</span><span class="o">);</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nf">SubList</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">fromIndex</span><span class="o">,</span> <span class="n">toIndex</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="modcount">modCount</h3>
+<p><code class="highlighter-rouge">AbstractList</code>中维护者一个<code class="highlighter-rouge">整型的modCount</code>字段，在对集合进行变更时会伴随<code class="highlighter-rouge">modCount</code>的增加，在对集合进行遍历时是不允许有其他的变更动作的，因此会在遍历开始之前拿到<code class="highlighter-rouge">modCount</code>的值写入到<code class="highlighter-rouge">expectedModCount</code>变量中，在遍历过程中会检查这个值和当前的<code class="highlighter-rouge">modCount</code>值相等，否则会抛出<code class="highlighter-rouge">ConcurrentModificationException</code>。</p>
+
+<h2 id="arraylist">ArrayList</h2>
+<p><code class="highlighter-rouge">ArrayList</code>继承自<code class="highlighter-rouge">AbstractList</code>，并实现了三个标识接口，实现该类接口不许实现任何方法即拥有了对应功能</p>
+<ul>
+  <li><code class="highlighter-rouge">RandomAccess</code>：支持快速随机访问</li>
+  <li><code class="highlighter-rouge">Cloneable</code>：可克隆（<code class="highlighter-rouge">clone()</code>方法）</li>
+  <li><code class="highlighter-rouge">java.io.Serializable</code>：可序列化的（<code class="highlighter-rouge">writeObject()</code>和<code class="highlighter-rouge">readObject()</code>方法）</li>
+</ul>
+
+<p><code class="highlighter-rouge">ArrayList</code>对数组操作进行了封装和优化，支持动态扩容。</p>
+
+<h3 id="初始化">初始化</h3>
+<p>内部维护了一个数组来存储元素，一个整型<code class="highlighter-rouge">size</code>来维护自身元素个数。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">transient</span> <span class="n">Object</span><span class="o">[]</span> <span class="n">elementData</span><span class="o">;</span>
+<span class="kd">private</span> <span class="kt">int</span> <span class="n">size</span><span class="o">;</span>
+</code></pre></div></div>
+
+<p>它提供了三个构造方法，参数分别是空、制定大小和指定集合，当参数为空时，会直接返回<code class="highlighter-rouge">EMPTY_ELEMENTDATA</code>即空的数组。而后面两种规则会指定<code class="highlighter-rouge">ArrayList</code>的大小。<code class="highlighter-rouge">ArrayList</code>有一个默认大小<code class="highlighter-rouge">DEFAULT_CAPACITY</code>为 10，但只有当默认创建的数组添加一个新的元素时，这个数组的大小才会变成默认大小。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="nf">ArrayList</span><span class="o">()</span> <span class="o">{</span>
+    <span class="k">this</span><span class="o">.</span><span class="na">elementData</span> <span class="o">=</span> <span class="n">DEFAULTCAPACITY_EMPTY_ELEMENTDATA</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="重写">重写</h3>
+<p><code class="highlighter-rouge">ArrayList</code>重写了<code class="highlighter-rouge">AbstractList</code>和<code class="highlighter-rouge">AbstractCollection</code>中的方法，修改了其相应实现。<code class="highlighter-rouge">toArray()</code>不再借助<code class="highlighter-rouge">Iterator</code>，而是直接截取 size 大小的数组返回（调用<code class="highlighter-rouge">Arrays.copyOf</code>方法）。</p>
+
+<h3 id="动态扩容">动态扩容</h3>
+<p><code class="highlighter-rouge">ArrayList</code>会在添加元素时检查当前数组的大小是否满足要求，若不满足要求则会进行动态扩容，通过下面几步进行。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 只针在默认数组中对初次添加元素，会将数组大小增至DEFAULT_CAPACITY</span>
+<span class="kd">private</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">calculateCapacity</span><span class="o">(</span><span class="n">Object</span><span class="o">[]</span> <span class="n">elementData</span><span class="o">,</span> <span class="kt">int</span> <span class="n">minCapacity</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">elementData</span> <span class="o">==</span> <span class="n">DEFAULTCAPACITY_EMPTY_ELEMENTDATA</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">Math</span><span class="o">.</span><span class="na">max</span><span class="o">(</span><span class="n">DEFAULT_CAPACITY</span><span class="o">,</span> <span class="n">minCapacity</span><span class="o">);</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="n">minCapacity</span><span class="o">;</span>
+<span class="o">}</span>
+
+<span class="kd">private</span> <span class="kt">void</span> <span class="nf">ensureCapacityInternal</span><span class="o">(</span><span class="kt">int</span> <span class="n">minCapacity</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">ensureExplicitCapacity</span><span class="o">(</span><span class="n">calculateCapacity</span><span class="o">(</span><span class="n">elementData</span><span class="o">,</span> <span class="n">minCapacity</span><span class="o">));</span>
+<span class="o">}</span>
+
+<span class="c1">// 若当前数组大小不满足条件，则会进行动态扩容</span>
+<span class="kd">private</span> <span class="kt">void</span> <span class="nf">ensureExplicitCapacity</span><span class="o">(</span><span class="kt">int</span> <span class="n">minCapacity</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">modCount</span><span class="o">++;</span>
+
+    <span class="c1">// overflow-conscious code</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">minCapacity</span> <span class="o">-</span> <span class="n">elementData</span><span class="o">.</span><span class="na">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span>
+        <span class="n">grow</span><span class="o">(</span><span class="n">minCapacity</span><span class="o">);</span>
+<span class="o">}</span>
+
+<span class="c1">// 扩容策略</span>
+<span class="kd">private</span> <span class="kt">void</span> <span class="nf">grow</span><span class="o">(</span><span class="kt">int</span> <span class="n">minCapacity</span><span class="o">)</span> <span class="o">{</span>
+    <span class="c1">// overflow-conscious code</span>
+    <span class="kt">int</span> <span class="n">oldCapacity</span> <span class="o">=</span> <span class="n">elementData</span><span class="o">.</span><span class="na">length</span><span class="o">;</span>
+
+    <span class="c1">// 扩容至1.5倍</span>
+    <span class="kt">int</span> <span class="n">newCapacity</span> <span class="o">=</span> <span class="n">oldCapacity</span> <span class="o">+</span> <span class="o">(</span><span class="n">oldCapacity</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="o">);</span>
+
+    <span class="c1">// 若仍不满足要求，直接使用minCapacity</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">newCapacity</span> <span class="o">-</span> <span class="n">minCapacity</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span>
+        <span class="n">newCapacity</span> <span class="o">=</span> <span class="n">minCapacity</span><span class="o">;</span>
+
+    <span class="c1">// 保证newCapacity不会超过整数上限，MAX_ARRAY_SIZE的值为Integer.MAX_VALUE - 8</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">newCapacity</span> <span class="o">-</span> <span class="n">MAX_ARRAY_SIZE</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span>
+        <span class="n">newCapacity</span> <span class="o">=</span> <span class="n">hugeCapacity</span><span class="o">(</span><span class="n">minCapacity</span><span class="o">);</span>
+    <span class="c1">// minCapacity is usually close to size, so this is a win:</span>
+    <span class="n">elementData</span> <span class="o">=</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="n">elementData</span><span class="o">,</span> <span class="n">newCapacity</span><span class="o">);</span>
+<span class="o">}</span>
+
+<span class="kd">private</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">hugeCapacity</span><span class="o">(</span><span class="kt">int</span> <span class="n">minCapacity</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">minCapacity</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span> <span class="c1">// overflow</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nf">OutOfMemoryError</span><span class="o">();</span>
+    <span class="k">return</span> <span class="o">(</span><span class="n">minCapacity</span> <span class="o">&gt;</span> <span class="n">MAX_ARRAY_SIZE</span><span class="o">)</span> <span class="o">?</span>
+        <span class="n">Integer</span><span class="o">.</span><span class="na">MAX_VALUE</span> <span class="o">:</span>
+        <span class="n">MAX_ARRAY_SIZE</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>动态扩容会将数组进行拷贝，存在开销。为了避免频繁的扩容，在初始化时就应该为<code class="highlighter-rouge">ArrayList</code>指定初始大小，但这样在实际使用前也会一直占据大块的连续内存，最好的思路是<strong>仍然使用无参构造器创建<code class="highlighter-rouge">ArrayList</code>，只在使用前为其进行一次扩容，通过调用<code class="highlighter-rouge">ensureCapacity()</code>方法。</strong></p>
+
+<h3 id="vector">Vector</h3>
+<p><code class="highlighter-rouge">Vector</code>与<code class="highlighter-rouge">ArrayList</code>的功能和实现都类似，最大的区别在于<strong>Vector 是线程安全的</strong>，它锁实现的大部分方法带有<code class="highlighter-rouge">synchronized</code>关键字，但开销也较大。<code class="highlighter-rouge">Stack</code>是它的一个子类，在单线程环境中不推荐使用<code class="highlighter-rouge">Vector</code>和<code class="highlighter-rouge">Stack</code>。</p>
+
+<h2 id="queue">Queue</h2>
+<p>实现了先入先出的队列功能</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Queue</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">Collection</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="kt">boolean</span> <span class="nf">add</span><span class="o">(</span><span class="n">E</span> <span class="n">e</span><span class="o">);</span>
+    <span class="kt">boolean</span> <span class="nf">offer</span><span class="o">(</span><span class="n">E</span> <span class="n">e</span><span class="o">);</span>
+    <span class="n">E</span> <span class="nf">remove</span><span class="o">();</span>
+    <span class="n">E</span> <span class="nf">poll</span><span class="o">();</span>
+    <span class="n">E</span> <span class="nf">element</span><span class="o">();</span>
+    <span class="n">E</span> <span class="nf">peek</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>有两个地方需要注意：</p>
+<ul>
+  <li><code class="highlighter-rouge">add()</code>与<code class="highlighter-rouge">offer()</code>的区别：<code class="highlighter-rouge">add()</code>对满的队列使用时会抛出异常，而<code class="highlighter-rouge">offer()</code>则会返回<code class="highlighter-rouge">false</code>。</li>
+  <li><code class="highlighter-rouge">remove()</code>与<code class="highlighter-rouge">poll()</code>的区别：<code class="highlighter-rouge">remove()</code>在对空的队列使用时会抛出异常，而<code class="highlighter-rouge">poll()</code>则会返回<code class="highlighter-rouge">null</code>。</li>
+</ul>
+
+<h3 id="abstractqueue">AbstractQueue</h3>
+<p>是<code class="highlighter-rouge">Queue</code>的超级实现类，其中<code class="highlighter-rouge">add</code>与<code class="highlighter-rouge">remove</code>方法的实现如下：</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">add</span><span class="o">(</span><span class="n">E</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">offer</span><span class="o">(</span><span class="n">e</span><span class="o">))</span>
+        <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="k">else</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nf">IllegalStateException</span><span class="o">(</span><span class="s">"Queue full"</span><span class="o">);</span>
+<span class="o">}</span>
+
+<span class="kd">public</span> <span class="n">E</span> <span class="nf">remove</span><span class="o">()</span> <span class="o">{</span>
+    <span class="n">E</span> <span class="n">x</span> <span class="o">=</span> <span class="n">poll</span><span class="o">();</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">x</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">;</span>
+    <span class="k">else</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nf">NoSuchElementException</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<h3 id="deque">Deque</h3>
+<p><code class="highlighter-rouge">Deque</code>继承自<code class="highlighter-rouge">Queue</code>，定义了双向队列。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Deque</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">Queue</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="kt">void</span> <span class="nf">addFirst</span><span class="o">(</span><span class="n">E</span> <span class="n">e</span><span class="o">);</span>
+    <span class="kt">void</span> <span class="nf">addLast</span><span class="o">(</span><span class="n">E</span> <span class="n">e</span><span class="o">);</span>
+    <span class="kt">boolean</span> <span class="nf">offerFirst</span><span class="o">(</span><span class="n">E</span> <span class="n">e</span><span class="o">);</span>
+    <span class="kt">boolean</span> <span class="nf">offerLast</span><span class="o">(</span><span class="n">E</span> <span class="n">e</span><span class="o">);</span>
+    <span class="n">E</span> <span class="nf">removeFirst</span><span class="o">();</span>
+    <span class="n">E</span> <span class="nf">removeLast</span><span class="o">();</span>
+    <span class="n">E</span> <span class="nf">pollFirst</span><span class="o">();</span>
+    <span class="n">E</span> <span class="nf">pollLast</span><span class="o">();</span>
+    <span class="n">E</span> <span class="nf">getFirst</span><span class="o">();</span>
+    <span class="n">E</span> <span class="nf">getLast</span><span class="o">();</span>
+    <span class="n">E</span> <span class="nf">peekFirst</span><span class="o">();</span>
+    <span class="n">E</span> <span class="nf">peekLast</span><span class="o">();</span>
+    <span class="kt">boolean</span> <span class="nf">removeFirstOccurrence</span><span class="o">(</span><span class="n">Object</span> <span class="n">o</span><span class="o">);</span>
+    <span class="kt">boolean</span> <span class="nf">removeLastOccurrence</span><span class="o">(</span><span class="n">Object</span> <span class="n">o</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="arraydeque">ArrayDeque</h2>
+<p>一个基于数组构建的循环队列，是<code class="highlighter-rouge">Deque</code>的实现类，不但实现了<code class="highlighter-rouge">Deque</code>的全部方法，还实现了栈相关的方法，因此它<strong>既可以作为队列使用，又能作为栈使用。</strong></p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// *** Stack methods ***</span>
+
+<span class="kd">public</span> <span class="kt">void</span> <span class="nf">push</span><span class="o">(</span><span class="n">E</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">addFirst</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
+<span class="o">}</span>
+
+<span class="kd">public</span> <span class="n">E</span> <span class="nf">pop</span><span class="o">()</span> <span class="o">{</span>
+    <span class="k">return</span> <span class="nf">removeFirst</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="初始化-1">初始化</h3>
+<p>定义了几个成员变量，用来存储元素和首末位置的引用。定义了一个常量，表示数组的最小大小，<code class="highlighter-rouge">ArrayDeque</code>内部维护的数组大小总是 2 的幂次方。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="kd">transient</span> <span class="n">Object</span><span class="o">[]</span> <span class="n">elements</span><span class="o">;</span> <span class="c1">// non-private to simplify nested class access</span>
+    <span class="kd">transient</span> <span class="kt">int</span> <span class="n">head</span><span class="o">;</span>
+    <span class="kd">transient</span> <span class="kt">int</span> <span class="n">tail</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">MIN_INITIAL_CAPACITY</span> <span class="o">=</span> <span class="mi">8</span><span class="o">;</span>
+</code></pre></div></div>
+
+<p>有三个构造方法，无参构造器默认数组大小为 16</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="nf">ArrayDeque</span><span class="o">()</span> <span class="o">{</span>
+    <span class="n">elements</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Object</span><span class="o">[</span><span class="mi">16</span><span class="o">];</span>
+<span class="o">}</span>
+
+<span class="kd">public</span> <span class="nf">ArrayDeque</span><span class="o">(</span><span class="kt">int</span> <span class="n">numElements</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">allocateElements</span><span class="o">(</span><span class="n">numElements</span><span class="o">);</span>
+<span class="o">}</span>
+
+<span class="kd">public</span> <span class="nf">ArrayDeque</span><span class="o">(</span><span class="n">Collection</span><span class="o">&lt;?</span> <span class="kd">extends</span> <span class="n">E</span><span class="o">&gt;</span> <span class="n">c</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">allocateElements</span><span class="o">(</span><span class="n">c</span><span class="o">.</span><span class="na">size</span><span class="o">());</span>
+    <span class="n">addAll</span><span class="o">(</span><span class="n">c</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>其余构造方法需要调用<code class="highlighter-rouge">allocateElements()</code>方法找到最近的 2 的幂次方，方式为不断和自己的右移 1/2/4/8/16 位之后的值进行或运算，使自己的最高位以下的值均为 1，之后进行自加操作即可。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">calculateSize</span><span class="o">(</span><span class="kt">int</span> <span class="n">numElements</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kt">int</span> <span class="n">initialCapacity</span> <span class="o">=</span> <span class="n">MIN_INITIAL_CAPACITY</span><span class="o">;</span>
+    <span class="c1">// Find the best power of two to hold elements.</span>
+    <span class="c1">// Tests "&lt;=" because arrays aren't kept full.</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">numElements</span> <span class="o">&gt;=</span> <span class="n">initialCapacity</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">initialCapacity</span> <span class="o">=</span> <span class="n">numElements</span><span class="o">;</span>
+        <span class="n">initialCapacity</span> <span class="o">|=</span> <span class="o">(</span><span class="n">initialCapacity</span> <span class="o">&gt;&gt;&gt;</span>  <span class="mi">1</span><span class="o">);</span>
+        <span class="n">initialCapacity</span> <span class="o">|=</span> <span class="o">(</span><span class="n">initialCapacity</span> <span class="o">&gt;&gt;&gt;</span>  <span class="mi">2</span><span class="o">);</span>
+        <span class="n">initialCapacity</span> <span class="o">|=</span> <span class="o">(</span><span class="n">initialCapacity</span> <span class="o">&gt;&gt;&gt;</span>  <span class="mi">4</span><span class="o">);</span>
+        <span class="n">initialCapacity</span> <span class="o">|=</span> <span class="o">(</span><span class="n">initialCapacity</span> <span class="o">&gt;&gt;&gt;</span>  <span class="mi">8</span><span class="o">);</span>
+        <span class="n">initialCapacity</span> <span class="o">|=</span> <span class="o">(</span><span class="n">initialCapacity</span> <span class="o">&gt;&gt;&gt;</span> <span class="mi">16</span><span class="o">);</span>
+        <span class="n">initialCapacity</span><span class="o">++;</span>
+
+        <span class="k">if</span> <span class="o">(</span><span class="n">initialCapacity</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span>   <span class="c1">// Too many elements, must back off</span>
+            <span class="n">initialCapacity</span> <span class="o">&gt;&gt;&gt;=</span> <span class="mi">1</span><span class="o">;</span><span class="c1">// Good luck allocating 2 ^ 30 elements</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="n">initialCapacity</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="add">add</h3>
+<p>增加元素要判断数组是否已满，判断方式为 head 与 tail 指向同一个位置，head是储存元素的，而 tail 是不存储元素的。这里<code class="highlighter-rouge">head = (head - 1) &amp; (elements.length - 1)</code>是当 head 的值为 0 时，<code class="highlighter-rouge">head-1</code>为 -1，二进制全为 1，与<code class="highlighter-rouge">elements.length - 1</code>进行与运算时只会保留<code class="highlighter-rouge">elements.length - 1</code>的部分，即将元素添加到<code class="highlighter-rouge">elements.length - 1</code>的位置，这也是<code class="highlighter-rouge">ArrayDeque</code>的大小永远是 2 的幂次方的原因。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">addFirst</span><span class="o">(</span><span class="n">E</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">e</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nf">NullPointerException</span><span class="o">();</span>
+    <span class="n">elements</span><span class="o">[</span><span class="n">head</span> <span class="o">=</span> <span class="o">(</span><span class="n">head</span> <span class="o">-</span> <span class="mi">1</span><span class="o">)</span> <span class="o">&amp;</span> <span class="o">(</span><span class="n">elements</span><span class="o">.</span><span class="na">length</span> <span class="o">-</span> <span class="mi">1</span><span class="o">)]</span> <span class="o">=</span> <span class="n">e</span><span class="o">;</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">head</span> <span class="o">==</span> <span class="n">tail</span><span class="o">)</span>
+        <span class="n">doubleCapacity</span><span class="o">();</span>
+<span class="o">}</span>
+
+<span class="kd">public</span> <span class="kt">void</span> <span class="nf">addLast</span><span class="o">(</span><span class="n">E</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">e</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nf">NullPointerException</span><span class="o">();</span>
+    <span class="n">elements</span><span class="o">[</span><span class="n">tail</span><span class="o">]</span> <span class="o">=</span> <span class="n">e</span><span class="o">;</span>
+    <span class="k">if</span> <span class="o">(</span> <span class="o">(</span><span class="n">tail</span> <span class="o">=</span> <span class="o">(</span><span class="n">tail</span> <span class="o">+</span> <span class="mi">1</span><span class="o">)</span> <span class="o">&amp;</span> <span class="o">(</span><span class="n">elements</span><span class="o">.</span><span class="na">length</span> <span class="o">-</span> <span class="mi">1</span><span class="o">))</span> <span class="o">==</span> <span class="n">head</span><span class="o">)</span>
+        <span class="n">doubleCapacity</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="动态扩容-1">动态扩容</h3>
+<p>扩容方式很简单，直接扩容至原大小的 2 倍。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kt">void</span> <span class="nf">doubleCapacity</span><span class="o">()</span> <span class="o">{</span>
+    <span class="k">assert</span> <span class="n">head</span> <span class="o">==</span> <span class="n">tail</span><span class="o">;</span>
+    <span class="kt">int</span> <span class="n">p</span> <span class="o">=</span> <span class="n">head</span><span class="o">;</span>
+    <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">elements</span><span class="o">.</span><span class="na">length</span><span class="o">;</span>
+    <span class="kt">int</span> <span class="n">r</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">p</span><span class="o">;</span> <span class="c1">// number of elements to the right of p</span>
+    <span class="kt">int</span> <span class="n">newCapacity</span> <span class="o">=</span> <span class="n">n</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="o">;</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">newCapacity</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nf">IllegalStateException</span><span class="o">(</span><span class="s">"Sorry, deque too big"</span><span class="o">);</span>
+    <span class="n">Object</span><span class="o">[]</span> <span class="n">a</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Object</span><span class="o">[</span><span class="n">newCapacity</span><span class="o">];</span>
+    <span class="n">System</span><span class="o">.</span><span class="na">arraycopy</span><span class="o">(</span><span class="n">elements</span><span class="o">,</span> <span class="n">p</span><span class="o">,</span> <span class="n">a</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">r</span><span class="o">);</span>
+    <span class="n">System</span><span class="o">.</span><span class="na">arraycopy</span><span class="o">(</span><span class="n">elements</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">a</span><span class="o">,</span> <span class="n">r</span><span class="o">,</span> <span class="n">p</span><span class="o">);</span>
+    <span class="n">elements</span> <span class="o">=</span> <span class="n">a</span><span class="o">;</span>
+    <span class="n">head</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+    <span class="n">tail</span> <span class="o">=</span> <span class="n">n</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="linkedlist">LinkedList</h2>
+<p>同时实现了<code class="highlighter-rouge">List</code>和<code class="highlighter-rouge">Deque</code>接口，同时继承自<code class="highlighter-rouge">AbstractSequentialList</code>。<code class="highlighter-rouge">AbstractSequentialList</code>继承自<code class="highlighter-rouge">AbstractList</code>，提供了<code class="highlighter-rouge">itrator</code>接口的默认实现，返回内部<code class="highlighter-rouge">ListIterator</code>对象。</p>
+
+<h3 id="初始化-2">初始化</h3>
+<p>LinkedList为基于链表的集合，内部维护着节点类。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">Node</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="n">E</span> <span class="n">item</span><span class="o">;</span>
+    <span class="n">Node</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="n">next</span><span class="o">;</span>
+    <span class="n">Node</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="n">prev</span><span class="o">;</span>
+
+    <span class="n">Node</span><span class="o">(</span><span class="n">Node</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="n">prev</span><span class="o">,</span> <span class="n">E</span> <span class="n">element</span><span class="o">,</span> <span class="n">Node</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="n">next</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">item</span> <span class="o">=</span> <span class="n">element</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">next</span> <span class="o">=</span> <span class="n">next</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">prev</span> <span class="o">=</span> <span class="n">prev</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>三个成员变量，维护着头尾节点的引用和链表大小。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">transient</span> <span class="kt">int</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+<span class="kd">transient</span> <span class="n">Node</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="n">first</span><span class="o">;</span>
+<span class="kd">transient</span> <span class="n">Node</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="n">last</span><span class="o">;</span>
+</code></pre></div></div>
+
+<p>两个构造方法，无参和集合。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="nf">LinkedList</span><span class="o">()</span> <span class="o">{</span>
+<span class="o">}</span>
+
+<span class="kd">public</span> <span class="nf">LinkedList</span><span class="o">(</span><span class="n">Collection</span><span class="o">&lt;?</span> <span class="kd">extends</span> <span class="n">E</span><span class="o">&gt;</span> <span class="n">c</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">this</span><span class="o">();</span>
+    <span class="n">addAll</span><span class="o">(</span><span class="n">c</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="内部方法">内部方法</h3>
+<p>定义了一组由 link 和 unlink 开头的方法，维护着链表特有的逻辑，其他从<code class="highlighter-rouge">List</code>和<code class="highlighter-rouge">Deque</code>继承来的方法均在这些内部方法的协助下实现。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 举个例子，将元素 link 到首位的逻辑</span>
+<span class="kd">private</span> <span class="kt">void</span> <span class="nf">linkFirst</span><span class="o">(</span><span class="n">E</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kd">final</span> <span class="n">Node</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">first</span><span class="o">;</span>
+    <span class="kd">final</span> <span class="n">Node</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="n">newNode</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Node</span><span class="o">&lt;&gt;(</span><span class="kc">null</span><span class="o">,</span> <span class="n">e</span><span class="o">,</span> <span class="n">f</span><span class="o">);</span>
+    <span class="n">first</span> <span class="o">=</span> <span class="n">newNode</span><span class="o">;</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">f</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+        <span class="n">last</span> <span class="o">=</span> <span class="n">newNode</span><span class="o">;</span>
+    <span class="k">else</span>
+        <span class="n">f</span><span class="o">.</span><span class="na">prev</span> <span class="o">=</span> <span class="n">newNode</span><span class="o">;</span>
+    <span class="n">size</span><span class="o">++;</span>
+    <span class="n">modCount</span><span class="o">++;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="性能">性能</h3>
+<p><code class="highlighter-rouge">LinkedList</code>在进行带有 index 的增删查时，通常需要对链表进行遍历或对折遍历。同<code class="highlighter-rouge">ArrayList</code>相比，<code class="highlighter-rouge">LinkedList</code>的插入很快，但查询无力。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Node</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="nf">node</span><span class="o">(</span><span class="kt">int</span> <span class="n">index</span><span class="o">)</span> <span class="o">{</span>
+    <span class="c1">// assert isElementIndex(index);</span>
+
+    <span class="k">if</span> <span class="o">(</span><span class="n">index</span> <span class="o">&lt;</span> <span class="o">(</span><span class="n">size</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="o">))</span> <span class="o">{</span>
+        <span class="n">Node</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="n">x</span> <span class="o">=</span> <span class="n">first</span><span class="o">;</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">index</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="na">next</span><span class="o">;</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">;</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+        <span class="n">Node</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="n">x</span> <span class="o">=</span> <span class="n">last</span><span class="o">;</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="o">;</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="n">index</span><span class="o">;</span> <span class="n">i</span><span class="o">--)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="na">prev</span><span class="o">;</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/02/15/gunicorn2/">Gunicorn源码阅读(二) Master进程
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/24/jmm/">JMM小结
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/17/sringioc/">Spring（一）IoC
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/15/classload/">JVM基础（二） 类加载过程
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/14/excutors/">Java核心类库学习（一） 线程池
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/10/thread1/">Java并发编程 线程同步机制
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+        
+            </ul>
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2019/02/15/gunicorn2/">Gunicorn源码阅读(二) Master进程</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2019/02/18/collection1/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2019/02/18/collection1/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>
