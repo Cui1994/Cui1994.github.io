@@ -16,6 +16,12 @@ Java中的集合分为三类，Set、Map 和 List，它们都处于`java.util`�
 
 
 
+集合类的学习大同小异，这里在通过源码了解常用集合类其实现方式时，主要关注下面几个方面：
+- 初始化过程（包括成员变量、内部类和构造方法），元素的存储方式、有无默认大小
+- 关键方法（如set、get等）
+- 扩容机制
+- 相应实现对应的性能优劣，如何正确使用等
+
 ## Collection
 
 ### Iterable
@@ -101,8 +107,18 @@ public List<E> subList(int fromIndex, int toIndex) {
 }
 ```
 
-### modCount
-`AbstractList`中维护者一个`整型的modCount`字段，在对集合进行变更时会伴随`modCount`的增加，在对集合进行遍历时是不允许有其他的变更动作的，因此会在遍历开始之前拿到`modCount`的值写入到`expectedModCount`变量中，在遍历过程中会检查这个值和当前的`modCount`值相等，否则会抛出`ConcurrentModificationException`。
+### fail-fast
+`AbstractList`中维护者一个整型的`modCount`字段来实现 fail-fast 机制，在`Iterator`的实现中通常会有`checkForComodification()`方法。
+```java
+        int expectedModCount = modCount;
+
+final void checkForComodification() {
+    if (modCount != expectedModCount)
+        throw new ConcurrentModificationException();
+}
+```
+
+在对集合进行变更时会伴随`modCount`的增加，在对集合进行遍历时是不允许有其他的变更动作的，因此会在遍历开始之前拿到`modCount`的值写入到`expectedModCount`变量中，在遍历过程中会检查这个值和当前的`modCount`值相等，否则会抛出`ConcurrentModificationException`。
 
 ## ArrayList
 `ArrayList`继承自`AbstractList`，并实现了三个标识接口，实现该类接口不许实现任何方法即拥有了对应功能

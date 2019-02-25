@@ -1,0 +1,547 @@
+---
+layout: post
+category: "Java"
+title:  "Java核心类库学习（二）Map"
+tags: [Java, 源码, Map]
+---
+
+* content
+{:toc}
+
+![](https://picsum.photos/800/300/?image=860)
+
+来看看 Map 的定义与相关实现。
+
+
+
+
+
+## Map
+整合了数组与链表的优点，在插入和查找都有不错的性能。`Map`中定义了`Entry`接口，提供了一系列基于 kv 操作的方法，在 Map 中存储的数据都要实现`Entry`接口。
+```java
+interface Entry<K,V> {
+    K getKey();
+    V getValue();
+    V setValue(V value);
+    boolean equals(Object o);
+    int hashCode();
+}
+```
+`Map`接口
+
+![](https://i.loli.net/2019/02/19/5c6bc45ea8320.png)
+
+### AbstractMap
+是`Map`的一个超级实现类，`entrySet()`方法是一个比较关键的地方，它会返回一个 Entry 的 Set，Map 自身的很多方法都是通过对这个 Set 进行迭代来处理，所以经常能看到下面的代码。
+```java
+Iterator<Entry<K,V>> i = entrySet().iterator();
+```
+`AbstractMap`并没有实现`entrySet()`方法，交由各个子类自行实现。
+
+## HashMap
+
+HashMap 以哈希表作为数据存储结构。
+
+### 初始化
+常量：
+```java
+// 大小均为 2 的幂次方 默认大小 16
+static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16
+// 最大容量 2 的 30 次方
+static final int MAXIMUM_CAPACITY = 1 << 30;
+// 当容量被占满 load factor 所制定的值时就进行 rehash 扩容，默认 0.75
+static final float DEFAULT_LOAD_FACTOR = 0.75f;
+// 链表大小超过这个值就转化为树
+static final int TREEIFY_THRESHOLD = 8;
+// 树的大小小于这个值就转化为链表
+static final int UNTREEIFY_THRESHOLD = 6;
+// 当容量达到64时才可以转化为树
+static final int MIN_TREEIFY_CAPACITY = 64;
+```
+所定义的数据单元，Node 类型中引入了连目标结构，而 TreeNode 类型则实现了一系列：
+```java
+static class Node<K,V> implements Map.Entry<K,V> {
+    static class Node<K,V> implements Map.Entry<K,V> {
+    final int hash;
+    final K key;
+    V value;
+    Node<K,V> next;
+}
+static final class TreeNode<K,V> extends LinkedHashMap.Entry<K,V> {
+    TreeNode<K,V> parent;  // red-black tree links
+    TreeNode<K,V> left;
+    TreeNode<K,V> right;
+    TreeNode<K,V> prev;    // needed to unlink next upon deletion
+    boolean red;
+}
+```
+成员变量：
+```java
+// 所存储的数据单元链表
+transient Node<K,V>[] table;
+// 提供遍历功能的Set
+transient Set<Map.Entry<K,V>> entrySet;
+
+transient int size;
+// 同集合的modCount作用相同
+transient int modCount;
+// 下一次要扩容的大小
+int threshold;
+
+final float loadFactor;
+```
+构造方法，`tableSizeFor()`与`ArrayDeque`中的寻找最近的 2 的幂次方实现相同。
+```java
+public HashMap(int initialCapacity, float loadFactor) {
+    if (initialCapacity < 0)
+        throw new IllegalArgumentException("Illegal initial capacity: " +
+                                           initialCapacity);
+    if (initialCapacity > MAXIMUM_CAPACITY)
+        initialCapacity = MAXIMUM_CAPACITY;
+    if (loadFactor <= 0 || Float.isNaN(loadFactor))
+        throw new IllegalArgumentException("Illegal load factor: " +
+                                           loadFactor);
+    this.loadFactor = loadFactor;
+    this.threshold = tableSizeFor(initialCapacity);
+}
+
+public HashMap(int initialCapacity) {
+    this(initialCapacity, DEFAULT_LOAD_FACTOR);
+}
+
+public HashMap() {
+    this.loadFactor = DEFAULT_LOAD_FACTOR; // all other fields defaulted
+}
+```
+### put方法
+这里以`put()`方法为例来看 HashMap 对元素增删改的操作，先来看 HashMap 的哈希方法，对 key 的 hashCode 的高16位取异或：
+```java
+static final int hash(Object key) {
+    int h;
+    return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+}
+
+public V put(K key, V value) {
+    return putVal(hash(key), key, value, false, true);
+}
+```
+
+下面就是`put()`方法的核心部分。HashMap 采用数组来做哈希表，用 hash 值与数组容量进行与运算计算数据在数组中的位置，这里要考虑两个问题：
+- 要考虑已经有 key 的情况，这时要做的不是插入而是替换原位置的值
+- 解决 hash 冲突，这里的方法是用拉链法和红黑树结合，所以 table 里可能是一个元素，也可能是链表的首节点或者红黑树的引用。
+- 扩容时机与策略，这里实现调用`resize()`方法
+
+```java
+final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
+               boolean evict) {
+    Node<K,V>[] tab; Node<K,V> p; int n, i;
+    // n 为数组容量，如果数组为空则调用 resize 进行数组长度的初始化
+    if ((tab = table) == null || (n = tab.length) == 0)
+        n = (tab = resize()).length;
+    // 如果目标位置没有值则直接插入元素，如果有值则将原值赋值给 p，p 可能是元素、链表或树
+    if ((p = tab[i = (n - 1) & hash]) == null)
+        tab[i] = newNode(hash, key, value, null);
+    else {
+        // 这里的 e 就是要替换值的原元素
+        Node<K,V> e; K k;
+        // p 为元素
+        if (p.hash == hash &&
+            ((k = p.key) == key || (key != null && key.equals(k))))
+            e = p;
+        // p 为树
+        else if (p instanceof TreeNode)
+            e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+        // p 为链表
+        else {
+            for (int binCount = 0; ; ++binCount) {
+                if ((e = p.next) == null) {
+                    p.next = newNode(hash, key, value, null);
+                    if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                        treeifyBin(tab, hash);
+                    break;
+                }
+                if (e.hash == hash &&
+                    ((k = e.key) == key || (key != null && key.equals(k))))
+                    break;
+                p = e;
+            }
+        }
+        // 替换原位置元素的值
+        if (e != null) { // existing mapping for key
+            V oldValue = e.value;
+            if (!onlyIfAbsent || oldValue == null)
+                e.value = value;
+            afterNodeAccess(e);
+            return oldValue;
+        }
+    }
+    ++modCount;
+    if (++size > threshold)
+        resize();
+    afterNodeInsertion(evict);
+    return null;
+}
+```
+
+### 动态扩容
+来看看扩容的方法`resize()`，它做了下面几件事：
+- 重新计算`capaticy`与`threshold`，一般会调整为原来的2倍，边界情况除外（如`MAXIMUM_CAPACITY`、`DEFAULT_INITIAL_CAPACITY`）
+- 根据新的容量新建`newTab`，并将`oldTab`中的数据迁移到新数组中，重新rehash插入元素，方式仍然是计算`hash & (newCap - 1)`，对于链表类型的节点，方式为先重新构建链表（老的链表在 rehash 之后可能会重新分散到两个位置，存在两条链表），再插入对应的位置。
+```java
+final Node<K,V>[] resize() {
+    Node<K,V>[] oldTab = table;
+    int oldCap = (oldTab == null) ? 0 : oldTab.length;
+    int oldThr = threshold;
+    int newCap, newThr = 0;
+    if (oldCap > 0) {
+        if (oldCap >= MAXIMUM_CAPACITY) {
+            threshold = Integer.MAX_VALUE;
+            return oldTab;
+        }
+        else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
+                 oldCap >= DEFAULT_INITIAL_CAPACITY)
+            newThr = oldThr << 1; // double threshold
+    }
+    else if (oldThr > 0) // initial capacity was placed in threshold
+        newCap = oldThr;
+    else {               // zero initial threshold signifies using defaults
+        newCap = DEFAULT_INITIAL_CAPACITY;
+        newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+    }
+    if (newThr == 0) {
+        float ft = (float)newCap * loadFactor;
+        newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
+                  (int)ft : Integer.MAX_VALUE);
+    }
+    threshold = newThr;
+    @SuppressWarnings({"rawtypes","unchecked"})
+        Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
+    table = newTab;
+    if (oldTab != null) {
+        for (int j = 0; j < oldCap; ++j) {
+            Node<K,V> e;
+            if ((e = oldTab[j]) != null) {
+                oldTab[j] = null;
+                // 只有一个元素的情况
+                if (e.next == null)
+                    newTab[e.hash & (newCap - 1)] = e;
+                // 重新规划树
+                else if (e instanceof TreeNode)
+                    ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
+                // 链表
+                else { // preserve order
+                    Node<K,V> loHead = null, loTail = null;
+                    Node<K,V> hiHead = null, hiTail = null;
+                    Node<K,V> next;
+                    do {
+                        next = e.next;
+                        if ((e.hash & oldCap) == 0) {
+                            if (loTail == null)
+                                loHead = e;
+                            else
+                                loTail.next = e;
+                            loTail = e;
+                        }
+                        else {
+                            if (hiTail == null)
+                                hiHead = e;
+                            else
+                                hiTail.next = e;
+                            hiTail = e;
+                        }
+                    } while ((e = next) != null);
+                    if (loTail != null) {
+                        loTail.next = null;
+                        newTab[j] = loHead;
+                    }
+                    if (hiTail != null) {
+                        hiTail.next = null;
+                        newTab[j + oldCap] = hiHead;
+                    }
+                }
+            }
+        }
+    }
+    return newTab;
+}
+```
+
+## HashTable
+
+HashTable 与 HashMap 定义与实现大都类似，主要区别有下面几点：（这部分参考了[这篇文章](http://www.importnew.com/24822.html)，有更详细的阐述）
+- HashTable 是线程安全的，它的方法都带有`synchronized`关键字。
+- HashTable 只定义了一种类型的`Entry`，继承自`Map.Entry`，引入了`next`指针，也就是说，它并没有引入红黑树来解决哈希冲突。
+- HashTable 的`put()`方法中有判空处理，而这个在 HashMap 中并不存在。
+```java
+public synchronized V put(K key, V value) {
+    // Make sure the value is not null
+    if (value == null) {
+        throw new NullPointerException();
+    }
+    ...
+}
+```
+- HashTable 的默认大小是 11，每次扩容后变为 2n+1，HashMap 的默认大小是 16，扩容后变为 2n。这里的区别是对素数取模得到的哈希值分布更加均匀，冲突更少，但是 2 的幂次方可以直接使用位运算，效率较高。
+HashMap 为了解决哈希冲突的问题，在`hash()`函数中对元素的哈希值做了一些位运算来减小哈希冲突。
+
+同 Vector 类似，HashTable 已经不再被推荐使用，如果需要线程安全，推荐直接只用juc包中的 ConcurrentHashMap。
+
+## SortedMap
+SortedMap 接口提供了有序集合的一些方法，由于元素排列是有序的，在查找时咋可以使用二分查找降低复杂度。
+```java
+public interface SortedMap<K,V> extends Map<K,V> {
+    Comparator<? super K> comparator();
+    // 子 Map
+    SortedMap<K,V> subMap(K fromKey, K toKey);
+    // 首元素到指定元素的子 Map
+    SortedMap<K,V> headMap(K toKey);
+    // 指定元素到末尾元素的 子Map
+    SortedMap<K,V> tailMap(K fromKey);
+
+    K firstKey();
+
+    K lastKey();
+
+    Set<K> keySet();
+
+    Collection<V> values();
+
+    Set<Map.Entry<K, V>> entrySet();
+}
+```
+
+它还有一个子接口`NavigableMap`，增加了对一个特定的 key 进行比较获取的一系列方法。
+```java
+*/
+public interface NavigableMap<K,V> extends SortedMap<K,V> {
+
+    // 获取小于指定 key 的 Entry
+    Map.Entry<K,V> lowerEntry(K key);
+    // 湖区小于指定 key 的 key
+    K lowerKey(K key);
+
+    // ...
+}
+```
+
+## TreeMap
+TreeMap 实现了 NavigableMap 接口，以红黑树来储存 Entry 数据，保证数据按照特定顺序（可以是自然顺序，可以是自定义顺序）。
+
+### 初始化
+
+只有一种 Entry 定义，定义了红黑树节点。
+```java
+static final class Entry<K,V> implements Map.Entry<K,V> {
+    K key;
+    V value;
+    Entry<K,V> left;
+    Entry<K,V> right;
+    Entry<K,V> parent;
+    boolean color = BLACK;
+
+    // ...
+}
+```
+
+成员变量：
+```java
+// comparator 比较器
+private final Comparator<? super K> comparator;
+
+// 根节点
+private transient Entry<K,V> root;
+
+// 容量，指树种的 Enrty 数目
+private transient int size = 0;
+
+private transient int modCount = 0;
+```
+
+提供了四种构造方法：
+```java
+// 无参，构造器为 null，采用 key 的自然比较顺序
+public TreeMap() {
+    comparator = null;
+}
+// 指定比较器
+public TreeMap(Comparator<? super K> comparator) {
+    this.comparator = comparator;
+}
+// 将 Map 树化
+public TreeMap(Map<? extends K, ? extends V> m) {
+    comparator = null;
+    putAll(m);
+}
+// 将 SortedMap 树化
+public TreeMap(SortedMap<K, ? extends V> m) {
+    comparator = m.comparator();
+    try {
+        buildFromSorted(m.size(), m.entrySet().iterator(), null, null);
+    } catch (java.io.IOException cannotHappen) {
+    } catch (ClassNotFoundException cannotHappen) {
+    }
+}
+```
+
+### put 方法
+`put()`方法本身的实现逻辑并不复杂，插入元素之后需要重新对红黑树进行旋转，这里不做介绍。
+```java
+public V put(K key, V value) {
+    Entry<K,V> t = root;
+    // 根节点为空，Map 中无元素
+    if (t == null) {
+        compare(key, key); // type (and possibly null) check
+
+        root = new Entry<>(key, value, null);
+        size = 1;
+        modCount++;
+        return null;
+    }
+
+    // Map 中有元素
+    int cmp;
+    Entry<K,V> parent;
+    // split comparator and comparable paths
+    Comparator<? super K> cpr = comparator;
+    // 找到 key 对应的节点位置
+    if (cpr != null) {
+        do {
+            parent = t;
+            cmp = cpr.compare(key, t.key);
+            if (cmp < 0)
+                t = t.left;
+            else if (cmp > 0)
+                t = t.right;
+            else
+                return t.setValue(value);
+        } while (t != null);
+    }
+    else {
+        if (key == null)
+            throw new NullPointerException();
+        @SuppressWarnings("unchecked")
+            Comparable<? super K> k = (Comparable<? super K>) key;
+        do {
+            parent = t;
+            cmp = k.compareTo(t.key);
+            if (cmp < 0)
+                t = t.left;
+            else if (cmp > 0)
+                t = t.right;
+            else
+                return t.setValue(value);
+        } while (t != null);
+    }
+
+    // 插入新元素
+    Entry<K,V> e = new Entry<>(key, value, parent);
+    if (cmp < 0)
+        parent.left = e;
+    else
+        parent.right = e;
+    // 旋转红黑树
+    fixAfterInsertion(e);
+    size++;
+    modCount++;
+    return null;
+}
+```
+
+## LinkedHashMap
+LinkedHashMap 是 HashMap 的子类，除了具有 HashMap 的功能之外，它还维护了一个双向链表，存储了元素的插入顺序，此外，它还支持 Access Order，支持按照访问顺序获取元素。
+
+### 初始化
+LinkedHashMap 对 Map 的 Entry 对象进行了扩展，增加了`before`和`after`两个属性。
+```java
+static class Entry<K,V> extends HashMap.Node<K,V> {
+    Entry<K,V> before, after;
+    Entry(int hash, K key, V value, Node<K,V> next) {
+        super(hash, key, value, next);
+    }
+}
+```
+同时增加了维护双向链表头尾的成员变量，头部元素先插入，尾部元素后插入。
+```java
+// 双向链表的头
+transient LinkedHashMap.Entry<K,V> head;
+// 双向链表的尾
+transient LinkedHashMap.Entry<K,V> tail;
+
+final boolean accessOrder;
+```
+构造方法同 HashMap 类似，不同的是增加了`accessOrder`参数的构造方法，默认为`false`
+```java
+public LinkedHashMap(int initialCapacity, float loadFactor, boolean accessOrder) {
+    super(initialCapacity, loadFactor);
+    this.accessOrder = accessOrder;
+}
+```
+
+### 插入新元素
+LinkedHashMap 复用了 HashMap 的`put()`方法，但是重写了`newNode()`方法。
+```java
+Node<K,V> newNode(int hash, K key, V value, Node<K,V> e) {
+    LinkedHashMap.Entry<K,V> p =
+        new LinkedHashMap.Entry<K,V>(hash, key, value, e);
+    linkNodeLast(p);
+    return p;
+}
+```
+`linkNodeLast()`将新加的元素放入双向链表的尾部。
+```java
+// link at the end of list
+private void linkNodeLast(LinkedHashMap.Entry<K,V> p) {
+    LinkedHashMap.Entry<K,V> last = tail;
+    tail = p;
+    if (last == null)
+        head = p;
+    else {
+        p.before = last;
+        last.after = p;
+    }
+}
+```
+
+### Access Order
+LinkedHashMap 的`get()`方法如下，`getNode()`复用了 HashMap 的方法，在后面添加了`afterNodeAccess()`方法，将这个元素移动到链表尾。
+```java
+public V get(Object key) {
+    Node<K,V> e;
+    if ((e = getNode(hash(key), key)) == null)
+        return null;
+    if (accessOrder)
+        afterNodeAccess(e);
+    return e.value;
+}
+```
+看看`afterNodeAccess()`方法的实现，考虑清楚边界情况后很简单。
+```java
+void afterNodeAccess(Node<K,V> e) { // move node to last
+    LinkedHashMap.Entry<K,V> last;
+    if (accessOrder && (last = tail) != e) {
+        // p 为 e, a 在 p 之前，b 在 p 之后
+        LinkedHashMap.Entry<K,V> p =
+            (LinkedHashMap.Entry<K,V>)e, b = p.before, a = p.after;
+        p.after = null;
+        if (b == null)
+            head = a;
+        else
+            b.after = a;
+        if (a != null)
+            a.before = b;
+        else
+            last = b;
+        if (last == null)
+            head = p;
+        else {
+            p.before = last;
+            last.after = p;
+        }
+        tail = p;
+        ++modCount;
+    }
+}
+```
+
+(End)
+

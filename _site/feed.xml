@@ -5,9 +5,32 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 19 Feb 2019 00:14:56 +0800</pubDate>
-    <lastBuildDate>Tue, 19 Feb 2019 00:14:56 +0800</lastBuildDate>
+    <pubDate>Mon, 25 Feb 2019 21:41:04 +0800</pubDate>
+    <lastBuildDate>Mon, 25 Feb 2019 21:41:04 +0800</lastBuildDate>
     <generator>Jekyll v3.8.4</generator>
+    
+      <item>
+        <title>Java核心类库学习（二）Map</title>
+        <description>
+&lt;img src=&quot;https://picsum.photos/800/300/?image=860&quot; alt=&quot;&quot; /&gt;
+
+来看看 Map 的定义与相关实现。
+
+</description>
+        <pubDate>Mon, 25 Feb 2019 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2019/02/25/map1/</link>
+        <guid isPermaLink="true">http://localhost:4000/2019/02/25/map1/</guid>
+        
+        <category>Java</category>
+        
+        <category>源码</category>
+        
+        <category>Map</category>
+        
+        
+        <category>Java</category>
+        
+      </item>
     
       <item>
         <title>Java核心类库学习（二）Collection</title>
@@ -210,28 +233,6 @@ JVM的内存分配与垃圾回收是老生常谈的话题了，这里先对GC涉
         
         
         <category>Java</category>
-        
-      </item>
-    
-      <item>
-        <title>饿厂的异地多活实践</title>
-        <description>
-&lt;img src=&quot;https://picsum.photos/800/300/?image=692&quot; alt=&quot;&quot; /&gt;
-饿厂于17年顺利完成了异地多活改造。改造的目的一是当时每天的订单量已经达到千万级，北京的机房无法扩容；二是机房级别的故障时有发生，每次都会造成很大损失，需要地理级别的容灾。&lt;a href=&quot;https://cui1994.github.io/2019/01/07/cap1/&quot;&gt;上篇文章&lt;/a&gt;的最后已经提到过，异地多活的复杂度和实现成本都是很高的，饿厂也不例外，除了中间件的建设，各业务方都需要进行多活改造。作为在饿厂搬了一年砖的业务小白，这里整理一下饿厂异地多活建设中所解决的问题和解决问题的方法。
-
-</description>
-        <pubDate>Tue, 08 Jan 2019 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2019/01/08/yididuohuo/</link>
-        <guid isPermaLink="true">http://localhost:4000/2019/01/08/yididuohuo/</guid>
-        
-        <category>分布式</category>
-        
-        <category>架构</category>
-        
-        <category>异地多活</category>
-        
-        
-        <category>服务架构</category>
         
       </item>
     

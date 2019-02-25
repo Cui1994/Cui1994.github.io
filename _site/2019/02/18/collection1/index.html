@@ -186,7 +186,7 @@
   </li>
   <li><a href="#list" id="markdown-toc-list">List</a>    <ul>
       <li><a href="#abstractlist" id="markdown-toc-abstractlist">AbstractList</a></li>
-      <li><a href="#modcount" id="markdown-toc-modcount">modCount</a></li>
+      <li><a href="#fail-fast" id="markdown-toc-fail-fast">fail-fast</a></li>
     </ul>
   </li>
   <li><a href="#arraylist" id="markdown-toc-arraylist">ArrayList</a>    <ul>
@@ -218,6 +218,14 @@
 <p><img src="https://picsum.photos/800/300/?image=743" alt="" /></p>
 
 <p>Java中的集合分为三类，Set、Map 和 List，它们都处于<code class="highlighter-rouge">java.util</code>包中，每个接口都有各自实现。这其中 Set 和 List 继承自 Collection，本文将介绍 Collection 接口以及一些常用 Collection 的实现。</p>
+
+<p>集合类的学习大同小异，这里在通过源码了解常用集合类其实现方式时，主要关注下面几个方面：</p>
+<ul>
+  <li>初始化过程（包括成员变量、内部类和构造方法），元素的存储方式、有无默认大小</li>
+  <li>关键方法（如set、get等）</li>
+  <li>扩容机制</li>
+  <li>相应实现对应的性能优劣，如何正确使用等</li>
+</ul>
 
 <h2 id="collection">Collection</h2>
 
@@ -304,8 +312,17 @@
 <span class="o">}</span>
 </code></pre></div></div>
 
-<h3 id="modcount">modCount</h3>
-<p><code class="highlighter-rouge">AbstractList</code>中维护者一个<code class="highlighter-rouge">整型的modCount</code>字段，在对集合进行变更时会伴随<code class="highlighter-rouge">modCount</code>的增加，在对集合进行遍历时是不允许有其他的变更动作的，因此会在遍历开始之前拿到<code class="highlighter-rouge">modCount</code>的值写入到<code class="highlighter-rouge">expectedModCount</code>变量中，在遍历过程中会检查这个值和当前的<code class="highlighter-rouge">modCount</code>值相等，否则会抛出<code class="highlighter-rouge">ConcurrentModificationException</code>。</p>
+<h3 id="fail-fast">fail-fast</h3>
+<p><code class="highlighter-rouge">AbstractList</code>中维护者一个整型的<code class="highlighter-rouge">modCount</code>字段来实现 fail-fast 机制，在<code class="highlighter-rouge">Iterator</code>的实现中通常会有<code class="highlighter-rouge">checkForComodification()</code>方法。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        <span class="kt">int</span> <span class="n">expectedModCount</span> <span class="o">=</span> <span class="n">modCount</span><span class="o">;</span>
+
+<span class="kd">final</span> <span class="kt">void</span> <span class="nf">checkForComodification</span><span class="o">()</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">modCount</span> <span class="o">!=</span> <span class="n">expectedModCount</span><span class="o">)</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nf">ConcurrentModificationException</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>在对集合进行变更时会伴随<code class="highlighter-rouge">modCount</code>的增加，在对集合进行遍历时是不允许有其他的变更动作的，因此会在遍历开始之前拿到<code class="highlighter-rouge">modCount</code>的值写入到<code class="highlighter-rouge">expectedModCount</code>变量中，在遍历过程中会检查这个值和当前的<code class="highlighter-rouge">modCount</code>值相等，否则会抛出<code class="highlighter-rouge">ConcurrentModificationException</code>。</p>
 
 <h2 id="arraylist">ArrayList</h2>
 <p><code class="highlighter-rouge">ArrayList</code>继承自<code class="highlighter-rouge">AbstractList</code>，并实现了三个标识接口，实现该类接口不许实现任何方法即拥有了对应功能</p>
@@ -616,27 +633,63 @@
             
                 
                     
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
                         
                         <h2 id="similar_posts">Similar Posts</h2>
                         <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/02/25/map1/">Java核心类库学习（二）Map
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
                         
                         <li class="relatedPost">
                             <a href="/2019/02/15/gunicorn2/">Gunicorn源码阅读(二) Master进程
@@ -826,15 +879,6 @@
             
                 
                     
-                        
-                        <li class="relatedPost">
-                            <a href="/2019/01/10/thread1/">Java并发编程 线程同步机制
-                            
-                            </a>
-                        </li>
-                        
-                        
-                    
                 
                     
                 
@@ -894,49 +938,6 @@
             
         
             
-            
-                
-                    
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-                    
-                
-            
-        
-            
-            
-                
-                    
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-                    
-                
             
                 
                     
@@ -975,6 +976,8 @@
     </div>
     <div class="nex">
 
+        
+        <p><strong>下一篇</strong> <a href="/2019/02/25/map1/">Java核心类库学习（二）Map</a></p>
         
     </div>
 </div>

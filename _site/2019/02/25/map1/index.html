@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Java核心类库学习（二）Map</title>
+    <meta name="description" content="来看看 Map 的定义与相关实现。">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2019/02/25/map1/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>Java核心类库学习（二）Map</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2019-02-25
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Java" title="Category: Java" rel="category">Java</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a-->
+        <a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a>&nbsp;
+    
+        <!--a href="/tag/#%E6%BA%90%E7%A0%81" title="Tag: 源码" rel="tag">源码</a-->
+        <a href="/tag/#源码" title="Tag: 源码" rel="tag">源码</a>&nbsp;
+    
+        <!--a href="/tag/#Map" title="Tag: Map" rel="tag">Map</a-->
+        <a href="/tag/#Map" title="Tag: Map" rel="tag">Map</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#map" id="markdown-toc-map">Map</a>    <ul>
+      <li><a href="#abstractmap" id="markdown-toc-abstractmap">AbstractMap</a></li>
+    </ul>
+  </li>
+  <li><a href="#hashmap" id="markdown-toc-hashmap">HashMap</a>    <ul>
+      <li><a href="#初始化" id="markdown-toc-初始化">初始化</a></li>
+      <li><a href="#put方法" id="markdown-toc-put方法">put方法</a></li>
+      <li><a href="#动态扩容" id="markdown-toc-动态扩容">动态扩容</a></li>
+    </ul>
+  </li>
+  <li><a href="#hashtable" id="markdown-toc-hashtable">HashTable</a></li>
+  <li><a href="#sortedmap" id="markdown-toc-sortedmap">SortedMap</a></li>
+  <li><a href="#treemap" id="markdown-toc-treemap">TreeMap</a>    <ul>
+      <li><a href="#初始化-1" id="markdown-toc-初始化-1">初始化</a></li>
+      <li><a href="#put-方法" id="markdown-toc-put-方法">put 方法</a></li>
+    </ul>
+  </li>
+  <li><a href="#linkedhashmap" id="markdown-toc-linkedhashmap">LinkedHashMap</a>    <ul>
+      <li><a href="#初始化-2" id="markdown-toc-初始化-2">初始化</a></li>
+      <li><a href="#插入新元素" id="markdown-toc-插入新元素">插入新元素</a></li>
+      <li><a href="#access-order" id="markdown-toc-access-order">Access Order</a></li>
+    </ul>
+  </li>
+</ul>
+
+<p><img src="https://picsum.photos/800/300/?image=860" alt="" /></p>
+
+<p>来看看 Map 的定义与相关实现。</p>
+
+<h2 id="map">Map</h2>
+<p>整合了数组与链表的优点，在插入和查找都有不错的性能。<code class="highlighter-rouge">Map</code>中定义了<code class="highlighter-rouge">Entry</code>接口，提供了一系列基于 kv 操作的方法，在 Map 中存储的数据都要实现<code class="highlighter-rouge">Entry</code>接口。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">interface</span> <span class="nc">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="n">K</span> <span class="nf">getKey</span><span class="o">();</span>
+    <span class="n">V</span> <span class="nf">getValue</span><span class="o">();</span>
+    <span class="n">V</span> <span class="nf">setValue</span><span class="o">(</span><span class="n">V</span> <span class="n">value</span><span class="o">);</span>
+    <span class="kt">boolean</span> <span class="nf">equals</span><span class="o">(</span><span class="n">Object</span> <span class="n">o</span><span class="o">);</span>
+    <span class="kt">int</span> <span class="nf">hashCode</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p><code class="highlighter-rouge">Map</code>接口</p>
+
+<p><img src="https://i.loli.net/2019/02/19/5c6bc45ea8320.png" alt="" /></p>
+
+<h3 id="abstractmap">AbstractMap</h3>
+<p>是<code class="highlighter-rouge">Map</code>的一个超级实现类，<code class="highlighter-rouge">entrySet()</code>方法是一个比较关键的地方，它会返回一个 Entry 的 Set，Map 自身的很多方法都是通过对这个 Set 进行迭代来处理，所以经常能看到下面的代码。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Iterator</span><span class="o">&lt;</span><span class="n">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;&gt;</span> <span class="n">i</span> <span class="o">=</span> <span class="n">entrySet</span><span class="o">().</span><span class="na">iterator</span><span class="o">();</span>
+</code></pre></div></div>
+<p><code class="highlighter-rouge">AbstractMap</code>并没有实现<code class="highlighter-rouge">entrySet()</code>方法，交由各个子类自行实现。</p>
+
+<h2 id="hashmap">HashMap</h2>
+
+<p>HashMap 以哈希表作为数据存储结构。</p>
+
+<h3 id="初始化">初始化</h3>
+<p>常量：</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 大小均为 2 的幂次方 默认大小 16</span>
+<span class="kd">static</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">DEFAULT_INITIAL_CAPACITY</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span><span class="o">;</span> <span class="c1">// aka 16</span>
+<span class="c1">// 最大容量 2 的 30 次方</span>
+<span class="kd">static</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">MAXIMUM_CAPACITY</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">30</span><span class="o">;</span>
+<span class="c1">// 当容量被占满 load factor 所制定的值时就进行 rehash 扩容，默认 0.75</span>
+<span class="kd">static</span> <span class="kd">final</span> <span class="kt">float</span> <span class="n">DEFAULT_LOAD_FACTOR</span> <span class="o">=</span> <span class="mf">0.75f</span><span class="o">;</span>
+<span class="c1">// 链表大小超过这个值就转化为树</span>
+<span class="kd">static</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">TREEIFY_THRESHOLD</span> <span class="o">=</span> <span class="mi">8</span><span class="o">;</span>
+<span class="c1">// 树的大小小于这个值就转化为链表</span>
+<span class="kd">static</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">UNTREEIFY_THRESHOLD</span> <span class="o">=</span> <span class="mi">6</span><span class="o">;</span>
+<span class="c1">// 当容量达到64时才可以转化为树</span>
+<span class="kd">static</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">MIN_TREEIFY_CAPACITY</span> <span class="o">=</span> <span class="mi">64</span><span class="o">;</span>
+</code></pre></div></div>
+<p>所定义的数据单元，Node 类型中引入了连目标结构，而 TreeNode 类型则实现了一系列：</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">static</span> <span class="kd">class</span> <span class="nc">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="kd">implements</span> <span class="n">Map</span><span class="o">.</span><span class="na">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="kd">static</span> <span class="kd">class</span> <span class="nc">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="kd">implements</span> <span class="n">Map</span><span class="o">.</span><span class="na">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="kd">final</span> <span class="kt">int</span> <span class="n">hash</span><span class="o">;</span>
+    <span class="kd">final</span> <span class="n">K</span> <span class="n">key</span><span class="o">;</span>
+    <span class="n">V</span> <span class="n">value</span><span class="o">;</span>
+    <span class="n">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">next</span><span class="o">;</span>
+<span class="o">}</span>
+<span class="kd">static</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">TreeNode</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">LinkedHashMap</span><span class="o">.</span><span class="na">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="n">TreeNode</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">parent</span><span class="o">;</span>  <span class="c1">// red-black tree links</span>
+    <span class="n">TreeNode</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">left</span><span class="o">;</span>
+    <span class="n">TreeNode</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">right</span><span class="o">;</span>
+    <span class="n">TreeNode</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">prev</span><span class="o">;</span>    <span class="c1">// needed to unlink next upon deletion</span>
+    <span class="kt">boolean</span> <span class="n">red</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>成员变量：</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 所存储的数据单元链表</span>
+<span class="kd">transient</span> <span class="n">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;[]</span> <span class="n">table</span><span class="o">;</span>
+<span class="c1">// 提供遍历功能的Set</span>
+<span class="kd">transient</span> <span class="n">Set</span><span class="o">&lt;</span><span class="n">Map</span><span class="o">.</span><span class="na">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;&gt;</span> <span class="n">entrySet</span><span class="o">;</span>
+
+<span class="kd">transient</span> <span class="kt">int</span> <span class="n">size</span><span class="o">;</span>
+<span class="c1">// 同集合的modCount作用相同</span>
+<span class="kd">transient</span> <span class="kt">int</span> <span class="n">modCount</span><span class="o">;</span>
+<span class="c1">// 下一次要扩容的大小</span>
+<span class="kt">int</span> <span class="n">threshold</span><span class="o">;</span>
+
+<span class="kd">final</span> <span class="kt">float</span> <span class="n">loadFactor</span><span class="o">;</span>
+</code></pre></div></div>
+<p>构造方法，<code class="highlighter-rouge">tableSizeFor()</code>与<code class="highlighter-rouge">ArrayDeque</code>中的寻找最近的 2 的幂次方实现相同。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="nf">HashMap</span><span class="o">(</span><span class="kt">int</span> <span class="n">initialCapacity</span><span class="o">,</span> <span class="kt">float</span> <span class="n">loadFactor</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">initialCapacity</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nf">IllegalArgumentException</span><span class="o">(</span><span class="s">"Illegal initial capacity: "</span> <span class="o">+</span>
+                                           <span class="n">initialCapacity</span><span class="o">);</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">initialCapacity</span> <span class="o">&gt;</span> <span class="n">MAXIMUM_CAPACITY</span><span class="o">)</span>
+        <span class="n">initialCapacity</span> <span class="o">=</span> <span class="n">MAXIMUM_CAPACITY</span><span class="o">;</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">loadFactor</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">Float</span><span class="o">.</span><span class="na">isNaN</span><span class="o">(</span><span class="n">loadFactor</span><span class="o">))</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nf">IllegalArgumentException</span><span class="o">(</span><span class="s">"Illegal load factor: "</span> <span class="o">+</span>
+                                           <span class="n">loadFactor</span><span class="o">);</span>
+    <span class="k">this</span><span class="o">.</span><span class="na">loadFactor</span> <span class="o">=</span> <span class="n">loadFactor</span><span class="o">;</span>
+    <span class="k">this</span><span class="o">.</span><span class="na">threshold</span> <span class="o">=</span> <span class="n">tableSizeFor</span><span class="o">(</span><span class="n">initialCapacity</span><span class="o">);</span>
+<span class="o">}</span>
+
+<span class="kd">public</span> <span class="nf">HashMap</span><span class="o">(</span><span class="kt">int</span> <span class="n">initialCapacity</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">this</span><span class="o">(</span><span class="n">initialCapacity</span><span class="o">,</span> <span class="n">DEFAULT_LOAD_FACTOR</span><span class="o">);</span>
+<span class="o">}</span>
+
+<span class="kd">public</span> <span class="nf">HashMap</span><span class="o">()</span> <span class="o">{</span>
+    <span class="k">this</span><span class="o">.</span><span class="na">loadFactor</span> <span class="o">=</span> <span class="n">DEFAULT_LOAD_FACTOR</span><span class="o">;</span> <span class="c1">// all other fields defaulted</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<h3 id="put方法">put方法</h3>
+<p>这里以<code class="highlighter-rouge">put()</code>方法为例来看 HashMap 对元素增删改的操作，先来看 HashMap 的哈希方法，对 key 的 hashCode 的高16位取异或：</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">static</span> <span class="kd">final</span> <span class="kt">int</span> <span class="nf">hash</span><span class="o">(</span><span class="n">Object</span> <span class="n">key</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kt">int</span> <span class="n">h</span><span class="o">;</span>
+    <span class="k">return</span> <span class="o">(</span><span class="n">key</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="o">(</span><span class="n">h</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="na">hashCode</span><span class="o">())</span> <span class="o">^</span> <span class="o">(</span><span class="n">h</span> <span class="o">&gt;&gt;&gt;</span> <span class="mi">16</span><span class="o">);</span>
+<span class="o">}</span>
+
+<span class="kd">public</span> <span class="n">V</span> <span class="nf">put</span><span class="o">(</span><span class="n">K</span> <span class="n">key</span><span class="o">,</span> <span class="n">V</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">return</span> <span class="nf">putVal</span><span class="o">(</span><span class="n">hash</span><span class="o">(</span><span class="n">key</span><span class="o">),</span> <span class="n">key</span><span class="o">,</span> <span class="n">value</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="kc">true</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>下面就是<code class="highlighter-rouge">put()</code>方法的核心部分。HashMap 采用数组来做哈希表，用 hash 值与数组容量进行与运算计算数据在数组中的位置，这里要考虑两个问题：</p>
+<ul>
+  <li>要考虑已经有 key 的情况，这时要做的不是插入而是替换原位置的值</li>
+  <li>解决 hash 冲突，这里的方法是用拉链法和红黑树结合，所以 table 里可能是一个元素，也可能是链表的首节点或者红黑树的引用。</li>
+  <li>扩容时机与策略，这里实现调用<code class="highlighter-rouge">resize()</code>方法</li>
+</ul>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">final</span> <span class="n">V</span> <span class="nf">putVal</span><span class="o">(</span><span class="kt">int</span> <span class="n">hash</span><span class="o">,</span> <span class="n">K</span> <span class="n">key</span><span class="o">,</span> <span class="n">V</span> <span class="n">value</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">onlyIfAbsent</span><span class="o">,</span>
+               <span class="kt">boolean</span> <span class="n">evict</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;[]</span> <span class="n">tab</span><span class="o">;</span> <span class="n">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">p</span><span class="o">;</span> <span class="kt">int</span> <span class="n">n</span><span class="o">,</span> <span class="n">i</span><span class="o">;</span>
+    <span class="c1">// n 为数组容量，如果数组为空则调用 resize 进行数组长度的初始化</span>
+    <span class="k">if</span> <span class="o">((</span><span class="n">tab</span> <span class="o">=</span> <span class="n">table</span><span class="o">)</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="o">(</span><span class="n">n</span> <span class="o">=</span> <span class="n">tab</span><span class="o">.</span><span class="na">length</span><span class="o">)</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="o">(</span><span class="n">tab</span> <span class="o">=</span> <span class="n">resize</span><span class="o">()).</span><span class="na">length</span><span class="o">;</span>
+    <span class="c1">// 如果目标位置没有值则直接插入元素，如果有值则将原值赋值给 p，p 可能是元素、链表或树</span>
+    <span class="k">if</span> <span class="o">((</span><span class="n">p</span> <span class="o">=</span> <span class="n">tab</span><span class="o">[</span><span class="n">i</span> <span class="o">=</span> <span class="o">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="o">)</span> <span class="o">&amp;</span> <span class="n">hash</span><span class="o">])</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+        <span class="n">tab</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">newNode</span><span class="o">(</span><span class="n">hash</span><span class="o">,</span> <span class="n">key</span><span class="o">,</span> <span class="n">value</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+    <span class="k">else</span> <span class="o">{</span>
+        <span class="c1">// 这里的 e 就是要替换值的原元素</span>
+        <span class="n">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">e</span><span class="o">;</span> <span class="n">K</span> <span class="n">k</span><span class="o">;</span>
+        <span class="c1">// p 为元素</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">p</span><span class="o">.</span><span class="na">hash</span> <span class="o">==</span> <span class="n">hash</span> <span class="o">&amp;&amp;</span>
+            <span class="o">((</span><span class="n">k</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="na">key</span><span class="o">)</span> <span class="o">==</span> <span class="n">key</span> <span class="o">||</span> <span class="o">(</span><span class="n">key</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">key</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">k</span><span class="o">))))</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="n">p</span><span class="o">;</span>
+        <span class="c1">// p 为树</span>
+        <span class="k">else</span> <span class="nf">if</span> <span class="o">(</span><span class="n">p</span> <span class="k">instanceof</span> <span class="n">TreeNode</span><span class="o">)</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="o">((</span><span class="n">TreeNode</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;)</span><span class="n">p</span><span class="o">).</span><span class="na">putTreeVal</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">tab</span><span class="o">,</span> <span class="n">hash</span><span class="o">,</span> <span class="n">key</span><span class="o">,</span> <span class="n">value</span><span class="o">);</span>
+        <span class="c1">// p 为链表</span>
+        <span class="k">else</span> <span class="o">{</span>
+            <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">binCount</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="o">;</span> <span class="o">++</span><span class="n">binCount</span><span class="o">)</span> <span class="o">{</span>
+                <span class="k">if</span> <span class="o">((</span><span class="n">e</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="na">next</span><span class="o">)</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">p</span><span class="o">.</span><span class="na">next</span> <span class="o">=</span> <span class="n">newNode</span><span class="o">(</span><span class="n">hash</span><span class="o">,</span> <span class="n">key</span><span class="o">,</span> <span class="n">value</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+                    <span class="k">if</span> <span class="o">(</span><span class="n">binCount</span> <span class="o">&gt;=</span> <span class="n">TREEIFY_THRESHOLD</span> <span class="o">-</span> <span class="mi">1</span><span class="o">)</span> <span class="c1">// -1 for 1st</span>
+                        <span class="n">treeifyBin</span><span class="o">(</span><span class="n">tab</span><span class="o">,</span> <span class="n">hash</span><span class="o">);</span>
+                    <span class="k">break</span><span class="o">;</span>
+                <span class="o">}</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">e</span><span class="o">.</span><span class="na">hash</span> <span class="o">==</span> <span class="n">hash</span> <span class="o">&amp;&amp;</span>
+                    <span class="o">((</span><span class="n">k</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="na">key</span><span class="o">)</span> <span class="o">==</span> <span class="n">key</span> <span class="o">||</span> <span class="o">(</span><span class="n">key</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">key</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">k</span><span class="o">))))</span>
+                    <span class="k">break</span><span class="o">;</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">e</span><span class="o">;</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+        <span class="c1">// 替换原位置元素的值</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">e</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// existing mapping for key</span>
+            <span class="n">V</span> <span class="n">oldValue</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
+            <span class="k">if</span> <span class="o">(!</span><span class="n">onlyIfAbsent</span> <span class="o">||</span> <span class="n">oldValue</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+                <span class="n">e</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">;</span>
+            <span class="n">afterNodeAccess</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
+            <span class="k">return</span> <span class="n">oldValue</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+    <span class="o">++</span><span class="n">modCount</span><span class="o">;</span>
+    <span class="k">if</span> <span class="o">(++</span><span class="n">size</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="o">)</span>
+        <span class="n">resize</span><span class="o">();</span>
+    <span class="n">afterNodeInsertion</span><span class="o">(</span><span class="n">evict</span><span class="o">);</span>
+    <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="动态扩容">动态扩容</h3>
+<p>来看看扩容的方法<code class="highlighter-rouge">resize()</code>，它做了下面几件事：</p>
+<ul>
+  <li>重新计算<code class="highlighter-rouge">capaticy</code>与<code class="highlighter-rouge">threshold</code>，一般会调整为原来的2倍，边界情况除外（如<code class="highlighter-rouge">MAXIMUM_CAPACITY</code>、<code class="highlighter-rouge">DEFAULT_INITIAL_CAPACITY</code>）</li>
+  <li>根据新的容量新建<code class="highlighter-rouge">newTab</code>，并将<code class="highlighter-rouge">oldTab</code>中的数据迁移到新数组中，重新rehash插入元素，方式仍然是计算<code class="highlighter-rouge">hash &amp; (newCap - 1)</code>，对于链表类型的节点，方式为先重新构建链表（老的链表在 rehash 之后可能会重新分散到两个位置，存在两条链表），再插入对应的位置。
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">final</span> <span class="n">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;[]</span> <span class="nf">resize</span><span class="o">()</span> <span class="o">{</span>
+  <span class="n">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;[]</span> <span class="n">oldTab</span> <span class="o">=</span> <span class="n">table</span><span class="o">;</span>
+  <span class="kt">int</span> <span class="n">oldCap</span> <span class="o">=</span> <span class="o">(</span><span class="n">oldTab</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="n">oldTab</span><span class="o">.</span><span class="na">length</span><span class="o">;</span>
+  <span class="kt">int</span> <span class="n">oldThr</span> <span class="o">=</span> <span class="n">threshold</span><span class="o">;</span>
+  <span class="kt">int</span> <span class="n">newCap</span><span class="o">,</span> <span class="n">newThr</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+  <span class="k">if</span> <span class="o">(</span><span class="n">oldCap</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">if</span> <span class="o">(</span><span class="n">oldCap</span> <span class="o">&gt;=</span> <span class="n">MAXIMUM_CAPACITY</span><span class="o">)</span> <span class="o">{</span>
+          <span class="n">threshold</span> <span class="o">=</span> <span class="n">Integer</span><span class="o">.</span><span class="na">MAX_VALUE</span><span class="o">;</span>
+          <span class="k">return</span> <span class="n">oldTab</span><span class="o">;</span>
+      <span class="o">}</span>
+      <span class="k">else</span> <span class="nf">if</span> <span class="o">((</span><span class="n">newCap</span> <span class="o">=</span> <span class="n">oldCap</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="o">)</span> <span class="o">&lt;</span> <span class="n">MAXIMUM_CAPACITY</span> <span class="o">&amp;&amp;</span>
+               <span class="n">oldCap</span> <span class="o">&gt;=</span> <span class="n">DEFAULT_INITIAL_CAPACITY</span><span class="o">)</span>
+          <span class="n">newThr</span> <span class="o">=</span> <span class="n">oldThr</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="o">;</span> <span class="c1">// double threshold</span>
+  <span class="o">}</span>
+  <span class="k">else</span> <span class="nf">if</span> <span class="o">(</span><span class="n">oldThr</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="c1">// initial capacity was placed in threshold</span>
+      <span class="n">newCap</span> <span class="o">=</span> <span class="n">oldThr</span><span class="o">;</span>
+  <span class="k">else</span> <span class="o">{</span>               <span class="c1">// zero initial threshold signifies using defaults</span>
+      <span class="n">newCap</span> <span class="o">=</span> <span class="n">DEFAULT_INITIAL_CAPACITY</span><span class="o">;</span>
+      <span class="n">newThr</span> <span class="o">=</span> <span class="o">(</span><span class="kt">int</span><span class="o">)(</span><span class="n">DEFAULT_LOAD_FACTOR</span> <span class="o">*</span> <span class="n">DEFAULT_INITIAL_CAPACITY</span><span class="o">);</span>
+  <span class="o">}</span>
+  <span class="k">if</span> <span class="o">(</span><span class="n">newThr</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+      <span class="kt">float</span> <span class="n">ft</span> <span class="o">=</span> <span class="o">(</span><span class="kt">float</span><span class="o">)</span><span class="n">newCap</span> <span class="o">*</span> <span class="n">loadFactor</span><span class="o">;</span>
+      <span class="n">newThr</span> <span class="o">=</span> <span class="o">(</span><span class="n">newCap</span> <span class="o">&lt;</span> <span class="n">MAXIMUM_CAPACITY</span> <span class="o">&amp;&amp;</span> <span class="n">ft</span> <span class="o">&lt;</span> <span class="o">(</span><span class="kt">float</span><span class="o">)</span><span class="n">MAXIMUM_CAPACITY</span> <span class="o">?</span>
+                <span class="o">(</span><span class="kt">int</span><span class="o">)</span><span class="n">ft</span> <span class="o">:</span> <span class="n">Integer</span><span class="o">.</span><span class="na">MAX_VALUE</span><span class="o">);</span>
+  <span class="o">}</span>
+  <span class="n">threshold</span> <span class="o">=</span> <span class="n">newThr</span><span class="o">;</span>
+  <span class="nd">@SuppressWarnings</span><span class="o">({</span><span class="s">"rawtypes"</span><span class="o">,</span><span class="s">"unchecked"</span><span class="o">})</span>
+      <span class="n">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;[]</span> <span class="n">newTab</span> <span class="o">=</span> <span class="o">(</span><span class="n">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;[])</span><span class="k">new</span> <span class="n">Node</span><span class="o">[</span><span class="n">newCap</span><span class="o">];</span>
+  <span class="n">table</span> <span class="o">=</span> <span class="n">newTab</span><span class="o">;</span>
+  <span class="k">if</span> <span class="o">(</span><span class="n">oldTab</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">oldCap</span><span class="o">;</span> <span class="o">++</span><span class="n">j</span><span class="o">)</span> <span class="o">{</span>
+          <span class="n">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">e</span><span class="o">;</span>
+          <span class="k">if</span> <span class="o">((</span><span class="n">e</span> <span class="o">=</span> <span class="n">oldTab</span><span class="o">[</span><span class="n">j</span><span class="o">])</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+              <span class="n">oldTab</span><span class="o">[</span><span class="n">j</span><span class="o">]</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+              <span class="c1">// 只有一个元素的情况</span>
+              <span class="k">if</span> <span class="o">(</span><span class="n">e</span><span class="o">.</span><span class="na">next</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+                  <span class="n">newTab</span><span class="o">[</span><span class="n">e</span><span class="o">.</span><span class="na">hash</span> <span class="o">&amp;</span> <span class="o">(</span><span class="n">newCap</span> <span class="o">-</span> <span class="mi">1</span><span class="o">)]</span> <span class="o">=</span> <span class="n">e</span><span class="o">;</span>
+              <span class="c1">// 重新规划树</span>
+              <span class="k">else</span> <span class="nf">if</span> <span class="o">(</span><span class="n">e</span> <span class="k">instanceof</span> <span class="n">TreeNode</span><span class="o">)</span>
+                  <span class="o">((</span><span class="n">TreeNode</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;)</span><span class="n">e</span><span class="o">).</span><span class="na">split</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">newTab</span><span class="o">,</span> <span class="n">j</span><span class="o">,</span> <span class="n">oldCap</span><span class="o">);</span>
+              <span class="c1">// 链表</span>
+              <span class="k">else</span> <span class="o">{</span> <span class="c1">// preserve order</span>
+                  <span class="n">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">loHead</span> <span class="o">=</span> <span class="kc">null</span><span class="o">,</span> <span class="n">loTail</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+                  <span class="n">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">hiHead</span> <span class="o">=</span> <span class="kc">null</span><span class="o">,</span> <span class="n">hiTail</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+                  <span class="n">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">next</span><span class="o">;</span>
+                  <span class="k">do</span> <span class="o">{</span>
+                      <span class="n">next</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="na">next</span><span class="o">;</span>
+                      <span class="k">if</span> <span class="o">((</span><span class="n">e</span><span class="o">.</span><span class="na">hash</span> <span class="o">&amp;</span> <span class="n">oldCap</span><span class="o">)</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                          <span class="k">if</span> <span class="o">(</span><span class="n">loTail</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+                              <span class="n">loHead</span> <span class="o">=</span> <span class="n">e</span><span class="o">;</span>
+                          <span class="k">else</span>
+                              <span class="n">loTail</span><span class="o">.</span><span class="na">next</span> <span class="o">=</span> <span class="n">e</span><span class="o">;</span>
+                          <span class="n">loTail</span> <span class="o">=</span> <span class="n">e</span><span class="o">;</span>
+                      <span class="o">}</span>
+                      <span class="k">else</span> <span class="o">{</span>
+                          <span class="k">if</span> <span class="o">(</span><span class="n">hiTail</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+                              <span class="n">hiHead</span> <span class="o">=</span> <span class="n">e</span><span class="o">;</span>
+                          <span class="k">else</span>
+                              <span class="n">hiTail</span><span class="o">.</span><span class="na">next</span> <span class="o">=</span> <span class="n">e</span><span class="o">;</span>
+                          <span class="n">hiTail</span> <span class="o">=</span> <span class="n">e</span><span class="o">;</span>
+                      <span class="o">}</span>
+                  <span class="o">}</span> <span class="k">while</span> <span class="o">((</span><span class="n">e</span> <span class="o">=</span> <span class="n">next</span><span class="o">)</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">);</span>
+                  <span class="k">if</span> <span class="o">(</span><span class="n">loTail</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                      <span class="n">loTail</span><span class="o">.</span><span class="na">next</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+                      <span class="n">newTab</span><span class="o">[</span><span class="n">j</span><span class="o">]</span> <span class="o">=</span> <span class="n">loHead</span><span class="o">;</span>
+                  <span class="o">}</span>
+                  <span class="k">if</span> <span class="o">(</span><span class="n">hiTail</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                      <span class="n">hiTail</span><span class="o">.</span><span class="na">next</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+                      <span class="n">newTab</span><span class="o">[</span><span class="n">j</span> <span class="o">+</span> <span class="n">oldCap</span><span class="o">]</span> <span class="o">=</span> <span class="n">hiHead</span><span class="o">;</span>
+                  <span class="o">}</span>
+              <span class="o">}</span>
+          <span class="o">}</span>
+      <span class="o">}</span>
+  <span class="o">}</span>
+  <span class="k">return</span> <span class="n">newTab</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<h2 id="hashtable">HashTable</h2>
+
+<p>HashTable 与 HashMap 定义与实现大都类似，主要区别有下面几点：（这部分参考了<a href="http://www.importnew.com/24822.html">这篇文章</a>，有更详细的阐述）</p>
+<ul>
+  <li>HashTable 是线程安全的，它的方法都带有<code class="highlighter-rouge">synchronized</code>关键字。</li>
+  <li>HashTable 只定义了一种类型的<code class="highlighter-rouge">Entry</code>，继承自<code class="highlighter-rouge">Map.Entry</code>，引入了<code class="highlighter-rouge">next</code>指针，也就是说，它并没有引入红黑树来解决哈希冲突。</li>
+  <li>HashTable 的<code class="highlighter-rouge">put()</code>方法中有判空处理，而这个在 HashMap 中并不存在。
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">synchronized</span> <span class="n">V</span> <span class="nf">put</span><span class="o">(</span><span class="n">K</span> <span class="n">key</span><span class="o">,</span> <span class="n">V</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+  <span class="c1">// Make sure the value is not null</span>
+  <span class="k">if</span> <span class="o">(</span><span class="n">value</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">throw</span> <span class="k">new</span> <span class="nf">NullPointerException</span><span class="o">();</span>
+  <span class="o">}</span>
+  <span class="o">...</span>
+<span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+  <li>HashTable 的默认大小是 11，每次扩容后变为 2n+1，HashMap 的默认大小是 16，扩容后变为 2n。这里的区别是对素数取模得到的哈希值分布更加均匀，冲突更少，但是 2 的幂次方可以直接使用位运算，效率较高。
+HashMap 为了解决哈希冲突的问题，在<code class="highlighter-rouge">hash()</code>函数中对元素的哈希值做了一些位运算来减小哈希冲突。</li>
+</ul>
+
+<p>同 Vector 类似，HashTable 已经不再被推荐使用，如果需要线程安全，推荐直接只用juc包中的 ConcurrentHashMap。</p>
+
+<h2 id="sortedmap">SortedMap</h2>
+<p>SortedMap 接口提供了有序集合的一些方法，由于元素排列是有序的，在查找时咋可以使用二分查找降低复杂度。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">SortedMap</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="n">Comparator</span><span class="o">&lt;?</span> <span class="kd">super</span> <span class="n">K</span><span class="o">&gt;</span> <span class="nf">comparator</span><span class="o">();</span>
+    <span class="c1">// 子 Map</span>
+    <span class="n">SortedMap</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="nf">subMap</span><span class="o">(</span><span class="n">K</span> <span class="n">fromKey</span><span class="o">,</span> <span class="n">K</span> <span class="n">toKey</span><span class="o">);</span>
+    <span class="c1">// 首元素到指定元素的子 Map</span>
+    <span class="n">SortedMap</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="nf">headMap</span><span class="o">(</span><span class="n">K</span> <span class="n">toKey</span><span class="o">);</span>
+    <span class="c1">// 指定元素到末尾元素的 子Map</span>
+    <span class="n">SortedMap</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="nf">tailMap</span><span class="o">(</span><span class="n">K</span> <span class="n">fromKey</span><span class="o">);</span>
+
+    <span class="n">K</span> <span class="nf">firstKey</span><span class="o">();</span>
+
+    <span class="n">K</span> <span class="nf">lastKey</span><span class="o">();</span>
+
+    <span class="n">Set</span><span class="o">&lt;</span><span class="n">K</span><span class="o">&gt;</span> <span class="nf">keySet</span><span class="o">();</span>
+
+    <span class="n">Collection</span><span class="o">&lt;</span><span class="n">V</span><span class="o">&gt;</span> <span class="nf">values</span><span class="o">();</span>
+
+    <span class="n">Set</span><span class="o">&lt;</span><span class="n">Map</span><span class="o">.</span><span class="na">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span> <span class="n">V</span><span class="o">&gt;&gt;</span> <span class="nf">entrySet</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>它还有一个子接口<code class="highlighter-rouge">NavigableMap</code>，增加了对一个特定的 key 进行比较获取的一系列方法。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">*/</span>
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">NavigableMap</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">SortedMap</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="o">{</span>
+
+    <span class="c1">// 获取小于指定 key 的 Entry</span>
+    <span class="n">Map</span><span class="o">.</span><span class="na">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="nf">lowerEntry</span><span class="o">(</span><span class="n">K</span> <span class="n">key</span><span class="o">);</span>
+    <span class="c1">// 湖区小于指定 key 的 key</span>
+    <span class="n">K</span> <span class="nf">lowerKey</span><span class="o">(</span><span class="n">K</span> <span class="n">key</span><span class="o">);</span>
+
+    <span class="c1">// ...</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="treemap">TreeMap</h2>
+<p>TreeMap 实现了 NavigableMap 接口，以红黑树来储存 Entry 数据，保证数据按照特定顺序（可以是自然顺序，可以是自定义顺序）。</p>
+
+<h3 id="初始化-1">初始化</h3>
+
+<p>只有一种 Entry 定义，定义了红黑树节点。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">static</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="kd">implements</span> <span class="n">Map</span><span class="o">.</span><span class="na">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="n">K</span> <span class="n">key</span><span class="o">;</span>
+    <span class="n">V</span> <span class="n">value</span><span class="o">;</span>
+    <span class="n">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">left</span><span class="o">;</span>
+    <span class="n">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">right</span><span class="o">;</span>
+    <span class="n">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">parent</span><span class="o">;</span>
+    <span class="kt">boolean</span> <span class="n">color</span> <span class="o">=</span> <span class="n">BLACK</span><span class="o">;</span>
+
+    <span class="c1">// ...</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>成员变量：</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// comparator 比较器</span>
+<span class="kd">private</span> <span class="kd">final</span> <span class="n">Comparator</span><span class="o">&lt;?</span> <span class="kd">super</span> <span class="n">K</span><span class="o">&gt;</span> <span class="n">comparator</span><span class="o">;</span>
+
+<span class="c1">// 根节点</span>
+<span class="kd">private</span> <span class="kd">transient</span> <span class="n">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">root</span><span class="o">;</span>
+
+<span class="c1">// 容量，指树种的 Enrty 数目</span>
+<span class="kd">private</span> <span class="kd">transient</span> <span class="kt">int</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+
+<span class="kd">private</span> <span class="kd">transient</span> <span class="kt">int</span> <span class="n">modCount</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+</code></pre></div></div>
+
+<p>提供了四种构造方法：</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 无参，构造器为 null，采用 key 的自然比较顺序</span>
+<span class="kd">public</span> <span class="nf">TreeMap</span><span class="o">()</span> <span class="o">{</span>
+    <span class="n">comparator</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+<span class="o">}</span>
+<span class="c1">// 指定比较器</span>
+<span class="kd">public</span> <span class="nf">TreeMap</span><span class="o">(</span><span class="n">Comparator</span><span class="o">&lt;?</span> <span class="kd">super</span> <span class="n">K</span><span class="o">&gt;</span> <span class="n">comparator</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">this</span><span class="o">.</span><span class="na">comparator</span> <span class="o">=</span> <span class="n">comparator</span><span class="o">;</span>
+<span class="o">}</span>
+<span class="c1">// 将 Map 树化</span>
+<span class="kd">public</span> <span class="nf">TreeMap</span><span class="o">(</span><span class="n">Map</span><span class="o">&lt;?</span> <span class="kd">extends</span> <span class="n">K</span><span class="o">,</span> <span class="o">?</span> <span class="kd">extends</span> <span class="n">V</span><span class="o">&gt;</span> <span class="n">m</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">comparator</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+    <span class="n">putAll</span><span class="o">(</span><span class="n">m</span><span class="o">);</span>
+<span class="o">}</span>
+<span class="c1">// 将 SortedMap 树化</span>
+<span class="kd">public</span> <span class="nf">TreeMap</span><span class="o">(</span><span class="n">SortedMap</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span> <span class="o">?</span> <span class="kd">extends</span> <span class="n">V</span><span class="o">&gt;</span> <span class="n">m</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">comparator</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="na">comparator</span><span class="o">();</span>
+    <span class="k">try</span> <span class="o">{</span>
+        <span class="n">buildFromSorted</span><span class="o">(</span><span class="n">m</span><span class="o">.</span><span class="na">size</span><span class="o">(),</span> <span class="n">m</span><span class="o">.</span><span class="na">entrySet</span><span class="o">().</span><span class="na">iterator</span><span class="o">(),</span> <span class="kc">null</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">java</span><span class="o">.</span><span class="na">io</span><span class="o">.</span><span class="na">IOException</span> <span class="n">cannotHappen</span><span class="o">)</span> <span class="o">{</span>
+    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">ClassNotFoundException</span> <span class="n">cannotHappen</span><span class="o">)</span> <span class="o">{</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="put-方法">put 方法</h3>
+<p><code class="highlighter-rouge">put()</code>方法本身的实现逻辑并不复杂，插入元素之后需要重新对红黑树进行旋转，这里不做介绍。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="n">V</span> <span class="nf">put</span><span class="o">(</span><span class="n">K</span> <span class="n">key</span><span class="o">,</span> <span class="n">V</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">t</span> <span class="o">=</span> <span class="n">root</span><span class="o">;</span>
+    <span class="c1">// 根节点为空，Map 中无元素</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">t</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">compare</span><span class="o">(</span><span class="n">key</span><span class="o">,</span> <span class="n">key</span><span class="o">);</span> <span class="c1">// type (and possibly null) check</span>
+
+        <span class="n">root</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Entry</span><span class="o">&lt;&gt;(</span><span class="n">key</span><span class="o">,</span> <span class="n">value</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="mi">1</span><span class="o">;</span>
+        <span class="n">modCount</span><span class="o">++;</span>
+        <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="c1">// Map 中有元素</span>
+    <span class="kt">int</span> <span class="n">cmp</span><span class="o">;</span>
+    <span class="n">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">parent</span><span class="o">;</span>
+    <span class="c1">// split comparator and comparable paths</span>
+    <span class="n">Comparator</span><span class="o">&lt;?</span> <span class="kd">super</span> <span class="n">K</span><span class="o">&gt;</span> <span class="n">cpr</span> <span class="o">=</span> <span class="n">comparator</span><span class="o">;</span>
+    <span class="c1">// 找到 key 对应的节点位置</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">cpr</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">do</span> <span class="o">{</span>
+            <span class="n">parent</span> <span class="o">=</span> <span class="n">t</span><span class="o">;</span>
+            <span class="n">cmp</span> <span class="o">=</span> <span class="n">cpr</span><span class="o">.</span><span class="na">compare</span><span class="o">(</span><span class="n">key</span><span class="o">,</span> <span class="n">t</span><span class="o">.</span><span class="na">key</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">cmp</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="na">left</span><span class="o">;</span>
+            <span class="k">else</span> <span class="nf">if</span> <span class="o">(</span><span class="n">cmp</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="na">right</span><span class="o">;</span>
+            <span class="k">else</span>
+                <span class="k">return</span> <span class="n">t</span><span class="o">.</span><span class="na">setValue</span><span class="o">(</span><span class="n">value</span><span class="o">);</span>
+        <span class="o">}</span> <span class="k">while</span> <span class="o">(</span><span class="n">t</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">);</span>
+    <span class="o">}</span>
+    <span class="k">else</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">key</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nf">NullPointerException</span><span class="o">();</span>
+        <span class="nd">@SuppressWarnings</span><span class="o">(</span><span class="s">"unchecked"</span><span class="o">)</span>
+            <span class="n">Comparable</span><span class="o">&lt;?</span> <span class="kd">super</span> <span class="n">K</span><span class="o">&gt;</span> <span class="n">k</span> <span class="o">=</span> <span class="o">(</span><span class="n">Comparable</span><span class="o">&lt;?</span> <span class="kd">super</span> <span class="n">K</span><span class="o">&gt;)</span> <span class="n">key</span><span class="o">;</span>
+        <span class="k">do</span> <span class="o">{</span>
+            <span class="n">parent</span> <span class="o">=</span> <span class="n">t</span><span class="o">;</span>
+            <span class="n">cmp</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="na">compareTo</span><span class="o">(</span><span class="n">t</span><span class="o">.</span><span class="na">key</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">cmp</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="na">left</span><span class="o">;</span>
+            <span class="k">else</span> <span class="nf">if</span> <span class="o">(</span><span class="n">cmp</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="na">right</span><span class="o">;</span>
+            <span class="k">else</span>
+                <span class="k">return</span> <span class="n">t</span><span class="o">.</span><span class="na">setValue</span><span class="o">(</span><span class="n">value</span><span class="o">);</span>
+        <span class="o">}</span> <span class="k">while</span> <span class="o">(</span><span class="n">t</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="c1">// 插入新元素</span>
+    <span class="n">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">e</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Entry</span><span class="o">&lt;&gt;(</span><span class="n">key</span><span class="o">,</span> <span class="n">value</span><span class="o">,</span> <span class="n">parent</span><span class="o">);</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">cmp</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span>
+        <span class="n">parent</span><span class="o">.</span><span class="na">left</span> <span class="o">=</span> <span class="n">e</span><span class="o">;</span>
+    <span class="k">else</span>
+        <span class="n">parent</span><span class="o">.</span><span class="na">right</span> <span class="o">=</span> <span class="n">e</span><span class="o">;</span>
+    <span class="c1">// 旋转红黑树</span>
+    <span class="n">fixAfterInsertion</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
+    <span class="n">size</span><span class="o">++;</span>
+    <span class="n">modCount</span><span class="o">++;</span>
+    <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="linkedhashmap">LinkedHashMap</h2>
+<p>LinkedHashMap 是 HashMap 的子类，除了具有 HashMap 的功能之外，它还维护了一个双向链表，存储了元素的插入顺序，此外，它还支持 Access Order，支持按照访问顺序获取元素。</p>
+
+<h3 id="初始化-2">初始化</h3>
+<p>LinkedHashMap 对 Map 的 Entry 对象进行了扩展，增加了<code class="highlighter-rouge">before</code>和<code class="highlighter-rouge">after</code>两个属性。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">static</span> <span class="kd">class</span> <span class="nc">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">HashMap</span><span class="o">.</span><span class="na">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="n">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">before</span><span class="o">,</span> <span class="n">after</span><span class="o">;</span>
+    <span class="n">Entry</span><span class="o">(</span><span class="kt">int</span> <span class="n">hash</span><span class="o">,</span> <span class="n">K</span> <span class="n">key</span><span class="o">,</span> <span class="n">V</span> <span class="n">value</span><span class="o">,</span> <span class="n">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">next</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">super</span><span class="o">(</span><span class="n">hash</span><span class="o">,</span> <span class="n">key</span><span class="o">,</span> <span class="n">value</span><span class="o">,</span> <span class="n">next</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>同时增加了维护双向链表头尾的成员变量，头部元素先插入，尾部元素后插入。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 双向链表的头</span>
+<span class="kd">transient</span> <span class="n">LinkedHashMap</span><span class="o">.</span><span class="na">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">head</span><span class="o">;</span>
+<span class="c1">// 双向链表的尾</span>
+<span class="kd">transient</span> <span class="n">LinkedHashMap</span><span class="o">.</span><span class="na">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">tail</span><span class="o">;</span>
+
+<span class="kd">final</span> <span class="kt">boolean</span> <span class="n">accessOrder</span><span class="o">;</span>
+</code></pre></div></div>
+<p>构造方法同 HashMap 类似，不同的是增加了<code class="highlighter-rouge">accessOrder</code>参数的构造方法，默认为<code class="highlighter-rouge">false</code></p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="nf">LinkedHashMap</span><span class="o">(</span><span class="kt">int</span> <span class="n">initialCapacity</span><span class="o">,</span> <span class="kt">float</span> <span class="n">loadFactor</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">accessOrder</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kd">super</span><span class="o">(</span><span class="n">initialCapacity</span><span class="o">,</span> <span class="n">loadFactor</span><span class="o">);</span>
+    <span class="k">this</span><span class="o">.</span><span class="na">accessOrder</span> <span class="o">=</span> <span class="n">accessOrder</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="插入新元素">插入新元素</h3>
+<p>LinkedHashMap 复用了 HashMap 的<code class="highlighter-rouge">put()</code>方法，但是重写了<code class="highlighter-rouge">newNode()</code>方法。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="nf">newNode</span><span class="o">(</span><span class="kt">int</span> <span class="n">hash</span><span class="o">,</span> <span class="n">K</span> <span class="n">key</span><span class="o">,</span> <span class="n">V</span> <span class="n">value</span><span class="o">,</span> <span class="n">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">LinkedHashMap</span><span class="o">.</span><span class="na">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">p</span> <span class="o">=</span>
+        <span class="k">new</span> <span class="n">LinkedHashMap</span><span class="o">.</span><span class="na">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;(</span><span class="n">hash</span><span class="o">,</span> <span class="n">key</span><span class="o">,</span> <span class="n">value</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+    <span class="n">linkNodeLast</span><span class="o">(</span><span class="n">p</span><span class="o">);</span>
+    <span class="k">return</span> <span class="n">p</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p><code class="highlighter-rouge">linkNodeLast()</code>将新加的元素放入双向链表的尾部。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// link at the end of list</span>
+<span class="kd">private</span> <span class="kt">void</span> <span class="nf">linkNodeLast</span><span class="o">(</span><span class="n">LinkedHashMap</span><span class="o">.</span><span class="na">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">p</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">LinkedHashMap</span><span class="o">.</span><span class="na">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">last</span> <span class="o">=</span> <span class="n">tail</span><span class="o">;</span>
+    <span class="n">tail</span> <span class="o">=</span> <span class="n">p</span><span class="o">;</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">last</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="n">p</span><span class="o">;</span>
+    <span class="k">else</span> <span class="o">{</span>
+        <span class="n">p</span><span class="o">.</span><span class="na">before</span> <span class="o">=</span> <span class="n">last</span><span class="o">;</span>
+        <span class="n">last</span><span class="o">.</span><span class="na">after</span> <span class="o">=</span> <span class="n">p</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="access-order">Access Order</h3>
+<p>LinkedHashMap 的<code class="highlighter-rouge">get()</code>方法如下，<code class="highlighter-rouge">getNode()</code>复用了 HashMap 的方法，在后面添加了<code class="highlighter-rouge">afterNodeAccess()</code>方法，将这个元素移动到链表尾。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="n">V</span> <span class="nf">get</span><span class="o">(</span><span class="n">Object</span> <span class="n">key</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">e</span><span class="o">;</span>
+    <span class="k">if</span> <span class="o">((</span><span class="n">e</span> <span class="o">=</span> <span class="n">getNode</span><span class="o">(</span><span class="n">hash</span><span class="o">(</span><span class="n">key</span><span class="o">),</span> <span class="n">key</span><span class="o">))</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+        <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">accessOrder</span><span class="o">)</span>
+        <span class="n">afterNodeAccess</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
+    <span class="k">return</span> <span class="n">e</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>看看<code class="highlighter-rouge">afterNodeAccess()</code>方法的实现，考虑清楚边界情况后很简单。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">afterNodeAccess</span><span class="o">(</span><span class="n">Node</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// move node to last</span>
+    <span class="n">LinkedHashMap</span><span class="o">.</span><span class="na">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">last</span><span class="o">;</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">accessOrder</span> <span class="o">&amp;&amp;</span> <span class="o">(</span><span class="n">last</span> <span class="o">=</span> <span class="n">tail</span><span class="o">)</span> <span class="o">!=</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">// p 为 e, a 在 p 之前，b 在 p 之后</span>
+        <span class="n">LinkedHashMap</span><span class="o">.</span><span class="na">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">p</span> <span class="o">=</span>
+            <span class="o">(</span><span class="n">LinkedHashMap</span><span class="o">.</span><span class="na">Entry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;)</span><span class="n">e</span><span class="o">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="na">before</span><span class="o">,</span> <span class="n">a</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="na">after</span><span class="o">;</span>
+        <span class="n">p</span><span class="o">.</span><span class="na">after</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">b</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+            <span class="n">head</span> <span class="o">=</span> <span class="n">a</span><span class="o">;</span>
+        <span class="k">else</span>
+            <span class="n">b</span><span class="o">.</span><span class="na">after</span> <span class="o">=</span> <span class="n">a</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">a</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span>
+            <span class="n">a</span><span class="o">.</span><span class="na">before</span> <span class="o">=</span> <span class="n">b</span><span class="o">;</span>
+        <span class="k">else</span>
+            <span class="n">last</span> <span class="o">=</span> <span class="n">b</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">last</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+            <span class="n">head</span> <span class="o">=</span> <span class="n">p</span><span class="o">;</span>
+        <span class="k">else</span> <span class="o">{</span>
+            <span class="n">p</span><span class="o">.</span><span class="na">before</span> <span class="o">=</span> <span class="n">last</span><span class="o">;</span>
+            <span class="n">last</span><span class="o">.</span><span class="na">after</span> <span class="o">=</span> <span class="n">p</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="n">tail</span> <span class="o">=</span> <span class="n">p</span><span class="o">;</span>
+        <span class="o">++</span><span class="n">modCount</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>(End)</p>
+
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/02/18/collection1/">Java核心类库学习（二）Collection
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/02/15/gunicorn2/">Gunicorn源码阅读(二) Master进程
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/24/jmm/">JMM小结
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/17/sringioc/">Spring（一）IoC
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/15/classload/">JVM基础（二） 类加载过程
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/14/excutors/">Java核心类库学习（一） 线程池
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+        
+            </ul>
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2019/02/18/collection1/">Java核心类库学习（二）Collection</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2019/02/25/map1/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2019/02/25/map1/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>
