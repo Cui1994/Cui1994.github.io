@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Gunicorn源码阅读(三) Worker进程</title>
+    <meta name="description" content="">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2019/02/26/gunicorn3/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>Gunicorn源码阅读(三) Worker进程</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2019-02-26
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Python" title="Category: Python" rel="category">Python</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#Gunicorn" title="Tag: Gunicorn" rel="tag">Gunicorn</a-->
+        <a href="/tag/#Gunicorn" title="Tag: Gunicorn" rel="tag">Gunicorn</a>&nbsp;
+    
+        <!--a href="/tag/#Python" title="Tag: Python" rel="tag">Python</a-->
+        <a href="/tag/#Python" title="Tag: Python" rel="tag">Python</a>&nbsp;
+    
+        <!--a href="/tag/#%E6%BA%90%E7%A0%81" title="Tag: 源码" rel="tag">源码</a-->
+        <a href="/tag/#源码" title="Tag: 源码" rel="tag">源码</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#worker-进程" id="markdown-toc-worker-进程">Worker 进程</a>    <ul>
+      <li><a href="#初始化" id="markdown-toc-初始化">初始化</a></li>
+      <li><a href="#loop" id="markdown-toc-loop">loop</a></li>
+      <li><a href="#handler" id="markdown-toc-handler">handler</a></li>
+      <li><a href="#geventworker" id="markdown-toc-geventworker">GeventWorker</a></li>
+    </ul>
+  </li>
+  <li><a href="#总结" id="markdown-toc-总结">总结</a></li>
+</ul>
+
+<p><img src="https://picsum.photos/800/300/?image=841" alt="" /></p>
+
+<p>为了消除版本影响，本篇将 gunicorn 版本更新为<code class="highlighter-rouge">19.9.0</code>。</p>
+
+<h2 id="worker-进程">Worker 进程</h2>
+
+<p>Worker 进程是真正接收并处理请求的进程，它也是个 loop，不断调用<code class="highlighter-rouge">listen()</code>来接收并处理新的请求。</p>
+
+<h3 id="初始化">初始化</h3>
+
+<p>Gunicorn 有很多 Worker 类型，我们先从默认的<code class="highlighter-rouge">SyncWorker</code>看起，Worker 的入口是<code class="highlighter-rouge">/workers/base.py</code>的<code class="highlighter-rouge">init_process()</code>函数，它会做一些初始化的工作，包括<strong>创建 WorkerTmp、创建管道、加载 reloader、注册信号处理函数、加载 WSGI application</strong>，最后加载各自 Worker 的<code class="highlighter-rouge">run()</code>方法。</p>
+
+<p>WorkerTmp 是 Worker 的一个属性，内部维护了一个打开的文件描述符，它会被 Master 进程循环检查文件的更新时间，如果发现长时间未更新就会被 Master 进程 kill 掉，默认时间是 30s。<code class="highlighter-rouge">notify()</code>方法会更改文件的访问权限来将更新时间同步，后面会多次看到这个方法的身影。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">class</span> <span class="nf">WorkerTmp</span><span class="o">(</span><span class="n">object</span><span class="o">):</span>
+
+    <span class="n">def</span> <span class="nf">__init__</span><span class="o">(</span><span class="n">self</span><span class="o">,</span> <span class="n">cfg</span><span class="o">):</span>
+        <span class="n">old_umask</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="na">umask</span><span class="o">(</span><span class="n">cfg</span><span class="o">.</span><span class="na">umask</span><span class="o">)</span>
+        <span class="n">fdir</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="na">worker_tmp_dir</span>
+        <span class="k">if</span> <span class="n">fdir</span> <span class="n">and</span> <span class="n">not</span> <span class="n">os</span><span class="o">.</span><span class="na">path</span><span class="o">.</span><span class="na">isdir</span><span class="o">(</span><span class="n">fdir</span><span class="o">):</span>
+            <span class="n">raise</span> <span class="nf">RuntimeError</span><span class="o">(</span><span class="s">"%s doesn't exist. Can't create workertmp."</span> <span class="o">%</span> <span class="n">fdir</span><span class="o">)</span>
+        <span class="n">fd</span><span class="o">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="na">mkstemp</span><span class="o">(</span><span class="n">prefix</span><span class="o">=</span><span class="s">"wgunicorn-"</span><span class="o">,</span> <span class="n">dir</span><span class="o">=</span><span class="n">fdir</span><span class="o">)</span>
+
+        <span class="err">#</span> <span class="n">allows</span> <span class="n">the</span> <span class="n">process</span> <span class="n">to</span> <span class="n">write</span> <span class="n">to</span> <span class="n">the</span> <span class="n">file</span>
+        <span class="n">util</span><span class="o">.</span><span class="na">chown</span><span class="o">(</span><span class="n">name</span><span class="o">,</span> <span class="n">cfg</span><span class="o">.</span><span class="na">uid</span><span class="o">,</span> <span class="n">cfg</span><span class="o">.</span><span class="na">gid</span><span class="o">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="na">umask</span><span class="o">(</span><span class="n">old_umask</span><span class="o">)</span>
+
+        <span class="err">#</span> <span class="n">unlink</span> <span class="n">the</span> <span class="n">file</span> <span class="n">so</span> <span class="n">we</span> <span class="n">don</span><span class="err">'</span><span class="n">t</span> <span class="n">leak</span> <span class="n">tempory</span> <span class="n">files</span>
+        <span class="k">try</span><span class="o">:</span>
+            <span class="k">if</span> <span class="n">not</span> <span class="nl">IS_CYGWIN:</span>
+                <span class="n">util</span><span class="o">.</span><span class="na">unlink</span><span class="o">(</span><span class="n">name</span><span class="o">)</span>
+            <span class="n">self</span><span class="o">.</span><span class="na">_tmp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="na">fdopen</span><span class="o">(</span><span class="n">fd</span><span class="o">,</span> <span class="err">'</span><span class="n">w</span><span class="o">+</span><span class="n">b</span><span class="err">'</span><span class="o">,</span> <span class="mi">1</span><span class="o">)</span>
+        <span class="nl">except:</span>
+            <span class="n">os</span><span class="o">.</span><span class="na">close</span><span class="o">(</span><span class="n">fd</span><span class="o">)</span>
+            <span class="n">raise</span>
+
+        <span class="n">self</span><span class="o">.</span><span class="na">spinner</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">def</span> <span class="nf">notify</span><span class="o">(</span><span class="n">self</span><span class="o">):</span>
+        <span class="n">self</span><span class="o">.</span><span class="na">spinner</span> <span class="o">=</span> <span class="o">(</span><span class="n">self</span><span class="o">.</span><span class="na">spinner</span> <span class="o">+</span> <span class="mi">1</span><span class="o">)</span> <span class="o">%</span> <span class="mi">2</span>
+        <span class="n">os</span><span class="o">.</span><span class="na">fchmod</span><span class="o">(</span><span class="n">self</span><span class="o">.</span><span class="na">_tmp</span><span class="o">.</span><span class="na">fileno</span><span class="o">(),</span> <span class="n">self</span><span class="o">.</span><span class="na">spinner</span><span class="o">)</span>
+
+    <span class="n">def</span> <span class="nf">last_update</span><span class="o">(</span><span class="n">self</span><span class="o">):</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="na">fstat</span><span class="o">(</span><span class="n">self</span><span class="o">.</span><span class="na">_tmp</span><span class="o">.</span><span class="na">fileno</span><span class="o">()).</span><span class="na">st_ctime</span>
+
+    <span class="n">def</span> <span class="nf">fileno</span><span class="o">(</span><span class="n">self</span><span class="o">):</span>
+        <span class="k">return</span> <span class="n">self</span><span class="o">.</span><span class="na">_tmp</span><span class="o">.</span><span class="na">fileno</span><span class="o">()</span>
+
+    <span class="n">def</span> <span class="nf">close</span><span class="o">(</span><span class="n">self</span><span class="o">):</span>
+        <span class="k">return</span> <span class="n">self</span><span class="o">.</span><span class="na">_tmp</span><span class="o">.</span><span class="na">close</span><span class="o">()</span>
+</code></pre></div></div>
+
+<p>与 Master 进程类似，Worker 在注册信号处理函数时会向管道的写入端写入字节来唤醒 loop。</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">init_signals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="s">'set_wakeup_fd'</span><span class="p">):</span>
+        <span class="n">signal</span><span class="o">.</span><span class="n">set_wakeup_fd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PIPE</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</code></pre></div></div>
+
+<p>Reloader 是 gunicorn 负责重新加载 WSGI application 的「监视器」，它是一个线程对象，它在启动后会监控工作目录下的<code class="highlighter-rouge">.py</code>文件，一旦这些文件被更改，Worker 进程就会终止，并由 Master 进程重新创建新的 Worker</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="nb">reload</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">changed</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Worker reloading: </span><span class="si">%</span><span class="s">s modified"</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alive</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">worker_int</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="nb">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">reloader_cls</span> <span class="o">=</span> <span class="n">reloader_engines</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">reload_engine</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">reloader</span> <span class="o">=</span> <span class="n">reloader_cls</span><span class="p">(</span><span class="n">extra_files</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">reload_extra_files</span><span class="p">,</span>
+                                 <span class="n">callback</span><span class="o">=</span><span class="n">changed</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">reloader</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">Reloader</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extra_files</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Reloader</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setDaemon</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_extra_files</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">extra_files</span> <span class="ow">or</span> <span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_extra_files_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">RLock</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span> <span class="o">=</span> <span class="n">interval</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_callback</span> <span class="o">=</span> <span class="n">callback</span>
+
+    <span class="k">def</span> <span class="nf">add_extra_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_files_lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_extra_files</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">fnames</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">COMPILED_EXT_RE</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'py'</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">__file__</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s">'__file__'</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_files_lock</span><span class="p">:</span>
+            <span class="n">fnames</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_extra_files</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">fnames</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">mtimes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_files</span><span class="p">():</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">mtime</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">st_mtime</span>
+                <span class="k">except</span> <span class="nb">OSError</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">old_time</span> <span class="o">=</span> <span class="n">mtimes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">old_time</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">mtimes</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span> <span class="o">=</span> <span class="n">mtime</span>
+                    <span class="k">continue</span>
+                <span class="k">elif</span> <span class="n">mtime</span> <span class="o">&gt;</span> <span class="n">old_time</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callback</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_callback</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>前面讲过，WSGI application 必须是一个 callable 对象，这里加载的动作就是把这个对象加载进来，作为<code class="highlighter-rouge">wsgi</code>成员变量。</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">load_wsgi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wsgi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">wsgi</span><span class="p">()</span>
+    <span class="k">except</span> <span class="nb">SyntaxError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># ...
+</span></code></pre></div></div>
+<p>真正的加载动作在<code class="highlighter-rouge">WSGIApplication</code>里，通过 uri 获取 module 和 obj，分别对 module 和 obj 进行<code class="highlighter-rouge">__import__</code>和<code class="highlighter-rouge">eval</code>。</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">WSGIApplication</span><span class="p">(</span><span class="n">Application</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">load_wsgiapp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">util</span><span class="o">.</span><span class="n">import_app</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">app_uri</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">import_app</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">":"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">module</span><span class="p">,</span> <span class="n">obj</span> <span class="o">=</span> <span class="n">module</span><span class="p">,</span> <span class="s">"application"</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">module</span><span class="p">,</span> <span class="n">obj</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">__import__</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+    <span class="k">except</span> <span class="nb">ImportError</span><span class="p">:</span>
+        <span class="c1"># ...
+</span>
+    <span class="n">mod</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">module</span><span class="p">]</span>
+
+    <span class="n">is_debug</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">app</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">vars</span><span class="p">(</span><span class="n">mod</span><span class="p">))</span>
+    <span class="c1"># ...
+</span></code></pre></div></div>
+
+<h3 id="loop">loop</h3>
+
+<p>接下来到了 Woker 的<code class="highlighter-rouge">run()</code>方法，它会将从 Master 进程继承来的 socket 设置为 ，之后根据 socket 的数目调用相应的方法，差别不大，这里看只有一个 socket 的情况。这里就是 Woker 进程的 loop 所在，它会通过<code class="highlighter-rouge">accept()</code>来尝试处理请求，通过<code class="highlighter-rouge">wait()</code>方法来控制 loop 的进行。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">timeout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="ow">or</span> <span class="mf">0.5</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sockets</span><span class="p">:</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sockets</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_for_multiple</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_for_one</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">run_for_one</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">):</span>
+    <span class="n">listener</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sockets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">alive</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">notify</span><span class="p">()</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">accept</span><span class="p">(</span><span class="n">listener</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="c1"># ...
+</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_parent_alive</span><span class="p">():</span>
+            <span class="k">return</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">StopWaiting</span><span class="p">:</span>
+            <span class="k">return</span>
+</code></pre></div></div>
+
+<p>先看<code class="highlighter-rouge">wait()</code>方法，通过 select 来轮训检测<code class="highlighter-rouge">self.wait_fds</code>是否就绪，这里<code class="highlighter-rouge">self.wait_fds</code>是<code class="highlighter-rouge">self.wait_fds = self.sockets + [self.PIPE[0]]</code>，有 fd 就绪或超过 timeout 则返回进行下一轮 loop。可见，使 loop 立即开始的行为有下面两个：</p>
+<ul>
+  <li>有 socket 处于就绪（可读）状态</li>
+  <li>收到信号
+    <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">wait</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">):</span>
+  <span class="k">try</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">notify</span><span class="p">()</span>
+      <span class="n">ret</span> <span class="o">=</span> <span class="n">select</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wait_fds</span><span class="p">,</span> <span class="p">[],</span> <span class="p">[],</span> <span class="n">timeout</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">ret</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+          <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">PIPE</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">ret</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+              <span class="n">os</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PIPE</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+          <span class="k">return</span> <span class="n">ret</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<p>再看<code class="highlighter-rouge">accept()</code>方法，由于 listeners 都被设置了 no-block，如果 socket 未就绪，<code class="highlighter-rouge">listener.accept()</code>函数会抛出<code class="highlighter-rouge">EAGAGIN</code>错误并立即返回，反之则获得<code class="highlighter-rouge">accept()</code>之后的文件描述符，设置 block 后传入 handle 进行处理。这里就可以发现，在<code class="highlighter-rouge">accept()</code>调用后，SyncWorker 便开始进入处理一个请求的流程，同时进入阻塞状态，不能再相应其他的请求。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">accept</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">listener</span><span class="p">):</span>
+    <span class="n">client</span><span class="p">,</span> <span class="n">addr</span> <span class="o">=</span> <span class="n">listener</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+    <span class="n">client</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">util</span><span class="o">.</span><span class="n">close_on_exec</span><span class="p">(</span><span class="n">client</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">listener</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">addr</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="handler">handler</h3>
+
+<p>进入 handler 之后，Worker 进程开始履行 gunicorn 作为 WSGI 的职责，即</p>
+<ul>
+  <li><strong>接收 HTTP 请求</strong></li>
+  <li><strong>解析 HTTP 请求</strong></li>
+  <li><strong>将HTTP请求进行封装并传给 application</strong></li>
+  <li><strong>获得 application 返回并返回 HTTP 响应</strong></li>
+</ul>
+
+<p>解析 HTTP 请求是通过<code class="highlighter-rouge">RequestParser</code>来进行的，它的<code class="highlighter-rouge">__next__</code>方法会读完之前的字节流，并重新创建<code class="highlighter-rouge">Request</code>对象并返回，<code class="highlighter-rouge">Request</code>会借助<code class="highlighter-rouge">Unreader</code>来读取 socket 中的字节流，解析出 HTTP 请求中的一些信息（header、body、path 等）。</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">listener</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">addr</span><span class="p">):</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">is_ssl</span><span class="p">:</span>
+            <span class="n">client</span> <span class="o">=</span> <span class="n">ssl</span><span class="o">.</span><span class="n">wrap_socket</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">server_side</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">ssl_options</span><span class="p">)</span>
+
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">http</span><span class="o">.</span><span class="n">RequestParser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+        <span class="n">req</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handle_request</span><span class="p">(</span><span class="n">listener</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">addr</span><span class="p">)</span>
+    <span class="c1"># ...
+</span>
+<span class="k">class</span> <span class="nc">RequestParser</span><span class="p">(</span><span class="n">Parser</span><span class="p">):</span>
+
+    <span class="n">mesg_class</span> <span class="o">=</span> <span class="n">Request</span>
+
+<span class="k">class</span> <span class="nc">Parser</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="n">mesg_class</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s">"recv"</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">unreader</span> <span class="o">=</span> <span class="n">SocketUnreader</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">unreader</span> <span class="o">=</span> <span class="n">IterUnreader</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesg</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c1"># request counter (for keepalive connetions)
+</span>        <span class="bp">self</span><span class="o">.</span><span class="n">req_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Stop if HTTP dictates a stop.
+</span>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesg</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesg</span><span class="o">.</span><span class="n">should_close</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="nb">StopIteration</span><span class="p">()</span>
+
+        <span class="c1"># Discard any unread body of the previous message
+</span>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesg</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesg</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8192</span><span class="p">)</span>
+            <span class="k">while</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesg</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8192</span><span class="p">)</span>
+
+        <span class="c1"># Parse the next request
+</span>        <span class="bp">self</span><span class="o">.</span><span class="n">req_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesg_class</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">unreader</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">req_count</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesg</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="nb">StopIteration</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesg</span>
+
+    <span class="nb">next</span> <span class="o">=</span> <span class="n">__next_</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">handle_request()</code>方法中会构建<code class="highlighter-rouge">environ</code>和<code class="highlighter-rouge">resp</code>，<code class="highlighter-rouge">environ</code>是一个一个包含所有 HTTP 请求信息的 dict 对象，而<code class="highlighter-rouge">resp</code>是一个<code class="highlighter-rouge">Response</code>对象，它是 HTTP 相应的封装，同时实现了<code class="highlighter-rouge">start_response</code>方法供 WSGI application 回调，之后调用 application 获得返回体（字节流），将它写入<code class="highlighter-rouge">resp</code>中，一个 HTTP 响应流程结束。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">handle_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">listener</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">addr</span><span class="p">):</span>
+    <span class="n">environ</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">resp</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">pre_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">req</span><span class="p">)</span>
+        <span class="n">request_start</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="n">resp</span><span class="p">,</span> <span class="n">environ</span> <span class="o">=</span> <span class="n">wsgi</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">addr</span><span class="p">,</span>
+                <span class="n">listener</span><span class="o">.</span><span class="n">getsockname</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="c1"># Force the connection closed until someone shows
+</span>        <span class="c1"># a buffering proxy that supports Keep-Alive to
+</span>        <span class="c1"># the backend.
+</span>        <span class="n">resp</span><span class="o">.</span><span class="n">force_close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nr</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nr</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_requests</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Autorestarting worker after current request."</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alive</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">respiter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsgi</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">resp</span><span class="o">.</span><span class="n">start_response</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">respiter</span><span class="p">,</span> <span class="n">environ</span><span class="p">[</span><span class="s">'wsgi.file_wrapper'</span><span class="p">]):</span>
+                <span class="n">resp</span><span class="o">.</span><span class="n">write_file</span><span class="p">(</span><span class="n">respiter</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">respiter</span><span class="p">:</span>
+                    <span class="c1"># 写入 resp
+</span>                    <span class="n">resp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="n">resp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">request_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">request_start</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">environ</span><span class="p">,</span> <span class="n">request_time</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">respiter</span><span class="p">,</span> <span class="s">"close"</span><span class="p">):</span>
+                <span class="n">respiter</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h3 id="geventworker">GeventWorker</h3>
+<p>下来看看最常用的 GeventWorker 的实现与 SyncWorker 有哪些不同。</p>
+
+<p>首先是<code class="highlighter-rouge">run()</code>方法，也是一个 loop，在 loop 中只是循环的调用<code class="highlighter-rouge">notify()</code>方法维持 Worker 进程存活，在这之前它会将 socket 交给 gevent 的<code class="highlighter-rouge">StreamServer</code>处理，同时用<code class="highlighter-rouge">worker_connections</code>控制最大连接数。其余部分与 SyncWorker 类似。</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">servers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ssl_args</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">is_ssl</span><span class="p">:</span>
+        <span class="n">ssl_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">server_side</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">ssl_options</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sockets</span><span class="p">:</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">worker_connections</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_class</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">environ</span> <span class="o">=</span> <span class="n">base_environ</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">)</span>
+            <span class="n">environ</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                <span class="s">"wsgi.multithread"</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                <span class="s">"SERVER_SOFTWARE"</span><span class="p">:</span> <span class="n">VERSION</span><span class="p">,</span>
+            <span class="p">})</span>
+            <span class="n">server</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_class</span><span class="p">(</span>
+                <span class="n">s</span><span class="p">,</span> <span class="n">application</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wsgi</span><span class="p">,</span> <span class="n">spawn</span><span class="o">=</span><span class="n">pool</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">,</span>
+                <span class="n">handler_class</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wsgi_handler</span><span class="p">,</span> <span class="n">environ</span><span class="o">=</span><span class="n">environ</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">ssl_args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">hfun</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+            <span class="n">server</span> <span class="o">=</span> <span class="n">StreamServer</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">handle</span><span class="o">=</span><span class="n">hfun</span><span class="p">,</span> <span class="n">spawn</span><span class="o">=</span><span class="n">pool</span><span class="p">,</span> <span class="o">**</span><span class="n">ssl_args</span><span class="p">)</span>
+
+        <span class="n">server</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="n">servers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">server</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">alive</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">notify</span><span class="p">()</span>
+        <span class="n">gevent</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="总结">总结</h2>
+<p>Worker 进程也是一个 loop，也会创建管道来控制 loop 的频率。它借助 WorkerTmp 来监控进程的空闲状态，借助 Reloader 来监控程序文件并自动重启。loop 中接收请求并完成解析和处理，loop 的条件是<code class="highlighter-rouge">alive</code>属性为<code class="highlighter-rouge">True</code>，而<code class="highlighter-rouge">SIGTERM</code>的信号处理函数会将该属性设置为<code class="highlighter-rouge">False</code>，使 Worker 进入空闲状态后被 Master 回收，从而配合 Master 进程实现热重启。</p>
+
+<p>Gunicorn 的整个源码阅读文章到这里就结束了，对 gunicorn 的实现不能做到面面俱到，只能挑个人认为比较重要的地方拿出来讲一讲。</p>
+
+<p>(End)</p>
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/02/25/map1/">Java核心类库学习（三）Map
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/02/18/collection1/">Java核心类库学习（二）Collection
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/02/15/gunicorn2/">Gunicorn源码阅读(二) Master进程
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/15/classload/">JVM基础（二） 类加载过程
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/14/excutors/">Java核心类库学习（一） 线程池
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+        
+            </ul>
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2019/02/25/map1/">Java核心类库学习（三）Map</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2019/02/26/gunicorn3/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2019/02/26/gunicorn3/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>

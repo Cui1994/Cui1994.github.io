@@ -5,12 +5,33 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Mon, 25 Feb 2019 21:41:04 +0800</pubDate>
-    <lastBuildDate>Mon, 25 Feb 2019 21:41:04 +0800</lastBuildDate>
+    <pubDate>Tue, 26 Feb 2019 23:46:47 +0800</pubDate>
+    <lastBuildDate>Tue, 26 Feb 2019 23:46:47 +0800</lastBuildDate>
     <generator>Jekyll v3.8.4</generator>
     
       <item>
-        <title>Java核心类库学习（二）Map</title>
+        <title>Gunicorn源码阅读(三) Worker进程</title>
+        <description>
+&lt;img src=&quot;https://picsum.photos/800/300/?image=841&quot; alt=&quot;&quot; /&gt;
+
+</description>
+        <pubDate>Tue, 26 Feb 2019 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2019/02/26/gunicorn3/</link>
+        <guid isPermaLink="true">http://localhost:4000/2019/02/26/gunicorn3/</guid>
+        
+        <category>Gunicorn</category>
+        
+        <category>Python</category>
+        
+        <category>源码</category>
+        
+        
+        <category>Python</category>
+        
+      </item>
+    
+      <item>
+        <title>Java核心类库学习（三）Map</title>
         <description>
 &lt;img src=&quot;https://picsum.photos/800/300/?image=860&quot; alt=&quot;&quot; /&gt;
 
@@ -208,28 +229,6 @@ Java中类的加载、连接都是在程序运行时完成的，虚拟机将clas
         <category>并发</category>
         
         <category>笔记</category>
-        
-        
-        <category>Java</category>
-        
-      </item>
-    
-      <item>
-        <title>JVM基础 GC及内存分配</title>
-        <description>
-&lt;img src=&quot;https://picsum.photos/800/300/?image=328&quot; alt=&quot;&quot; /&gt;
-JVM的内存分配与垃圾回收是老生常谈的话题了，这里先对GC涉及的知识进行整理，主要内容有JVM内存布局、GC算法、垃圾回收器以及JVM的内存分配。
-
-</description>
-        <pubDate>Wed, 09 Jan 2019 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2019/01/09/gc/</link>
-        <guid isPermaLink="true">http://localhost:4000/2019/01/09/gc/</guid>
-        
-        <category>Java</category>
-        
-        <category>JVM</category>
-        
-        <category>GC</category>
         
         
         <category>Java</category>

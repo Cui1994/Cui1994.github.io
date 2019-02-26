@@ -49,7 +49,7 @@ def signal(self, sig, frame):
 ```
 在`init_signals()`方法中注册了信号处理函数，首先会关闭已经打开的管道，初始化新的管道。为所有信号注册默认的信号处置函数`signal()`，这个函数会将信号到信号事件队列`SIG_QUEUE`，并唤醒自身，交由 master 的进程的 loop 去处理对应的信号，后面会提到唤醒的工作机制。
 
-此外，`SIGCHILD`会直接注册信号处置函数`handle_chld`，处理 worker 退出产生的僵尸进程。方法是循环调用`waitpid(-1, WNOHANG)`直到不再返回 pid。
+这里注意几个特殊的信号，`SIGCHILD`会直接注册信号处置函数`handle_chld`，处理 worker 退出产生的僵尸进程。方法是循环调用`waitpid(-1, WNOHANG)`直到不再返回 pid。
 ```python
 def handle_chld(self, sig, frame):
     "SIGCHLD handling"
@@ -68,7 +68,67 @@ def reap_workers(self):
          # ...
 ```
 
+`SIGHUP`信号则实现了 gunicorn 的优雅重启，具体实现方式为重新加载配置和日志文件 -> 创建新的 Worker -> 优雅关闭旧的 Worker。
+```python
+def reload(self):
+    old_address = self.cfg.address
+
+    # reset old environment
+    for k in self.cfg.env:
+        if k in self.cfg.env_orig:
+            # reset the key to the value it had before
+            # we launched gunicorn
+            os.environ[k] = self.cfg.env_orig[k]
+        else:
+            # delete the value set by gunicorn
+            try:
+                del os.environ[k]
+            except KeyError:
+                pass
+
+    # reload conf
+    self.app.reload()
+    self.setup(self.app)
+
+    # reopen log files
+    self.log.reopen_files()
+
+    # do we need to change listener ?
+    if old_address != self.cfg.address:
+        # close all listeners
+        for l in self.LISTENERS:
+            l.close()
+        # init new listeners
+        self.LISTENERS = sock.create_sockets(self.cfg, self.log)
+        listeners_str = ",".join([str(l) for l in self.LISTENERS])
+        self.log.info("Listening at: %s", listeners_str)
+
+    # do some actions on reload
+    self.cfg.on_reload(self)
+
+    # unlink pidfile
+    if self.pidfile is not None:
+        self.pidfile.unlink()
+
+    # create new pidfile
+    if self.cfg.pidfile is not None:
+        self.pidfile = Pidfile(self.cfg.pidfile)
+        self.pidfile.create(self.pid)
+
+    # set new proc_name
+    util._setproctitle("master [%s]" % self.proc_name)
+
+    # spawn new workers
+    for _ in range(self.cfg.workers):
+        self.spawn_worker()
+
+    # manage workers
+    self.manage_workers()
+
+```
+
 之后通过`create_sockets()`方法通过配置的地址或者文件描述符来创建 socket，根据配置的地址格式判断创建 socket 的类型。这些 sockets 储存在`LISTENERS`中，最终会被 worker 进程继承，但 woker 真正 listen 的 socket 并非是 master 进程中锁创建的 socket，而是会自行创建 socket 进行监听，这个行为由`reuseport`参数决定，现在已默认为`True`。
+> 注：关于`create_sockets()`部分进行更正，最新版本的 gunicorn 行为是 Master 创建 socket 并调用`bind()`和`listen()`之后直接被 Worker 进程继承。
 
 ```python
 def manage_workers(self):
