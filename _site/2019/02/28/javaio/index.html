@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Java I/O 模型</title>
+    <meta name="description" content="Unix 网络编程提供了五种 I/O 模型，分别是：  阻塞 I/O  非阻塞 I/O  I/O 多路复用  信号驱动 I/O  异步 I/O其中后两者的区别在于信号驱动 I/O 是内核通知用户进程何时开始进行 I/O 操作，异步 I/O 是内核通知用户进程何时 I/O 操作已经完成。本文将介绍 Java 在此基...">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2019/02/28/javaio/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>Java I/O 模型</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2019-02-28
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Java" title="Category: Java" rel="category">Java</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a-->
+        <a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a>&nbsp;
+    
+        <!--a href="/tag/#%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B" title="Tag: 网络编程" rel="tag">网络编程</a-->
+        <a href="/tag/#网络编程" title="Tag: 网络编程" rel="tag">网络编程</a>&nbsp;
+    
+        <!--a href="/tag/#netty" title="Tag: netty" rel="tag">netty</a-->
+        <a href="/tag/#netty" title="Tag: netty" rel="tag">netty</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#bio-同步阻塞-io" id="markdown-toc-bio-同步阻塞-io">BIO 同步阻塞 I/O</a></li>
+  <li><a href="#伪异步-io" id="markdown-toc-伪异步-io">伪异步 I/O</a></li>
+  <li><a href="#rector-模式" id="markdown-toc-rector-模式">Rector 模式</a>    <ul>
+      <li><a href="#单-reactor-单线程" id="markdown-toc-单-reactor-单线程">单 Reactor 单线程</a></li>
+      <li><a href="#单-reactor-多线程" id="markdown-toc-单-reactor-多线程">单 Reactor 多线程</a></li>
+      <li><a href="#多-reactor-多线程" id="markdown-toc-多-reactor-多线程">多 Reactor 多线程</a></li>
+    </ul>
+  </li>
+  <li><a href="#nio-非阻塞-io" id="markdown-toc-nio-非阻塞-io">NIO 非阻塞 I/O</a></li>
+  <li><a href="#aio-异步-io" id="markdown-toc-aio-异步-io">AIO 异步 I/O</a></li>
+  <li><a href="#netty" id="markdown-toc-netty">Netty</a></li>
+</ul>
+
+<p><img src="https://picsum.photos/800/300/?image=872" alt="" /></p>
+
+<p>Unix 网络编程提供了五种 I/O 模型，分别是：</p>
+<ul>
+  <li>阻塞 I/O</li>
+  <li>非阻塞 I/O</li>
+  <li>I/O 多路复用</li>
+  <li>信号驱动 I/O</li>
+  <li>异步 I/O</li>
+</ul>
+
+<p>其中后两者的区别在于<strong>信号驱动 I/O 是内核通知用户进程何时开始进行 I/O 操作，异步 I/O 是内核通知用户进程何时 I/O 操作已经完成</strong>。本文将介绍 Java 在此基础上实现的网络 I/O 模型。</p>
+
+<h2 id="bio-同步阻塞-io">BIO 同步阻塞 I/O</h2>
+
+<p>BIO 模型的服务器会采用一个 Acceptor 来负责监听客户端的连接，收到客户端的连接请求后会创建一个新的 handler 线程负责处理之后的读写操作，之后 handler 线程将相应返回给客户端。</p>
+
+<p>JDK 自带的<code class="highlighter-rouge">Socket</code>和<code class="highlighter-rouge">ServerSocket</code>都只能进行同步阻塞 I/O。</p>
+
+<p>这种模型最明显的弊端在于<strong>请求与线程的比例为 1:1</strong>，在请求量很高的情况下，系统会创建大量线程以相应客户端请求，可能导致线程堆栈逸出、创建线程失败等问题，最终发生宕机。</p>
+
+<p><img src="https://i.loli.net/2019/02/28/5c77e410ab716.jpg" alt="" /></p>
+
+<h2 id="伪异步-io">伪异步 I/O</h2>
+
+<p>伪异步 I/O 在 BIO 的基础上进行了优化，它会提前创建线程池，Acceptor 接收到客户端请求后会将请求封装为一个 Runable 的对象交给线程池处理，如果请求数量超过了线程池活跃线程的数量，超过部分的请求会被放在线程池的任务队列里，待线程处理完之前的请求后消费任务队列里的请求。请求数量可以远大于线程数。</p>
+
+<p>这种模型虽然解决了 BIO 一请求一线程的弊端，但由于<strong>其线程处理的过程仍然是同步的</strong>，一但处理请求的过程中被阻塞，阻塞的这段时间线程是无法响应其他请求的。一但线程池里的线程都被阻塞，整个线程池的请求会越堆越多，最终超过队列大小，服务器拒绝请求引发连锁反应。</p>
+
+<p><img src="https://i.loli.net/2019/02/28/5c77e16f8421e.jpg" alt="" /></p>
+
+<h2 id="rector-模式">Rector 模式</h2>
+<p>在介绍剩下的 Java I/O 模型之前，先来了解一下 Reactor 模式的一些概念。<strong>Reactor 模式又称作 Dispatcher 模式，采用 I/O 多路复用技术来统一监听事件，收到相应的事件之后分配给某个对象去处理</strong>。</p>
+
+<p>Reactor 模式下有下面三种角色：</p>
+<ul>
+  <li><strong>Reactor</strong>：监听事件并将对应时间分配给相应对象（如果是新连接会交给 Acceptor，如果是其他事件会交给 Acceptor 中创建的 Handler）</li>
+  <li><strong>Acceptor</strong>：处理新连接，创建新的 Handler 去处理连接之后的动作</li>
+  <li><strong>Handler</strong>：完成 read -&gt; 业务处理 -&gt; write 的业务流程。</li>
+</ul>
+
+<p>根据 Reactor 和服务线程数量不同，Reactor 模式 可以分为下面几部分。</p>
+
+<h3 id="单-reactor-单线程">单 Reactor 单线程</h3>
+<p><img src="https://i.loli.net/2019/02/28/5c77f5f5592c7.jpg" alt="" /></p>
+
+<p>这个模式下的处理流程如下：</p>
+<ul>
+  <li>Reactor 通过 select/epoll 监控事件，收到事件后进行分发（一般会实现<code class="highlighter-rouge">dispatch()</code>方法）</li>
+  <li>如果是建立连接会交给 Acceptor 处理，Acceptor 会进行<code class="highlighter-rouge">accept()</code>，并创建 Handler 处理之后的事件</li>
+  <li>如果不是建立连接，则会直接调用对应的 Handler 处理，完成<code class="highlighter-rouge">read()</code> -&gt; 业务处理 -&gt; <code class="highlighter-rouge">write()</code> 的操作</li>
+</ul>
+
+<p>整个服务只存在一个线程，即支持 Reactor 进行事件调度，又支持 Handler 进行业务处理。</p>
+
+<p>这个模式的缺点很明显，<strong>在 Hanlder 进行业务处理的过程中，整个服务器无法处理其他已连接的事件，很容易造成性能瓶颈</strong>。因此，这种模式只适用于业务处理很快的场景，如 redis。</p>
+
+<h3 id="单-reactor-多线程">单 Reactor 多线程</h3>
+<p><img src="https://i.loli.net/2019/02/28/5c77fa6cf071e.jpg" alt="" /></p>
+
+<p>相对于单线程，多线程增加了线程池，它会将单线程中 Handler 里的业务处理的职能交给线程池里的 Processor 线程来做，Processor 会将业务处理的结果返回给 Handler，Handler 只进行 read 和 write。</p>
+
+<p>这样，业务处理就不会阻塞服务响应其他请求了。但这种模式还有一个缺点，<strong>Reactor 承担所有时间的监听和响应，在高并发时容易成为性能瓶颈。</strong></p>
+
+<h3 id="多-reactor-多线程">多 Reactor 多线程</h3>
+<p><img src="https://i.loli.net/2019/02/28/5c77fd9e85040.jpg" alt="" /></p>
+
+<p>相对于单 Reactor，多 Reactor 模式增加了多个（一般与CPU核数相等）的 SubReactor，带来的区别有：</p>
+<ul>
+  <li>MainReactor 只负责监听连接事件</li>
+  <li>Acceptor 在<code class="highlighter-rouge">accept()</code>之后会将 socket 注册到一个 SubReactor 的 select/epoll 上</li>
+  <li>SubReactor 继续监听已连接 socket 的其他事件，并交给 Handler 处理</li>
+  <li>Handler 依然可以用线程池来进行业务处理。</li>
+</ul>
+
+<p>这样一来，<strong>事件监听的任务被分散到多个线程的 Reactor 上</strong>，带来很大的性能提升。netty 就是这种模式。</p>
+
+<h2 id="nio-非阻塞-io">NIO 非阻塞 I/O</h2>
+<p>NIO 是同步非阻塞 I/O，在 JDK 1.4 中引入了 NIO 类库，引入了一些新的类：</p>
+<ul>
+  <li><strong>Buffer</strong>：缓冲区，所有的读写操作都是在 Buffer 上进行的，提供了数据的结构化访问和读写位置的维护（limit）</li>
+  <li><strong>Channel</strong>：全双工读写流，包括用于网络读写的<code class="highlighter-rouge">SelectableChannel</code>和用于文件操作的<code class="highlighter-rouge">FileChannel</code>，常见的<code class="highlighter-rouge">SocketChannel</code>和<code class="highlighter-rouge">ServerSocketChannel</code>都是<code class="highlighter-rouge">SelectableChannel</code>的子类</li>
+  <li><strong>Selector</strong>：会不断轮训注册在其上的 Channel，一但 Channel 上有了新的事件，Selector 会把它轮训出来。通过 SelectionKey 可以获得就绪的 Channel 集合。底层用 epoll 实现。</li>
+</ul>
+
+<p>下面是用 NIO 实现的简单的 TCPServer，可以发现 NIO 相当于简单的单 Reactor 单线程模式。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">java.io.IOException</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.net.InetSocketAddress</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.nio.ByteBuffer</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.nio.channels.*</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.nio.charset.StandardCharsets</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.Iterator</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.Set</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">SimpleNIOServer</span> <span class="kd">implements</span> <span class="n">Runnable</span><span class="o">{</span>
+
+    <span class="kd">private</span> <span class="n">Selector</span> <span class="n">selector</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">ServerSocketChannel</span> <span class="n">channel</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kd">volatile</span> <span class="n">Boolean</span> <span class="n">stop</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">SimpleNIOServer</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="n">selector</span> <span class="o">=</span> <span class="n">Selector</span><span class="o">.</span><span class="na">open</span><span class="o">();</span>
+            <span class="n">channel</span> <span class="o">=</span> <span class="n">ServerSocketChannel</span><span class="o">.</span><span class="na">open</span><span class="o">();</span>
+            <span class="n">channel</span><span class="o">.</span><span class="na">configureBlocking</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span>
+            <span class="n">channel</span><span class="o">.</span><span class="na">socket</span><span class="o">().</span><span class="na">bind</span><span class="o">(</span><span class="k">new</span> <span class="n">InetSocketAddress</span><span class="o">(</span><span class="mi">5000</span><span class="o">),</span> <span class="mi">1024</span><span class="o">);</span>
+            <span class="n">channel</span><span class="o">.</span><span class="na">register</span><span class="o">(</span><span class="n">selector</span><span class="o">,</span> <span class="n">SelectionKey</span><span class="o">.</span><span class="na">OP_ACCEPT</span><span class="o">);</span>
+            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Server start ..."</span><span class="o">);</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">IOException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+        <span class="o">}</span>
+
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">while</span><span class="o">(!</span><span class="n">stop</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">try</span> <span class="o">{</span>
+                <span class="n">selector</span><span class="o">.</span><span class="na">select</span><span class="o">(</span><span class="mi">1000</span><span class="o">);</span>
+                <span class="n">Set</span><span class="o">&lt;</span><span class="n">SelectionKey</span><span class="o">&gt;</span> <span class="n">selectionKeys</span> <span class="o">=</span> <span class="n">selector</span><span class="o">.</span><span class="na">selectedKeys</span><span class="o">();</span>
+                <span class="n">Iterator</span><span class="o">&lt;</span><span class="n">SelectionKey</span><span class="o">&gt;</span> <span class="n">iterator</span> <span class="o">=</span> <span class="n">selectionKeys</span><span class="o">.</span><span class="na">iterator</span><span class="o">();</span>
+                <span class="k">while</span> <span class="o">(</span><span class="n">iterator</span><span class="o">.</span><span class="na">hasNext</span><span class="o">())</span> <span class="o">{</span>
+                    <span class="n">SelectionKey</span> <span class="n">key</span> <span class="o">=</span> <span class="n">iterator</span><span class="o">.</span><span class="na">next</span><span class="o">();</span>
+                    <span class="k">try</span> <span class="o">{</span>
+                        <span class="c1">// dispatch</span>
+                        <span class="n">dispatch</span><span class="o">(</span><span class="n">key</span><span class="o">);</span>
+                        <span class="n">iterator</span><span class="o">.</span><span class="na">remove</span><span class="o">();</span>
+                    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="k">if</span> <span class="o">(</span><span class="n">key</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                            <span class="n">key</span><span class="o">.</span><span class="na">cancel</span><span class="o">();</span>
+                            <span class="k">if</span> <span class="o">(</span><span class="n">key</span><span class="o">.</span><span class="na">channel</span><span class="o">()</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="n">key</span><span class="o">.</span><span class="na">channel</span><span class="o">().</span><span class="na">close</span><span class="o">();</span>
+                        <span class="o">}</span>
+                        <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+                    <span class="o">}</span>
+                <span class="o">}</span>
+            <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">IOException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+            <span class="o">}</span>
+
+        <span class="o">}</span>
+
+        <span class="c1">// 关闭 selector 之后其余注册在其上的组件将会自动解除注册并关闭</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">selector</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">try</span> <span class="o">{</span>
+                <span class="n">selector</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+            <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">dispatch</span><span class="o">(</span><span class="n">SelectionKey</span> <span class="n">key</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">key</span><span class="o">.</span><span class="na">isValid</span><span class="o">())</span> <span class="o">{</span>
+            <span class="c1">// accept</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">key</span><span class="o">.</span><span class="na">isAcceptable</span><span class="o">())</span> <span class="o">{</span>
+
+                <span class="n">ServerSocketChannel</span> <span class="n">ssc</span> <span class="o">=</span> <span class="o">(</span><span class="n">ServerSocketChannel</span><span class="o">)</span><span class="n">key</span><span class="o">.</span><span class="na">channel</span><span class="o">();</span>
+                <span class="n">SocketChannel</span> <span class="n">socketChannel</span> <span class="o">=</span> <span class="n">ssc</span><span class="o">.</span><span class="na">accept</span><span class="o">();</span>
+                <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Connected With "</span> <span class="o">+</span> <span class="n">socketChannel</span><span class="o">.</span><span class="na">getRemoteAddress</span><span class="o">().</span><span class="na">toString</span><span class="o">());</span>
+                <span class="n">socketChannel</span><span class="o">.</span><span class="na">configureBlocking</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span>
+                <span class="c1">// 相当于创建 Handler</span>
+                <span class="n">socketChannel</span><span class="o">.</span><span class="na">register</span><span class="o">(</span><span class="n">selector</span><span class="o">,</span> <span class="n">SelectionKey</span><span class="o">.</span><span class="na">OP_READ</span><span class="o">);</span>
+            <span class="o">}</span>
+
+            <span class="c1">// read</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">key</span><span class="o">.</span><span class="na">isReadable</span><span class="o">())</span> <span class="o">{</span>
+                <span class="n">SocketChannel</span> <span class="n">socketChannel</span> <span class="o">=</span> <span class="o">(</span><span class="n">SocketChannel</span><span class="o">)</span> <span class="n">key</span><span class="o">.</span><span class="na">channel</span><span class="o">();</span>
+                <span class="n">ByteBuffer</span> <span class="n">readBuffer</span> <span class="o">=</span> <span class="n">ByteBuffer</span><span class="o">.</span><span class="na">allocate</span><span class="o">(</span><span class="mi">1024</span><span class="o">);</span>
+                <span class="c1">// 由于设置了非阻塞，read 调用会立即返回</span>
+                <span class="kt">int</span> <span class="n">readBytes</span> <span class="o">=</span> <span class="n">socketChannel</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="n">readBuffer</span><span class="o">);</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">readBytes</span><span class="o">&gt;</span><span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="c1">// 将 position 设置为初始位置，将 limit 设置为 position</span>
+                    <span class="n">readBuffer</span><span class="o">.</span><span class="na">flip</span><span class="o">();</span>
+                    <span class="c1">// 获取 position 和 limit 之间的字节</span>
+                    <span class="kt">byte</span><span class="o">[]</span> <span class="n">bytes</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">byte</span><span class="o">[</span><span class="n">readBuffer</span><span class="o">.</span><span class="na">remaining</span><span class="o">()];</span>
+                    <span class="n">String</span> <span class="n">body</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="n">StandardCharsets</span><span class="o">.</span><span class="na">UTF_8</span><span class="o">);</span>
+                    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Server received: "</span> <span class="o">+</span> <span class="n">body</span><span class="o">);</span>
+                    <span class="n">response</span><span class="o">(</span><span class="n">socketChannel</span><span class="o">);</span>
+                <span class="o">}</span>
+                <span class="k">else</span> <span class="nf">if</span> <span class="o">(</span><span class="n">readBytes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">key</span><span class="o">.</span><span class="na">cancel</span><span class="o">();</span>
+                    <span class="n">socketChannel</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+                <span class="o">}</span>
+                <span class="k">else</span> <span class="o">{</span>
+                    <span class="o">;</span>
+                <span class="o">}</span>
+
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">response</span><span class="o">(</span><span class="n">SocketChannel</span> <span class="n">channel</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="kt">byte</span><span class="o">[]</span> <span class="n">bytes</span> <span class="o">=</span> <span class="s">"Hello World"</span><span class="o">.</span><span class="na">getBytes</span><span class="o">();</span>
+        <span class="n">ByteBuffer</span> <span class="n">writeBuffer</span> <span class="o">=</span> <span class="n">ByteBuffer</span><span class="o">.</span><span class="na">allocate</span><span class="o">(</span><span class="n">bytes</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
+        <span class="n">writeBuffer</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">bytes</span><span class="o">);</span>
+        <span class="n">writeBuffer</span><span class="o">.</span><span class="na">flip</span><span class="o">();</span>
+        <span class="n">channel</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">writeBuffer</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">SimpleNIOServer</span> <span class="n">server</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SimpleNIOServer</span><span class="o">();</span>
+        <span class="k">new</span> <span class="nf">Thread</span><span class="o">(</span><span class="n">server</span><span class="o">).</span><span class="na">start</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<h2 id="aio-异步-io">AIO 异步 I/O</h2>
+<p>AIO 是真正意义上的异步 I/O，它采用回调机制，在进行异步 I/O 操作的时候传入一个 CompletionHandler 对象用于回调， 由 JDK 底层的线程池负责回调并驱动读写操作。</p>
+
+<p>由 AIO 实现的 TCPServer：</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">java.io.IOException</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.net.InetSocketAddress</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.nio.ByteBuffer</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.nio.channels.AsynchronousServerSocketChannel</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.nio.channels.AsynchronousSocketChannel</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.nio.channels.CompletionHandler</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.nio.charset.StandardCharsets</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">SimpleAIOServer</span> <span class="kd">implements</span> <span class="n">Runnable</span><span class="o">{</span>
+
+    <span class="kd">private</span> <span class="n">AsynchronousServerSocketChannel</span> <span class="n">serverSocketChannel</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">SimpleAIOServer</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="n">serverSocketChannel</span> <span class="o">=</span> <span class="n">AsynchronousServerSocketChannel</span><span class="o">.</span><span class="na">open</span><span class="o">();</span>
+            <span class="n">serverSocketChannel</span><span class="o">.</span><span class="na">bind</span><span class="o">(</span><span class="k">new</span> <span class="n">InetSocketAddress</span><span class="o">(</span><span class="mi">5000</span><span class="o">),</span> <span class="mi">1024</span><span class="o">);</span>
+            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Start server ..."</span><span class="o">);</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">IOException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">doAccept</span><span class="o">();</span>
+
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="n">Thread</span><span class="o">.</span><span class="na">sleep</span><span class="o">(</span><span class="n">Integer</span><span class="o">.</span><span class="na">MAX_VALUE</span><span class="o">);</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">InterruptedException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+        <span class="o">}</span>
+
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">doAccept</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">serverSocketChannel</span><span class="o">.</span><span class="na">accept</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="k">new</span> <span class="n">CompletionHandler</span><span class="o">&lt;</span><span class="n">AsynchronousSocketChannel</span><span class="o">,</span> <span class="n">SimpleAIOServer</span><span class="o">&gt;()</span> <span class="o">{</span>
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">completed</span><span class="o">(</span><span class="n">AsynchronousSocketChannel</span> <span class="n">result</span><span class="o">,</span> <span class="n">SimpleAIOServer</span> <span class="n">attachment</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">attachment</span><span class="o">.</span><span class="na">serverSocketChannel</span><span class="o">.</span><span class="na">accept</span><span class="o">(</span><span class="n">attachment</span><span class="o">,</span> <span class="k">this</span><span class="o">);</span>
+                <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Connected ..."</span><span class="o">);</span>
+                <span class="n">ByteBuffer</span> <span class="n">readBuffer</span> <span class="o">=</span> <span class="n">ByteBuffer</span><span class="o">.</span><span class="na">allocate</span><span class="o">(</span><span class="mi">1024</span><span class="o">);</span>
+                <span class="n">result</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="n">readBuffer</span><span class="o">,</span> <span class="n">readBuffer</span><span class="o">,</span> <span class="k">new</span> <span class="n">ReadCompletionHandler</span><span class="o">(</span><span class="n">result</span><span class="o">));</span>
+            <span class="o">}</span>
+
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">failed</span><span class="o">(</span><span class="n">Throwable</span> <span class="n">exc</span><span class="o">,</span> <span class="n">SimpleAIOServer</span> <span class="n">attachment</span><span class="o">)</span> <span class="o">{</span>
+
+            <span class="o">}</span>
+        <span class="o">});</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">SimpleAIOServer</span> <span class="n">server</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SimpleAIOServer</span><span class="o">();</span>
+        <span class="n">server</span><span class="o">.</span><span class="na">run</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="kd">class</span> <span class="nc">ReadCompletionHandler</span> <span class="kd">implements</span> <span class="n">CompletionHandler</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">ByteBuffer</span><span class="o">&gt;</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="n">AsynchronousSocketChannel</span> <span class="n">channel</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">ReadCompletionHandler</span><span class="o">(</span><span class="n">AsynchronousSocketChannel</span> <span class="n">channel</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">channel</span> <span class="o">=</span> <span class="n">channel</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">completed</span><span class="o">(</span><span class="n">Integer</span> <span class="n">result</span><span class="o">,</span> <span class="n">ByteBuffer</span> <span class="n">attachment</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">attachment</span><span class="o">.</span><span class="na">flip</span><span class="o">();</span>
+        <span class="kt">byte</span><span class="o">[]</span> <span class="n">body</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">byte</span><span class="o">[</span><span class="n">attachment</span><span class="o">.</span><span class="na">remaining</span><span class="o">()];</span>
+        <span class="n">attachment</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">body</span><span class="o">);</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Received: "</span> <span class="o">+</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">body</span><span class="o">,</span> <span class="n">StandardCharsets</span><span class="o">.</span><span class="na">UTF_8</span><span class="o">));</span>
+            <span class="n">doWrite</span><span class="o">();</span>
+        <span class="o">}</span>
+        <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">doWrite</span><span class="o">()</span> <span class="o">{</span>
+        <span class="kt">byte</span><span class="o">[]</span> <span class="n">res</span> <span class="o">=</span> <span class="s">"Hello World"</span><span class="o">.</span><span class="na">getBytes</span><span class="o">();</span>
+        <span class="n">ByteBuffer</span> <span class="n">writeBuffer</span> <span class="o">=</span> <span class="n">ByteBuffer</span><span class="o">.</span><span class="na">allocate</span><span class="o">(</span><span class="n">res</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
+        <span class="n">writeBuffer</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">res</span><span class="o">);</span>
+        <span class="n">writeBuffer</span><span class="o">.</span><span class="na">flip</span><span class="o">();</span>
+        <span class="n">channel</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">writeBuffer</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">failed</span><span class="o">(</span><span class="n">Throwable</span> <span class="n">exc</span><span class="o">,</span> <span class="n">ByteBuffer</span> <span class="n">attachment</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="netty">Netty</h2>
+
+<p>Netty 是标准的多 Reactor 多线程模型，封装了一些底层的细节，下面是用 Netty 实现的简单的 TCPServer，没有用线程池来处理业务请求。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">io.netty.bootstrap.ServerBootstrap</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">io.netty.buffer.ByteBuf</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">io.netty.buffer.Unpooled</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">io.netty.channel.*</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">io.netty.channel.nio.NioEventLoop</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">io.netty.channel.nio.NioEventLoopGroup</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">io.netty.channel.socket.SocketChannel</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">io.netty.channel.socket.nio.NioServerSocketChannel</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">SimpleNettyServer</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">bind</span><span class="o">()</span> <span class="o">{</span>
+
+        <span class="c1">// 两个线程组，分别处理 accept 和 read/write，对应 reactor 里的 MainReactor 和 SubReactor</span>
+        <span class="n">NioEventLoopGroup</span> <span class="n">bossGroup</span> <span class="o">=</span> <span class="k">new</span> <span class="n">NioEventLoopGroup</span><span class="o">();</span>
+        <span class="n">NioEventLoopGroup</span> <span class="n">workerGroup</span> <span class="o">=</span> <span class="k">new</span> <span class="n">NioEventLoopGroup</span><span class="o">();</span>
+
+        <span class="n">ServerBootstrap</span> <span class="n">boot</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ServerBootstrap</span><span class="o">();</span>
+        <span class="n">boot</span><span class="o">.</span><span class="na">group</span><span class="o">(</span><span class="n">bossGroup</span><span class="o">,</span> <span class="n">workerGroup</span><span class="o">)</span>
+                <span class="o">.</span><span class="na">channel</span><span class="o">(</span><span class="n">NioServerSocketChannel</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+                <span class="o">.</span><span class="na">option</span><span class="o">(</span><span class="n">ChannelOption</span><span class="o">.</span><span class="na">SO_BACKLOG</span><span class="o">,</span> <span class="mi">1024</span><span class="o">)</span>
+                <span class="c1">// childHandler I/O事件的处理类，对应 reactor 中的 handler</span>
+                <span class="o">.</span><span class="na">childHandler</span><span class="o">(</span><span class="k">new</span> <span class="n">ChildHandler</span><span class="o">());</span>
+
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="n">ChannelFuture</span> <span class="n">future</span> <span class="o">=</span> <span class="n">boot</span><span class="o">.</span><span class="na">bind</span><span class="o">(</span><span class="mi">5000</span><span class="o">).</span><span class="na">sync</span><span class="o">();</span>
+            <span class="n">future</span><span class="o">.</span><span class="na">channel</span><span class="o">().</span><span class="na">closeFuture</span><span class="o">().</span><span class="na">sync</span><span class="o">();</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">InterruptedException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+        <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+            <span class="n">bossGroup</span><span class="o">.</span><span class="na">shutdownGracefully</span><span class="o">();</span>
+            <span class="n">workerGroup</span><span class="o">.</span><span class="na">shutdownGracefully</span><span class="o">();</span>
+        <span class="o">}</span>
+
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">SimpleNettyServer</span> <span class="n">simpleNettyServer</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SimpleNettyServer</span><span class="o">();</span>
+        <span class="n">simpleNettyServer</span><span class="o">.</span><span class="na">bind</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="c1">// 网络事件处理类</span>
+<span class="kd">class</span> <span class="nc">ChildHandler</span> <span class="kd">extends</span> <span class="n">ChannelInitializer</span><span class="o">&lt;</span><span class="n">SocketChannel</span><span class="o">&gt;</span> <span class="o">{</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">initChannel</span><span class="o">(</span><span class="n">SocketChannel</span> <span class="n">ch</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+        <span class="n">ch</span><span class="o">.</span><span class="na">pipeline</span><span class="o">().</span><span class="na">addLast</span><span class="o">(</span><span class="k">new</span> <span class="n">ServerHandler</span><span class="o">());</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="c1">// 对网络事件的读写类</span>
+<span class="kd">class</span> <span class="nc">ServerHandler</span> <span class="kd">extends</span> <span class="n">ChannelInboundHandlerAdapter</span> <span class="o">{</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">channelRead</span><span class="o">(</span><span class="n">ChannelHandlerContext</span> <span class="n">ctx</span><span class="o">,</span> <span class="n">Object</span> <span class="n">msg</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+        <span class="c1">// netty 的 ByteBuf 对象</span>
+        <span class="n">ByteBuf</span> <span class="n">buf</span> <span class="o">=</span> <span class="o">(</span><span class="n">ByteBuf</span><span class="o">)</span> <span class="n">msg</span><span class="o">;</span>
+        <span class="kt">byte</span><span class="o">[]</span> <span class="n">bytes</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">byte</span><span class="o">[</span><span class="n">buf</span><span class="o">.</span><span class="na">readableBytes</span><span class="o">()];</span>
+        <span class="n">buf</span><span class="o">.</span><span class="na">readBytes</span><span class="o">(</span><span class="n">bytes</span><span class="o">);</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Received: "</span> <span class="o">+</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">bytes</span><span class="o">));</span>
+        <span class="n">ByteBuf</span> <span class="n">resp</span> <span class="o">=</span> <span class="n">Unpooled</span><span class="o">.</span><span class="na">copiedBuffer</span><span class="o">(</span><span class="s">"Hello World!"</span><span class="o">.</span><span class="na">getBytes</span><span class="o">());</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">resp</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">channelReadComplete</span><span class="o">(</span><span class="n">ChannelHandlerContext</span> <span class="n">ctx</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+        <span class="c1">// netty 的 write 并没有直接写入 SocketChannel，而是放在缓冲数组里</span>
+        <span class="c1">// 将消息发送队列里的消息写入到 SocketChannel 里发送给对方</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="na">flush</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">exceptionCaught</span><span class="o">(</span><span class="n">ChannelHandlerContext</span> <span class="n">ctx</span><span class="o">,</span> <span class="n">Throwable</span> <span class="n">cause</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>(End)</p>
+
+<blockquote>
+  <p>参考资料</p>
+  <ul>
+    <li>https://juejin.im/post/5b4570cce51d451984695a9b</li>
+    <li>https://segmentfault.com/a/1190000016072310</li>
+  </ul>
+</blockquote>
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/02/25/map1/">Java核心类库学习（三）Map
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/02/18/collection1/">Java核心类库学习（二）Collection
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/24/jmm/">JMM小结
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/17/sringioc/">Spring（一）IoC
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/15/classload/">JVM基础（二） 类加载过程
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/14/excutors/">Java核心类库学习（一） 线程池
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+        
+            </ul>
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2019/02/26/gunicorn3/">Gunicorn源码阅读(三) Worker进程</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2019/02/28/javaio/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2019/02/28/javaio/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>

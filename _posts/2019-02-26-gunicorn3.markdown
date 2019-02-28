@@ -211,7 +211,7 @@ def wait(self, timeout):
             return ret[0]
 ```
 
-再看`accept()`方法，由于 listeners 都被设置了 no-block，如果 socket 未就绪，`listener.accept()`函数会抛出`EAGAGIN`错误并立即返回，反之则获得`accept()`之后的文件描述符，设置 block 后传入 handle 进行处理。这里就可以发现，在`accept()`调用后，SyncWorker 便开始进入处理一个请求的流程，同时进入阻塞状态，不能再相应其他的请求。
+再看`accept()`方法，由于 listeners 都被设置了 Non-Block，如果 socket 未就绪，`listener.accept()`函数会抛出`EAGAGIN`错误并立即返回，反之则获得`accept()`之后的文件描述符，设置 block 后传入 handle 进行处理。这里就可以发现，在`accept()`调用后，SyncWorker 便开始进入处理一个请求的流程，同时进入阻塞状态，不能再相应其他的请求。
 
 ```python
 def accept(self, listener):

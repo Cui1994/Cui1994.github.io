@@ -383,7 +383,7 @@
   </li>
 </ul>
 
-<p>再看<code class="highlighter-rouge">accept()</code>方法，由于 listeners 都被设置了 no-block，如果 socket 未就绪，<code class="highlighter-rouge">listener.accept()</code>函数会抛出<code class="highlighter-rouge">EAGAGIN</code>错误并立即返回，反之则获得<code class="highlighter-rouge">accept()</code>之后的文件描述符，设置 block 后传入 handle 进行处理。这里就可以发现，在<code class="highlighter-rouge">accept()</code>调用后，SyncWorker 便开始进入处理一个请求的流程，同时进入阻塞状态，不能再相应其他的请求。</p>
+<p>再看<code class="highlighter-rouge">accept()</code>方法，由于 listeners 都被设置了 Non-Block，如果 socket 未就绪，<code class="highlighter-rouge">listener.accept()</code>函数会抛出<code class="highlighter-rouge">EAGAGIN</code>错误并立即返回，反之则获得<code class="highlighter-rouge">accept()</code>之后的文件描述符，设置 block 后传入 handle 进行处理。这里就可以发现，在<code class="highlighter-rouge">accept()</code>调用后，SyncWorker 便开始进入处理一个请求的流程，同时进入阻塞状态，不能再相应其他的请求。</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">accept</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">listener</span><span class="p">):</span>
     <span class="n">client</span><span class="p">,</span> <span class="n">addr</span> <span class="o">=</span> <span class="n">listener</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
@@ -540,6 +540,33 @@
         <hr>
 
         
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
         
             
             
@@ -840,33 +867,6 @@
                 
             
         
-            
-            
-                
-                    
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-                    
-                
-            
-        
         
             </ul>
         
@@ -879,6 +879,8 @@
     </div>
     <div class="nex">
 
+        
+        <p><strong>下一篇</strong> <a href="/2019/02/28/javaio/">Java I/O 模型</a></p>
         
     </div>
 </div>

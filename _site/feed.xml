@@ -5,9 +5,41 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 26 Feb 2019 23:46:47 +0800</pubDate>
-    <lastBuildDate>Tue, 26 Feb 2019 23:46:47 +0800</lastBuildDate>
+    <pubDate>Thu, 28 Feb 2019 23:58:44 +0800</pubDate>
+    <lastBuildDate>Thu, 28 Feb 2019 23:58:44 +0800</lastBuildDate>
     <generator>Jekyll v3.8.4</generator>
+    
+      <item>
+        <title>Java I/O 模型</title>
+        <description>
+&lt;img src=&quot;https://picsum.photos/800/300/?image=872&quot; alt=&quot;&quot; /&gt;
+
+Unix 网络编程提供了五种 I/O 模型，分别是：
+&lt;ul&gt;
+  &lt;li&gt;阻塞 I/O&lt;/li&gt;
+  &lt;li&gt;非阻塞 I/O&lt;/li&gt;
+  &lt;li&gt;I/O 多路复用&lt;/li&gt;
+  &lt;li&gt;信号驱动 I/O&lt;/li&gt;
+  &lt;li&gt;异步 I/O&lt;/li&gt;
+&lt;/ul&gt;
+
+其中后两者的区别在于&lt;strong&gt;信号驱动 I/O 是内核通知用户进程何时开始进行 I/O 操作，异步 I/O 是内核通知用户进程何时 I/O 操作已经完成&lt;/strong&gt;。本文将介绍 Java 在此基础上实现的网络 I/O 模型。
+
+</description>
+        <pubDate>Thu, 28 Feb 2019 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2019/02/28/javaio/</link>
+        <guid isPermaLink="true">http://localhost:4000/2019/02/28/javaio/</guid>
+        
+        <category>Java</category>
+        
+        <category>网络编程</category>
+        
+        <category>netty</category>
+        
+        
+        <category>Java</category>
+        
+      </item>
     
       <item>
         <title>Gunicorn源码阅读(三) Worker进程</title>
@@ -205,30 +237,6 @@ Java中类的加载、连接都是在程序运行时完成的，虚拟机将clas
         <category>线程</category>
         
         <category>源码</category>
-        
-        
-        <category>Java</category>
-        
-      </item>
-    
-      <item>
-        <title>Java并发编程 线程同步机制</title>
-        <description>
-&lt;img src=&quot;https://picsum.photos/800/300/?image=1047&quot; alt=&quot;&quot; /&gt;
-对Java在并发环境下线程安全的实现方式做点笔记。
-
-</description>
-        <pubDate>Thu, 10 Jan 2019 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2019/01/10/thread1/</link>
-        <guid isPermaLink="true">http://localhost:4000/2019/01/10/thread1/</guid>
-        
-        <category>Java</category>
-        
-        <category>多线程</category>
-        
-        <category>并发</category>
-        
-        <category>笔记</category>
         
         
         <category>Java</category>
