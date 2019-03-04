@@ -1,0 +1,148 @@
+---
+layout: post
+category: "Java"
+title:  "Spring（二）AOP"
+tags: [Java, Spring, 动态代理]
+---
+
+* content
+{:toc}
+
+![](https://picsum.photos/800/300/?image=357)
+本文将从 AOP 的概念、Java 动态代理的实现以及 Spring 是如何通过动态代理实现 AOP 三方面入手了解 Spring 的AOP。
+
+
+
+
+
+## AOP 基本概念
+AOP 的全程是 Aspected-Oriented Programming，即 面向切面编程。它是 OOP 的一种补充，**把系统需求按照功能分门归类，把它们封装在一个个切面中，然后再指定这些系统功能往业务功能中织入（Weave）的规则。最后由第三方机构根据你指定的织入规则，将系统功能整合到业务功能中。**
+
+上面提到的**织入**，就是**将 AOP 组件集成到 OOP 组件上的过程**。AOP 中的组件主要有以下几个：
+- **Joinpoint**：在系统的哪些执行点上进行织入操作，下面是一些常用的 JoinPoint
+    - 方法调用 Method Call
+    - 方法调用执行 Method Call Execute
+    - 构造方法调用 Constructor Call
+    - 字段设置 File Set
+    - 字段获取 File Get
+    - 异常处理执行 Exception Handler Execution
+    - 类初始化 Class Initialization
+- **Pointcut**：往哪些 Joinpoint 上织入横切逻辑
+    - 指定方法名称
+    - 正则
+    - 特定Pointcut表述语言
+- **Advice**：代表将被织入到 Joinpoint 的横切逻辑
+    - 在 JointPoint 指定位置之前执行的横切逻辑 Before Advice
+    - 在 JointPoint 指定位置之后执行的横切逻辑 After Advice
+        - After returning Advice
+        - After throwing Advice
+        - After Advice 相当于finally
+    - 前后执行 Around Advice
+    - 为对象添加新的属性或特性 Introduction
+- **Aspect** 对系统中的横切关注点逻辑进行封装的 AOP 实体，包含多个 Pointcut 和 Advice 定义
+- **织入和织入器**：连接 AOP 和 OOP
+- **目标对象**：符合Pointcut所指定的条件，将在织入过程中被织入横切逻辑的对象
+
+
+
+## 动态代理
+代理模式是指**访问原类的方法时，通过代理类去调用原类的方法，并完成额外的功能**。而当需要代理的类很多，但需要完成的额外功能相似时，就需要动态代理来避免实现大量重复的代理类。
+
+一句话阐述动态代理就是**为指定的接口，在系统运行期间，动态的生成代理对象**，Java 的动态代理分为 JDK 动态代理和 CGLIB 代理。
+
+
+### JDK 动态代理
+JDK 动态代理的实现主要依赖`java.lang.reflect.InvocationHandler`接口和`java.lang.reflect.Proxy`类，先来看一个简单的 demo。
+```java
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+
+public class Man implements Person {
+    @Override
+    public void hi() {
+        System.out.println("Hi!");
+    }
+
+    public static void main(String[] args) {
+        new PersonProxy(new Man()).getProxiedPerson().hi();
+    }
+}
+
+class PersonProxy implements InvocationHandler {
+
+    private Person person;
+
+    public PersonProxy(Person person) {
+        this.person = person;
+    }
+
+    public Person getProxiedPerson() {
+        return (Person) Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                person.getClass().getInterfaces(),
+                this
+        );
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        Object result = method.invoke(person, args);
+        System.out.println("How are you?");
+        return result;
+    }
+}
+```
+
+`InvocationHandler`接口只定义了一个方法，使我们实现横切逻辑的地方，也就是 Advice，**代理类的特定方法被调用时，InvocationHandler 会拦截相应方法的调用，并进行特定处理。**它接收三个参数：
+- `proxy`：被代理的原对象
+- `method`：要拦截的某个方法的 Method 对象
+- `args`：方法的参数
+```java
+public interface InvocationHandler {
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable;
+}
+```
+
+`Proxy`是一个工具类，提供了一系列方法来创建代理对象，最常用的是`newProxyInstance`方法，同样接收三个参数：
+- `loader`：定义了创建代理对象的类加载器，因为创建代理对象之前要先加载它的类
+- `interfaces`：定义代理对象可以实现什么接口
+- `h`：一个`InvocationHanler`对象，定义所使用的 handler 对象
+
+这个方法实际上做了三件事：
+- 调用一个 native 方法动态生成了代理类的字节码
+- 用定义好的 loader 将它加载到 jvm
+- 通过反射 new 出了这个类的实例
+
+### CGLIB
+CGLIB 也叫子类代理，**会在内存中生成一个子类完成代理类的功能扩展。**它与 JDK 动态代理的区别在于**JDK 动态代理创建对象的开销要小于 CGLIB，而运行性能要差与 CGLIB。**《Spring 实战》中给出的建议是**如果是单例尽量使用 CGLIB**。
+
+CGLIB 对方法调用的拦截由`MethodInterceptor`的实现类完成。
+```java
+public interface MethodInterceptor extends Callback {
+    Object intercept(Object var1, Method var2, Object[] var3, MethodProxy var4) throws Throwable;
+}
+```
+
+## Spring AOP
+属于第二代 AOP ，通过动态代理和字节码生成技术实现，在运行期间为对象生成一个代理对象，将横切逻辑织入到这个代理对象中。
+对于实现了 Interface 的类，会采用动态代理机制为其生成代理类，否则会尝试使用 CGLIB 的开源动态字节码生成库，为目标生成动态的代理对象实例。
+
+Spring 实现 AOP 的原理其实也很简单，**AOP 框架负责动态地生成 AOP 代理类，这个代理类的方法则由 Advice 和回调目标对象的方法所组成。**
+
+几个 Spring AOP 常用的注解组件，基本与上面提到的 AOP 基本组件对应：
+- `@Aspect`：定义了一个 Aspect 实体类
+- `@Pointcut("execution(* )")`：切入点表达式
+- `@Before("pointCut_()")`：在指定切入点之前执行的切入逻辑
+- `@After("pointCut_()")`：在指定切入点之后执行的切入逻辑
+- `@Around("pointCut_()")`：在指定切入点前后执行
+
+使用注解实现 Spring AOP 时仅需要在配置文件中加入`<aop:aspectj-autoproxy proxy-target-class="true"/>`一行，会为 Spring 容器注册`AnnotationAwareAspectJAutoProxyCreator`，它是一个 BeanPostProcessor，会为容器中的 Bean 生成 AOP 代理对象。其中`proxy-target-class`会强制开启 CGLIB。
+
+这里不对 Spring AOP 源码部分进行深入，有兴趣可以参照[这篇文章](https://my.oschina.net/guangshan/blog/1797461)。
+
+(End)
+
+> 参考资料：
+> - [Spring AOP 实现原理与 CGLIB 应用](https://www.ibm.com/developerworks/cn/java/j-lo-springaopcglib/index.html)
+

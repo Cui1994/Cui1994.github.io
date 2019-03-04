@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Spring（二）AOP</title>
+    <meta name="description" content="本文将从 AOP 的概念、Java 动态代理的实现以及 Spring 是如何通过动态代理实现 AOP 三方面入手了解 Spring 的AOP。">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2019/03/01/aop/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>Spring（二）AOP</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2019-03-01
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Java" title="Category: Java" rel="category">Java</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a-->
+        <a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a>&nbsp;
+    
+        <!--a href="/tag/#Spring" title="Tag: Spring" rel="tag">Spring</a-->
+        <a href="/tag/#Spring" title="Tag: Spring" rel="tag">Spring</a>&nbsp;
+    
+        <!--a href="/tag/#%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86" title="Tag: 动态代理" rel="tag">动态代理</a-->
+        <a href="/tag/#动态代理" title="Tag: 动态代理" rel="tag">动态代理</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#aop-基本概念" id="markdown-toc-aop-基本概念">AOP 基本概念</a></li>
+  <li><a href="#动态代理" id="markdown-toc-动态代理">动态代理</a>    <ul>
+      <li><a href="#jdk-动态代理" id="markdown-toc-jdk-动态代理">JDK 动态代理</a></li>
+      <li><a href="#cglib" id="markdown-toc-cglib">CGLIB</a></li>
+    </ul>
+  </li>
+  <li><a href="#spring-aop" id="markdown-toc-spring-aop">Spring AOP</a></li>
+</ul>
+
+<p><img src="https://picsum.photos/800/300/?image=357" alt="" />
+本文将从 AOP 的概念、Java 动态代理的实现以及 Spring 是如何通过动态代理实现 AOP 三方面入手了解 Spring 的AOP。</p>
+
+<h2 id="aop-基本概念">AOP 基本概念</h2>
+<p>AOP 的全程是 Aspected-Oriented Programming，即 面向切面编程。它是 OOP 的一种补充，<strong>把系统需求按照功能分门归类，把它们封装在一个个切面中，然后再指定这些系统功能往业务功能中织入（Weave）的规则。最后由第三方机构根据你指定的织入规则，将系统功能整合到业务功能中。</strong></p>
+
+<p>上面提到的<strong>织入</strong>，就是<strong>将 AOP 组件集成到 OOP 组件上的过程</strong>。AOP 中的组件主要有以下几个：</p>
+<ul>
+  <li><strong>Joinpoint</strong>：在系统的哪些执行点上进行织入操作，下面是一些常用的 JoinPoint
+    <ul>
+      <li>方法调用 Method Call</li>
+      <li>方法调用执行 Method Call Execute</li>
+      <li>构造方法调用 Constructor Call</li>
+      <li>字段设置 File Set</li>
+      <li>字段获取 File Get</li>
+      <li>异常处理执行 Exception Handler Execution</li>
+      <li>类初始化 Class Initialization</li>
+    </ul>
+  </li>
+  <li><strong>Pointcut</strong>：往哪些 Joinpoint 上织入横切逻辑
+    <ul>
+      <li>指定方法名称</li>
+      <li>正则</li>
+      <li>特定Pointcut表述语言</li>
+    </ul>
+  </li>
+  <li><strong>Advice</strong>：代表将被织入到 Joinpoint 的横切逻辑
+    <ul>
+      <li>在 JointPoint 指定位置之前执行的横切逻辑 Before Advice</li>
+      <li>在 JointPoint 指定位置之后执行的横切逻辑 After Advice
+        <ul>
+          <li>After returning Advice</li>
+          <li>After throwing Advice</li>
+          <li>After Advice 相当于finally</li>
+        </ul>
+      </li>
+      <li>前后执行 Around Advice</li>
+      <li>为对象添加新的属性或特性 Introduction</li>
+    </ul>
+  </li>
+  <li><strong>Aspect</strong> 对系统中的横切关注点逻辑进行封装的 AOP 实体，包含多个 Pointcut 和 Advice 定义</li>
+  <li><strong>织入和织入器</strong>：连接 AOP 和 OOP</li>
+  <li><strong>目标对象</strong>：符合Pointcut所指定的条件，将在织入过程中被织入横切逻辑的对象</li>
+</ul>
+
+<h2 id="动态代理">动态代理</h2>
+<p>代理模式是指<strong>访问原类的方法时，通过代理类去调用原类的方法，并完成额外的功能</strong>。而当需要代理的类很多，但需要完成的额外功能相似时，就需要动态代理来避免实现大量重复的代理类。</p>
+
+<p>一句话阐述动态代理就是<strong>为指定的接口，在系统运行期间，动态的生成代理对象</strong>，Java 的动态代理分为 JDK 动态代理和 CGLIB 代理。</p>
+
+<h3 id="jdk-动态代理">JDK 动态代理</h3>
+<p>JDK 动态代理的实现主要依赖<code class="highlighter-rouge">java.lang.reflect.InvocationHandler</code>接口和<code class="highlighter-rouge">java.lang.reflect.Proxy</code>类，先来看一个简单的 demo。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">java.lang.reflect.InvocationHandler</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.lang.reflect.Method</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.lang.reflect.Proxy</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Man</span> <span class="kd">implements</span> <span class="n">Person</span> <span class="o">{</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">hi</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Hi!"</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">new</span> <span class="nf">PersonProxy</span><span class="o">(</span><span class="k">new</span> <span class="n">Man</span><span class="o">()).</span><span class="na">getProxiedPerson</span><span class="o">().</span><span class="na">hi</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="kd">class</span> <span class="nc">PersonProxy</span> <span class="kd">implements</span> <span class="n">InvocationHandler</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="n">Person</span> <span class="n">person</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">PersonProxy</span><span class="o">(</span><span class="n">Person</span> <span class="n">person</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">person</span> <span class="o">=</span> <span class="n">person</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">Person</span> <span class="nf">getProxiedPerson</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="o">(</span><span class="n">Person</span><span class="o">)</span> <span class="n">Proxy</span><span class="o">.</span><span class="na">newProxyInstance</span><span class="o">(</span>
+                <span class="n">getClass</span><span class="o">().</span><span class="na">getClassLoader</span><span class="o">(),</span>
+                <span class="n">person</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getInterfaces</span><span class="o">(),</span>
+                <span class="k">this</span>
+        <span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">Object</span> <span class="nf">invoke</span><span class="o">(</span><span class="n">Object</span> <span class="n">proxy</span><span class="o">,</span> <span class="n">Method</span> <span class="n">method</span><span class="o">,</span> <span class="n">Object</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Throwable</span> <span class="o">{</span>
+        <span class="n">Object</span> <span class="n">result</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">person</span><span class="o">,</span> <span class="n">args</span><span class="o">);</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"How are you?"</span><span class="o">);</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">InvocationHandler</code>接口只定义了一个方法，使我们实现横切逻辑的地方，也就是 Advice，<strong>代理类的特定方法被调用时，InvocationHandler 会拦截相应方法的调用，并进行特定处理。</strong>它接收三个参数：</p>
+<ul>
+  <li><code class="highlighter-rouge">proxy</code>：被代理的原对象</li>
+  <li><code class="highlighter-rouge">method</code>：要拦截的某个方法的 Method 对象</li>
+  <li><code class="highlighter-rouge">args</code>：方法的参数
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">InvocationHandler</span> <span class="o">{</span>
+  <span class="kd">public</span> <span class="n">Object</span> <span class="nf">invoke</span><span class="o">(</span><span class="n">Object</span> <span class="n">proxy</span><span class="o">,</span> <span class="n">Method</span> <span class="n">method</span><span class="o">,</span> <span class="n">Object</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Throwable</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<p><code class="highlighter-rouge">Proxy</code>是一个工具类，提供了一系列方法来创建代理对象，最常用的是<code class="highlighter-rouge">newProxyInstance</code>方法，同样接收三个参数：</p>
+<ul>
+  <li><code class="highlighter-rouge">loader</code>：定义了创建代理对象的类加载器，因为创建代理对象之前要先加载它的类</li>
+  <li><code class="highlighter-rouge">interfaces</code>：定义代理对象可以实现什么接口</li>
+  <li><code class="highlighter-rouge">h</code>：一个<code class="highlighter-rouge">InvocationHanler</code>对象，定义所使用的 handler 对象</li>
+</ul>
+
+<p>这个方法实际上做了三件事：</p>
+<ul>
+  <li>调用一个 native 方法动态生成了代理类的字节码</li>
+  <li>用定义好的 loader 将它加载到 jvm</li>
+  <li>通过反射 new 出了这个类的实例</li>
+</ul>
+
+<h3 id="cglib">CGLIB</h3>
+<p>CGLIB 也叫子类代理，<strong>会在内存中生成一个子类完成代理类的功能扩展。</strong>它与 JDK 动态代理的区别在于<strong>JDK 动态代理创建对象的开销要小于 CGLIB，而运行性能要差与 CGLIB。</strong>《Spring 实战》中给出的建议是<strong>如果是单例尽量使用 CGLIB</strong>。</p>
+
+<p>CGLIB 对方法调用的拦截由<code class="highlighter-rouge">MethodInterceptor</code>的实现类完成。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">MethodInterceptor</span> <span class="kd">extends</span> <span class="n">Callback</span> <span class="o">{</span>
+    <span class="n">Object</span> <span class="nf">intercept</span><span class="o">(</span><span class="n">Object</span> <span class="n">var1</span><span class="o">,</span> <span class="n">Method</span> <span class="n">var2</span><span class="o">,</span> <span class="n">Object</span><span class="o">[]</span> <span class="n">var3</span><span class="o">,</span> <span class="n">MethodProxy</span> <span class="n">var4</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Throwable</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="spring-aop">Spring AOP</h2>
+<p>属于第二代 AOP ，通过动态代理和字节码生成技术实现，在运行期间为对象生成一个代理对象，将横切逻辑织入到这个代理对象中。
+对于实现了 Interface 的类，会采用动态代理机制为其生成代理类，否则会尝试使用 CGLIB 的开源动态字节码生成库，为目标生成动态的代理对象实例。</p>
+
+<p>Spring 实现 AOP 的原理其实也很简单，<strong>AOP 框架负责动态地生成 AOP 代理类，这个代理类的方法则由 Advice 和回调目标对象的方法所组成。</strong></p>
+
+<p>几个 Spring AOP 常用的注解组件，基本与上面提到的 AOP 基本组件对应：</p>
+<ul>
+  <li><code class="highlighter-rouge">@Aspect</code>：定义了一个 Aspect 实体类</li>
+  <li><code class="highlighter-rouge">@Pointcut("execution(* )")</code>：切入点表达式</li>
+  <li><code class="highlighter-rouge">@Before("pointCut_()")</code>：在指定切入点之前执行的切入逻辑</li>
+  <li><code class="highlighter-rouge">@After("pointCut_()")</code>：在指定切入点之后执行的切入逻辑</li>
+  <li><code class="highlighter-rouge">@Around("pointCut_()")</code>：在指定切入点前后执行</li>
+</ul>
+
+<p>使用注解实现 Spring AOP 时仅需要在配置文件中加入<code class="highlighter-rouge">&lt;aop:aspectj-autoproxy proxy-target-class="true"/&gt;</code>一行，会为 Spring 容器注册<code class="highlighter-rouge">AnnotationAwareAspectJAutoProxyCreator</code>，它是一个 BeanPostProcessor，会为容器中的 Bean 生成 AOP 代理对象。其中<code class="highlighter-rouge">proxy-target-class</code>会强制开启 CGLIB。</p>
+
+<p>这里不对 Spring AOP 源码部分进行深入，有兴趣可以参照<a href="https://my.oschina.net/guangshan/blog/1797461">这篇文章</a>。</p>
+
+<p>(End)</p>
+
+<blockquote>
+  <p>参考资料：</p>
+  <ul>
+    <li><a href="https://www.ibm.com/developerworks/cn/java/j-lo-springaopcglib/index.html">Spring AOP 实现原理与 CGLIB 应用</a></li>
+  </ul>
+</blockquote>
+
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/02/28/javaio/">Java 网络 I/O 模型
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/02/25/map1/">Java核心类库学习（三）Map
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/02/18/collection1/">Java核心类库学习（二）Collection
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/24/jmm/">JMM小结
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/17/sringioc/">Spring（一）IoC
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/15/classload/">JVM基础（二） 类加载过程
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+        
+            </ul>
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2019/02/28/javaio/">Java 网络 I/O 模型</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2019/03/01/aop/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2019/03/01/aop/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>
