@@ -61,7 +61,7 @@ Redis 事务的 ACID 性质：
 - 持久性：Redis 的事务没有额外的持久化操作，由 Redis 的持久化配置决定。
 
 ## 复制
-Redis 的复制功能包括**同步 Sync **和**命令传播 Command propagate **来实现。
+Redis 的复制功能包括**同步 Sync** 和**命令传播 Command propagate**来实现。
 
 slave 对 master 的同步通过发送同步命令来实现，同步命令有两种：
 - `SYNC`：2.8 版本之前的命令，**master 收到同步命令后会执行`BGSAVE`创建 RDB 文件，之后将 RDB 文件和缓冲区内的写命令发送给 slave。**
