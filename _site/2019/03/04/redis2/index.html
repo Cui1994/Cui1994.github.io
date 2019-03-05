@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Redis 原理与实现小结</title>
+    <meta name="description" content="对 Redis 的原理与实现做个总结，大部分来自《Redis 设计与实现》一书。主要内容涉及 Redis 的持久化、复制策略、集群实现和事务。">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2019/03/04/redis2/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>Redis 原理与实现小结</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2019-03-04
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Redis" title="Category: Redis" rel="category">Redis</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#Redis" title="Tag: Redis" rel="tag">Redis</a-->
+        <a href="/tag/#Redis" title="Tag: Redis" rel="tag">Redis</a>&nbsp;
+    
+        <!--a href="/tag/#%E5%88%86%E5%B8%83%E5%BC%8F" title="Tag: 分布式" rel="tag">分布式</a-->
+        <a href="/tag/#分布式" title="Tag: 分布式" rel="tag">分布式</a>&nbsp;
+    
+        <!--a href="/tag/#%E9%9B%86%E7%BE%A4" title="Tag: 集群" rel="tag">集群</a-->
+        <a href="/tag/#集群" title="Tag: 集群" rel="tag">集群</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <p><img src="https://picsum.photos/800/300/?image=1000" alt="" /></p>
+<ul id="markdown-toc">
+  <li><a href="#过期时间与删除策略" id="markdown-toc-过期时间与删除策略">过期时间与删除策略</a></li>
+  <li><a href="#持久化" id="markdown-toc-持久化">持久化</a></li>
+  <li><a href="#事件" id="markdown-toc-事件">事件</a></li>
+  <li><a href="#事务" id="markdown-toc-事务">事务</a></li>
+  <li><a href="#复制" id="markdown-toc-复制">复制</a></li>
+  <li><a href="#sentinel" id="markdown-toc-sentinel">Sentinel</a>    <ul>
+      <li><a href="#数据存储" id="markdown-toc-数据存储">数据存储</a></li>
+      <li><a href="#工作模式" id="markdown-toc-工作模式">工作模式</a></li>
+      <li><a href="#failure-dectation" id="markdown-toc-failure-dectation">failure dectation</a></li>
+      <li><a href="#automatical-failover" id="markdown-toc-automatical-failover">automatical failover</a></li>
+    </ul>
+  </li>
+  <li><a href="#集群" id="markdown-toc-集群">集群</a>    <ul>
+      <li><a href="#结构" id="markdown-toc-结构">结构</a></li>
+      <li><a href="#sharding" id="markdown-toc-sharding">sharding</a></li>
+      <li><a href="#reshard" id="markdown-toc-reshard">reshard</a></li>
+      <li><a href="#replication-与-failover" id="markdown-toc-replication-与-failover">replication 与 failover</a></li>
+    </ul>
+  </li>
+  <li><a href="#qa" id="markdown-toc-qa">Q&amp;A</a></li>
+</ul>
+
+<p>对 Redis 的原理与实现做个总结，大部分来自《Redis 设计与实现》一书。主要内容涉及 Redis 的持久化、复制策略、集群实现和事务。</p>
+
+<h2 id="过期时间与删除策略">过期时间与删除策略</h2>
+<p>在 redisDB 中用一个 expires 的字典保存设置了过期时间的键，val 指向过期时间，是一个 timestamp 对象。</p>
+
+<p>删除策略：采用惰性删除与定期删除结合的策略。</p>
+<ul>
+  <li><strong>惰性删除</strong>：当操作一个键时，如果过期就将其删除</li>
+  <li><strong>定期删除</strong>：会定期，在规定时间内<strong>随机</strong>检查一部分键的过期时间，如果已过期就将其删除，有一个全局变量会记录检查进度。</li>
+</ul>
+
+<h2 id="持久化">持久化</h2>
+
+<p>Redis 的持久化有两种，RDB 和 AOF。</p>
+
+<p>RDB 是压缩过的二进制文件，RDB 持久化既可以手动执行，又可以定期执行。Redis 提供两个命令进行手动 RDB 持久化：</p>
+<ul>
+  <li><code class="highlighter-rouge">SAVE</code>：阻塞直到持久化完成</li>
+  <li><code class="highlighter-rouge">BGSAVE</code>：创建子进程进行持久化，父进程继续接受客户端请求</li>
+</ul>
+
+<p>RDB 载入：在服务器启动时自动进行，但如果开启了 AOF 持久化，会优先使用 AOF 文件恢复数据库状态。</p>
+
+<p><strong>AOF 通过追加写入服务器的写入命令来进行持久化</strong>。通过下面三步进行：</p>
+<ul>
+  <li><strong>命令追加</strong>：将命令写入 AOF 缓冲区<code class="highlighter-rouge">aof_buf</code>中。</li>
+  <li><strong>文件写入</strong>：在事件循环结束后将<code class="highlighter-rouge">aof_buf</code>中的命令写入文件。</li>
+  <li><strong>文件同步</strong>：调用<code class="highlighter-rouge">sync</code>将文件进行同步，何时同步由配置决定，有三种方式，always、everysec、no。</li>
+</ul>
+
+<p>重写机制：为了防止 AOF 文件过大，会创建一个子进程来对 AOF 文件进行重写，将同一个键多个操作的命令整合为一个命令。重写期间新接收的命令会写入 AOF 重写缓冲区。</p>
+
+<h2 id="事件">事件</h2>
+<p>Redis 是一个事件驱动进程，本身是一个事件循环（loop）。存在两种事件：</p>
+<ul>
+  <li><strong>文件事件</strong>：对 socekt 进行的操作，采用<strong>单 reactor 单线程模式</strong>创建文件事件处理器，监听多个 socket 文件描述符，根据 socket 所执行的任务分配不同的时间处理器。</li>
+  <li><strong>时间事件</strong>：在特定的时间/周期进行的操作，维护了一个<strong>无序链表</strong>，每当时间执行器运行时，会遍历整个链表，查找已到达时间的时间并调用相应的事件处理器。</li>
+</ul>
+
+<p>事件调度策略：</p>
+<ul>
+  <li>所有事件的处理都是<strong>同步、有序、原子</strong>的进行的，服务器<strong>不会打断事件处理，也不会对事件进行抢占</strong>。</li>
+  <li>多路复用 I/O 的 timeout 是由到<strong>达时间最接近当前时间</strong>的事件决定的。</li>
+  <li><strong>时间事件的处理通常会比设定的时间稍晚一点</strong>，因为在事件处理过程中时间事件可能已经到达。</li>
+</ul>
+
+<h2 id="事务">事务</h2>
+<p>Redis 的事务是指<strong>将多个命令打包，一次性、按顺序地执行多个命令的机制，在执行事务期间不会被其他请求中断</strong>。</p>
+
+<p>事务的实现依靠一个<strong>命令队列</strong>来存放命令，在 Redis 中有个<code class="highlighter-rouge">multiCmd</code>类型的数组，保存了已入队命令的相关信息。命令以 FIFO 的方式进入数组。</p>
+
+<p>Redis 事务的 ACID 性质：</p>
+<ul>
+  <li>原子性：<strong>Redis 不支持事务回滚</strong>，事务中的一条命令执行失败，Redis 会忽略这条失败的命令继续执行接下来的指令。</li>
+  <li>一致性：事务不会影响 Redis 的数据一致性。</li>
+  <li>隔离性：<strong>Redis 的单线程模型天然支持事务隔离。</strong></li>
+  <li>持久性：Redis 的事务没有额外的持久化操作，由 Redis 的持久化配置决定。</li>
+</ul>
+
+<h2 id="复制">复制</h2>
+<p>Redis 的复制功能包括<strong>同步 Sync **和</strong>命令传播 Command propagate **来实现。</p>
+
+<p>slave 对 master 的同步通过发送同步命令来实现，同步命令有两种：</p>
+<ul>
+  <li><code class="highlighter-rouge">SYNC</code>：2.8 版本之前的命令，<strong>master 收到同步命令后会执行<code class="highlighter-rouge">BGSAVE</code>创建 RDB 文件，之后将 RDB 文件和缓冲区内的写命令发送给 slave。</strong></li>
+  <li><code class="highlighter-rouge">PSYNC</code>：根据是否为第一次同步会执行<strong>完全重同步</strong>（相当于 SYNC）和<strong>部分重同步。</strong></li>
+</ul>
+
+<p>部分重同步由三个部分构成：</p>
+<ul>
+  <li>master 和 slave 的<strong>复制偏移量</strong>：master 每次向 slave 发送 N 字节数据时，将自己的复制偏移量加 N，slave 收到 N 字节数据时，将自己的复制偏移量加 N。</li>
+  <li>master 的<strong>复制积压缓冲区</strong>：master 维护了一个 FIFO 的队列，大小为 1MB。每次命令传播时会将命令写入队列，并为队列中的每个字节记录复制偏移量。</li>
+  <li>服务器的<strong>运行 id</strong>：master 和 slave 都有一个自己的运行时 id，slave 在重连同步时要判断是否是之前的 master。</li>
+</ul>
+
+<p><code class="highlighter-rouge">PSYNC</code>的调用过程：</p>
+<ol>
+  <li>slave 向 master 发送同步命令，分为两种情况：
+    <ul>
+      <li>没有 master，会发送<code class="highlighter-rouge">PSYNC ? -1</code></li>
+      <li>有 master，会发送<code class="highlighter-rouge">PSYNC &lt;runid&gt; &lt;offset&gt;</code>：offset 是 slave 当前的复制偏移量。</li>
+    </ul>
+  </li>
+  <li>master 向 slave 回复，会有三种结果：
+    <ul>
+      <li><code class="highlighter-rouge">+FULLRESYNC &lt;runid&gt; &lt;offset&gt;</code>：表示 master 会进行完全重同步，runid 是 master 的运行 id，slave 会记录这个 id，在之后的<code class="highlighter-rouge">PSYNC</code>命令中用到。</li>
+      <li><code class="highlighter-rouge">+CONTINUE</code>：master 会进行部分重同步，会发送 slave 缺少的命令字节。</li>
+      <li><code class="highlighter-rouge">-ERR</code>：错误。</li>
+    </ul>
+  </li>
+</ol>
+
+<p><strong>命令传播</strong>：在同步结束之后，slave 与 master 进入命令传播阶段，<strong>master 会不断发送自己执行的写命令给 slave。</strong></p>
+
+<p><strong>心跳</strong>：slave 会以每秒一次的频率，向 master 发送命令<code class="highlighter-rouge">REPLCONF ACK &lt;offset&gt;</code>，来检测连接状态和<strong>命令丢失。</strong></p>
+
+<h2 id="sentinel">Sentinel</h2>
+
+<p>Redis 的高可用决策策略是<strong>独裁式</strong>，使用<strong>哨兵 Sentinel</strong>（节点或集群）即充当了独裁者，来监控并收集 master 和 slave 的信息，并及时作出 failure detction 和 failover。
+<img src="https://i.loli.net/2019/03/05/5c7de52d4edd4.jpg" alt="" /></p>
+
+<h3 id="数据存储">数据存储</h3>
+<p>Sentinel 用字典（哈希表）存储监视的服务器信息，所有服务器信息，包括 master、slave 以及其他的 sentinel 节点都是一个<code class="highlighter-rouge">sentinelRedisInstance</code>实例。Sentinel 节点在收到频道信息后会更新这些信息。</p>
+
+<h3 id="工作模式">工作模式</h3>
+<ul>
+  <li><strong>创建连接</strong>：Sentinel 会分别与 master 和 slave 建立两个异步网络连接，<strong>命令连接</strong>和<strong>订阅连接</strong>。</li>
+  <li><strong>获取服务器信息</strong>：以<strong>10s/次</strong>的频率通过命令连接向 master 和 slave 发送<code class="highlighter-rouge">INFO</code>命令，获取服务器的拓扑信息以及 runid、slave 的复制偏移量等。</li>
+  <li><strong>向服务器发送信息</strong>：以<strong>2s/次</strong>的频率通过命令连接向 master 和 slave 发送<code class="highlighter-rouge">PUBLISH __sentinel__:hello</code>开头的命令，包含 sentinel 系统的信息和 master 服务器的信息。</li>
+  <li><strong>心跳</strong>：Snetinel 节点之间，以及和 master、slave之间都会存在心跳，心跳的方式有三种：
+    <ul>
+      <li>Ping：用来检测节点是否在线</li>
+      <li>INFO：获取其他服务器信息</li>
+      <li>频道信息：更新监视的其他服务器的信息</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="failure-dectation">failure dectation</h3>
+<p>Sentinel 通过两种步骤进行故障检测：</p>
+<ul>
+  <li><strong>主观下线</strong>：Sentinel 会以默认 1s/次的频率向所有与它建立命令连接的节点发送<code class="highlighter-rouge">PING</code>命令，并通过命令回复判断节点是否在线。当 master 节点在一定时间内没有返回有效回复，就判断 master 主观下线。</li>
+  <li><strong>客观下线</strong>：一但一个 Sentinel 节点判断 master 主观下线之后，为了确定 master 真的下线，会向其他 Sentinel 节点发起询问，如果超过一定数量的节点（默认 n/2）都判断 master 主观下线，则 Sentinel 系统判断 master 客观下线，开始进行 failover。</li>
+</ul>
+
+<h3 id="automatical-failover">automatical failover</h3>
+<p>在进行 failover 之前，Sentinel 集群会首先会选举出一个 Leader，由 Leader 选择一个 slave 将其作为新的 master，选举过程是简化版的 Raft 算法。</p>
+
+<p>failover 的过程分为下面几个步骤：</p>
+<ul>
+  <li>从下线的 master 的 slave 节点里选出一个 slave，将其作为新的 master。</li>
+  <li>为其他 slave 设置新的 master 开始复制。</li>
+  <li>将下线的 master 设为新 master 的 slave，其上线之后开始从新的 master 复制。</li>
+</ul>
+
+<h2 id="集群">集群</h2>
+<p>Redis 自带了分布式存储的解决方案，构建集群并对数据进行分片存储。</p>
+
+<h3 id="结构">结构</h3>
+<p>Redis 的 cluster 是一个去中心的网络拓扑结构，<strong>每个节点都保存了其他节点的信息，任意两个节点之间都存在通信。</strong></p>
+
+<h3 id="sharding">sharding</h3>
+<p>Redis Cluster 用<strong>槽指派</strong>来实现 sharding，Redis 一共设定 16834 个槽，所有的键值都属于槽内。每个节点通过<code class="highlighter-rouge">ADDSOLTS</code>设定自己处理的槽的范围，并广播给其他槽。节点在接收到客户端请求后，<strong>节点会计算键值对应的槽并判断是否是自己处理的槽，如果不是会返回一个<code class="highlighter-rouge">MOVED</code>错误指引客户端请求正确的节点。</strong></p>
+
+<h3 id="reshard">reshard</h3>
+<p>重新分片命令会将一定数量的已指派的槽从源节点改为指派到目标节点，之后会将这部分槽位对应的键值对迁移到目标节点，在迁移过程中两个节点均不会下线或暂停服务。</p>
+
+<p>单个槽的迁移步骤如下：</p>
+<ol>
+  <li>向目标节点发送命令使其<strong>准备好导入属于槽 solt 的键值对</strong>。</li>
+  <li>向源节点发送命令使其<strong>准备好属于槽 solt 的键值对进行迁移</strong>。</li>
+  <li>向源节点发送命令<strong>获得最多 count 数量的属于槽 solt 的键名</strong>。</li>
+  <li>向源节点发送命令<strong>原子地将单个键值对迁移到目标节点</strong>。</li>
+  <li>重复执行 3、4 步骤，直到所有的键值对迁移到目标节点。</li>
+  <li>向集群中的任意节点发送命令，<strong>将槽 solt 指派给目标节点</strong>，这一命令会传播给集群中的所有节点。</li>
+</ol>
+
+<p>如果涉及多个槽的迁移，会重复执行单个槽的迁移步骤，在步骤 3 和 4 执行过程中，如果客户端请求了槽 solt 对应的键的操作，若键还在源节点，则进行操作，否则会返回 <strong>ASK 错误</strong>，指引客户端请求正确的目标节点。</p>
+
+<h3 id="replication-与-failover">replication 与 failover</h3>
+<p>Cluster 中的节点也分 master 和 salve。master 用于处理槽，slave 用于复制 master，并在 master 下线时代替下线节点继续处理请求。</p>
+
+<p>Cluster 中的节点会定期向其他节点发送<code class="highlighter-rouge">PING</code>命令，来检测对方是否在线。如果半数以上的 master 节点都确定某个节点下线，会向集群中广播一条节点下线通知，并开始进行 failover：</p>
+<ol>
+  <li>下线节点的一个 slave 会被选中</li>
+  <li>对被选中的 slave 执行<code class="highlighter-rouge">SLAVEOF no one</code>的命令，将其设置为 master。</li>
+  <li>新 master 会撤销下线节点的指派槽，并将这些槽重新指派给自己。</li>
+  <li>新 master 向集群广播一条<code class="highlighter-rouge">PONG</code>消息，通知其他节点自己已经成为 master。</li>
+  <li>新 master 开始处理指派槽的客户端请求。</li>
+</ol>
+
+<h2 id="qa">Q&amp;A</h2>
+
+<p>说一个喜闻乐见的问题吧，<strong>为什么 Redis 是单线程的还那么快</strong>，主要有以下几个方面的原因：</p>
+<ul>
+  <li>Redis 主要是内存操作</li>
+  <li>数据结构上的优化，降低很多操作的时间复杂度</li>
+  <li>单线程不涉及锁的争用和上下文切换</li>
+  <li>采用多路 I/O 复用模型，可以同时处理多个请求</li>
+  <li>CPU 并不是 Redis 的性能瓶颈，单线程就够了</li>
+</ul>
+
+<p>(End)</p>
+
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2019/03/03/aop/">Spring（二）AOP</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2019/03/04/redis2/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2019/03/04/redis2/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>
