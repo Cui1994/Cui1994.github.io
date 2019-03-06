@@ -127,6 +127,85 @@
             
               <li>
                 <h2>
+                  <a class="post-link" href="/2018/07/12/yewu7/">Python Web 基础向（七）分布式锁</a>
+                </h2>
+                <div class="label">
+                    <div class="label-card">
+                        <i class="fa fa-calendar"></i>2018-07-12
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+
+                    <div class="label-card">
+                    
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Python Web" title="Category: Python Web" rel="category">Python Web</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+                    </div>
+
+                    <div class="label-card">
+                    
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <a href="/tag/#redis" title="Tag: redis" rel="tag">redis</a>&nbsp;
+    
+        <a href="/tag/#分布式锁" title="Tag: 分布式锁" rel="tag">分布式锁</a>
+    
+  
+
+</span>
+
+                    </div>
+                </div>
+                <div class="excerpt">
+                    
+<p>当多个线程同时操作共享的内存数据时，为了解决线程安全问题，各语言都引入并发锁来确保同一时间只有一个线程会操作共享内存。而现在的大规模互联网应用一般采用分布式和集群来提高后端服务性能，同一个服务可能在不同的机器或容器中都存在实例，多线程中的并发锁也失去了意义，这时就引入了分布式锁的概念，当然它们的目的是相同的，都是为了限制同一时间内一个资源只能被一个请求操作，或者说某个方法只能被运行一次。</p>
+
+<p>目前业内实现分布式锁的方式主要有下面三种：</p>
+
+<ul>
+  <li>
+    <p>基于数据库的悲观锁乐观锁</p>
+  </li>
+  <li>
+    <p>基于redis的分布式事务锁</p>
+  </li>
+  <li>
+    <p>基于Zookeeper的节点锁</p>
+  </li>
+</ul>
+
+<p>其中redis简单易用，应用最广也较为稳定，本文主要介绍这种方式下的分布式锁。</p>
+
+
+                </div>
+                <div class="read-all">
+                    <a  href="/2018/07/12/yewu7/"><i class="fa fa-newspaper-o"></i>Read All</a>
+                </div>
+                <hr>
+              </li>
+            
+              <li>
+                <h2>
                   <a class="post-link" href="/2018/04/20/yewu6/">Python Web 基础向（六） 查询</a>
                 </h2>
                 <div class="label">
@@ -449,69 +528,6 @@
                 <hr>
               </li>
             
-              <li>
-                <h2>
-                  <a class="post-link" href="/2018/01/20/boke/">什么是优秀的公开博客</a>
-                </h2>
-                <div class="label">
-                    <div class="label-card">
-                        <i class="fa fa-calendar"></i>2018-01-20
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-
-                    <div class="label-card">
-                    
-
-
-<!-- <span class="point">•</span> -->
-<span class="categories">
-  <i class="fa fa-th-list"></i>
-  
-    
-        <a href="/category/#杂谈" title="Category: 杂谈" rel="category">杂谈</a>
-    
-  
-
-  <!-- <span class="point">•</span> -->
-</span>
-
-
-                    </div>
-
-                    <div class="label-card">
-                    
-<!-- <span class="point">•</span> -->
-<span class="pageTag">
-  <i class="fa fa-tags"></i>
-  
-    
-        <a href="/tag/#博客" title="Tag: 博客" rel="tag">博客</a>
-    
-  
-
-</span>
-
-                    </div>
-                </div>
-                <div class="excerpt">
-                    
-<p>坚持写博客是我一直以来的一个目标，当然现在看来做的很差，时而兴起才会写一写。在我的理解里，博客既是写给别人看，又是写给自己看的。对自己来说，有个属于自己的地方能够分享自己的所见、所想、所学、所感，对他人来说，你的博客说不定解决了其他人正在头疼的问题，于己于人好处多多。但博客这东西，客观来说还是良莠不齐，质量上乘的博客（如阮一峰）确实有其独到之处，我想借这篇文章尝试分析一下好的博客究竟好在哪里，也好找个标杆，早日写出优秀博客。</p>
-
-<p><img src="https://i.loli.net/2018/11/26/5bfc026de0e00.png" alt="" /></p>
-
-
-                </div>
-                <div class="read-all">
-                    <a  href="/2018/01/20/boke/"><i class="fa fa-newspaper-o"></i>Read All</a>
-                </div>
-                <hr>
-              </li>
-            
         </ul>
 
 
@@ -539,6 +555,8 @@
                 </div>
                 <ul class="content-ul" recent>
                     
+                        <li><a href="/2019/03/06/singleton/">看似简单的单例模式</a></li>
+                    
                         <li><a href="/2019/03/04/redis2/">Redis 原理与实现小结</a></li>
                     
                         <li><a href="/2019/03/03/aop/">Spring（二）AOP</a></li>
@@ -556,8 +574,6 @@
                         <li><a href="/2019/01/24/jmm/">JMM小结</a></li>
                     
                         <li><a href="/2019/01/17/sringioc/">Spring（一）IoC</a></li>
-                    
-                        <li><a href="/2019/01/15/linux9/">Linux基础（九）I/O多路复用</a></li>
                     
                 </ul>
             </div>
@@ -593,7 +609,7 @@
                             <span class="name">
                                 设计模式
                             </span>
-                            <span class="badge">1</span>
+                            <span class="badge">2</span>
                         </a>
                     </li>
                     
@@ -698,7 +714,7 @@
                       
                       
                       
-                      <a href="/tag/#直播通" style="font-size: 12pt; color: #666;">直播通</a>
+                      <a href="/tag/#直播通" style="font-size: 11.5pt; color: #666;">直播通</a>
                     
                       
                       
@@ -726,7 +742,7 @@
                       
                       
                       
-                      <a href="/tag/#设计模式" style="font-size: 9pt; color: #999;">设计模式</a>
+                      <a href="/tag/#设计模式" style="font-size: 10pt; color: #888;">设计模式</a>
                     
                       
                       
@@ -852,21 +868,21 @@
                       
                       
                       
-                      <a href="/tag/#Linux" style="font-size: 17pt; color: #111;">Linux</a>
+                      <a href="/tag/#Linux" style="font-size: 16pt; color: #222;">Linux</a>
                     
                       
                       
                       
                       
                       
-                      <a href="/tag/#读书笔记" style="font-size: 17pt; color: #111;">读书笔记</a>
+                      <a href="/tag/#读书笔记" style="font-size: 16pt; color: #222;">读书笔记</a>
                     
                       
                       
                       
                       
                       
-                      <a href="/tag/#Python" style="font-size: 13pt; color: #555;">Python</a>
+                      <a href="/tag/#Python" style="font-size: 12.5pt; color: #555;">Python</a>
                     
                       
                       
@@ -971,7 +987,7 @@
                       
                       
                       
-                      <a href="/tag/#多线程" style="font-size: 9pt; color: #999;">多线程</a>
+                      <a href="/tag/#多线程" style="font-size: 10pt; color: #888;">多线程</a>
                     
                       
                       
@@ -1006,7 +1022,7 @@
                       
                       
                       
-                      <a href="/tag/#源码" style="font-size: 14pt; color: #444;">源码</a>
+                      <a href="/tag/#源码" style="font-size: 13.5pt; color: #444;">源码</a>
                     
                       
                       

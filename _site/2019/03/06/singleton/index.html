@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>看似简单的单例模式</title>
+    <meta name="description" content="单例模式作为较为常用的设计模式，实现思路看似简单，但要写出一个在多线程环境中能正确运行的单例模式却并不容易。">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2019/03/06/singleton/">
+    <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">awakeBird</a>
+        <small>Back-end Dev Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>看似简单的单例模式</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2019-03-06
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#设计模式" title="Category: 设计模式" rel="category">设计模式</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a-->
+        <a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a>&nbsp;
+    
+        <!--a href="/tag/#%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F" title="Tag: 设计模式" rel="tag">设计模式</a-->
+        <a href="/tag/#设计模式" title="Tag: 设计模式" rel="tag">设计模式</a>&nbsp;
+    
+        <!--a href="/tag/#%E5%A4%9A%E7%BA%BF%E7%A8%8B" title="Tag: 多线程" rel="tag">多线程</a-->
+        <a href="/tag/#多线程" title="Tag: 多线程" rel="tag">多线程</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+        <ul id="markdown-toc">
+  <li><a href="#最简单的实现思路" id="markdown-toc-最简单的实现思路">最简单的实现思路</a></li>
+  <li><a href="#简单加锁" id="markdown-toc-简单加锁">简单加锁</a></li>
+  <li><a href="#双重检查锁定" id="markdown-toc-双重检查锁定">双重检查锁定</a></li>
+  <li><a href="#在静态变量中创建对象" id="markdown-toc-在静态变量中创建对象">在静态变量中创建对象</a></li>
+  <li><a href="#枚举单例" id="markdown-toc-枚举单例">枚举单例</a></li>
+</ul>
+
+<p><img src="https://picsum.photos/800/300/?image=727" alt="" />
+单例模式作为较为常用的设计模式，实现思路看似简单，但要写出一个在多线程环境中能正确运行的单例模式却并不容易。</p>
+
+<h2 id="最简单的实现思路">最简单的实现思路</h2>
+<p>一说起单例模式，我们脑中自然会思路：<strong>用一个成员变量存储这个单例，只在第一次用到时进行实例化。</strong>于是大手一挥，写下下面的代码：</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Singleton</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="n">Singleton</span> <span class="n">instance</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="nf">Singleton</span><span class="o">()</span> <span class="o">{}</span> <span class="c1">// 将构造方法设置为 private，禁止私自创建对象</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">Singleton</span> <span class="nf">getInstance</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">instance</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">instance</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Singleton</span><span class="o">();</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="n">instance</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>这种方式看似满足了要求，但其实只在单线程环境中能满足条件，放在多线程环境中，就变成了一个<strong>典型的 check-then-act 问题，没有任何线程同步机制下会引发竞态</strong>。上面的实现如果两个线程同时执行<code class="highlighter-rouge">if (instance == null)</code>代码，则会同时判断<code class="highlighter-rouge">instance</code>变量为<code class="highlighter-rouge">null</code>，最终创建两个对象实例，这样就不满足单例模式的初衷了。</p>
+
+<h2 id="简单加锁">简单加锁</h2>
+<p>那既然没有线程同步机制，加上就是了，我们最容易想到的线程同步机制就是加锁，于是有了第二版实现：</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Singleton</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="n">Singleton</span> <span class="n">instance</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="nf">Singleton</span><span class="o">()</span> <span class="o">{}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">Singleton</span> <span class="nf">getInstance</span><span class="o">()</span> <span class="o">{</span>
+        <span class="kd">synchronized</span> <span class="o">(</span><span class="n">Singleton</span><span class="o">.</span><span class="na">class</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">instance</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">instance</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Singleton</span><span class="o">();</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+
+        <span class="k">return</span> <span class="n">instance</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>我们用<code class="highlighter-rouge">synchronized</code>内部锁对可能产生竞态的代码块进行了加锁，确保临界区内的代码每次只有一个线程在执行。这样确实做到了线程安全，但在每次调用<code class="highlighter-rouge">getInstance()</code>方法时都需要进行加锁和释放操作，由于我们的竞态只会在实例化对象时发生，之后的加锁和释放操作毫无意义，可能会产生不必要的上下文切换开销，也就是锁的粒度太大，还需进行优化。（这也是 HashTable 和 Vector 这类集合被弃用的原因）</p>
+
+<p>之后的实现就有些套路的意思了。</p>
+
+<h2 id="双重检查锁定">双重检查锁定</h2>
+<p>在上一版的基础上出现了双重检查锁定 Double-checked Locking（DCL），具体方式是<strong>只当<code class="highlighter-rouge">instance</code>变量为<code class="highlighter-rouge">null</code>的前提下再进行第二版里的加锁检查操作。</strong></p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Singleton</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="n">Singleton</span> <span class="n">instance</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="nf">Singleton</span><span class="o">()</span> <span class="o">{}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">Singleton</span> <span class="nf">getInstance</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">instance</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>                     <span class="c1">// ①</span>
+            <span class="kd">synchronized</span> <span class="o">(</span><span class="n">Singleton</span><span class="o">.</span><span class="na">class</span><span class="o">)</span> <span class="o">{</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">instance</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">instance</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Singleton</span><span class="o">();</span>     <span class="c1">// ②</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+
+        <span class="k">return</span> <span class="n">instance</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>这样我们只会在实例化对象时有加速动作，成功实例化对象之后的<code class="highlighter-rouge">getInstance()</code>调用不会再出现锁的争用和上下文切换开销。</p>
+
+<p>但这里还有一个问题，<code class="highlighter-rouge">instance = new Singleton()</code>并不是一个原子操作，在 JVM 中它实际上是分成三步进行的：</p>
+<ol>
+  <li>为 Singleton 对象分配内存</li>
+  <li>调用构造函数对变量进行必要的初始化</li>
+  <li>将 instance 引用指向 Signleton 对象</li>
+</ol>
+
+<p>JVM 在执行语句时可能会发生重排序，上面的顺序可能是 1-2-3，也可能是 1-3-2，当线程 A 在执行 语句 ② 时，如果发生了 1-3-2 的重排，另一线程 B 在执行语句 ① 的时候会直接判断<code class="highlighter-rouge">instance</code>不为<code class="highlighter-rouge">null</code>，最终导致返回的<code class="highlighter-rouge">instance</code> 是一个没有经过初始化的对象。</p>
+
+<p>这里的解决方式也很简单，只需要将<code class="highlighter-rouge">instance</code>变量加上<code class="highlighter-rouge">volatile</code>关键字即可，它会子语句 3 前后加上内存屏障，防止对<code class="highlighter-rouge">instance</code>的写操作和之前的任何内存操作进行重排，防止语句 2 3 进行重排，并且确保 3 的执行对其他线程可见。</p>
+<blockquote>
+  <p>volatile 的内存语义参见之前的博文<a href="https://cui1994.github.io/2019/01/24/jmm/">JMM 小结</a></p>
+</blockquote>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Singleton</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">volatile</span> <span class="n">Singleton</span> <span class="n">instance</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="nf">Singleton</span><span class="o">()</span> <span class="o">{}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">Singleton</span> <span class="nf">getInstance</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">instance</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="kd">synchronized</span> <span class="o">(</span><span class="n">Singleton</span><span class="o">.</span><span class="na">class</span><span class="o">)</span> <span class="o">{</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">instance</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">instance</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Singleton</span><span class="o">();</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+
+        <span class="k">return</span> <span class="n">instance</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="在静态变量中创建对象">在静态变量中创建对象</h2>
+<p>到目前为止，我么都是自己来控制对象只被创建一次，可以换一个思路，可以<strong>将创建对象的过程写在静态变量里，这样就可以在类初始化的时候创建对象，而 JVM 可以保证类只会被初始化一次，在多线程环境中也会被正确的加载和同步。</strong></p>
+<blockquote>
+  <p>Java 类加载机制见<a href="https://cui1994.github.io/2019/01/15/classload/">JVM基础（二） 类加载过程</a></p>
+</blockquote>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Singleton</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kd">static</span> <span class="n">Singleton</span> <span class="n">instance</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Singleton</span><span class="o">();</span>
+    <span class="kd">private</span> <span class="nf">Singleton</span><span class="o">()</span> <span class="o">{}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">Singleton</span> <span class="nf">getInstance</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">instance</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>但这样也有一个问题，对象是在<code class="highlighter-rouge">Singleton</code>类被初始化时创建的，而不是第一次调用<code class="highlighter-rouge">getInstance()</code>时被创建的，提前创建对象会造成一定的内存消耗，因此，我们要采用<strong>延时加载策略</strong>，将对象的创建完全控制在<code class="highlighter-rouge">getInstance()</code>方法内。解决方式是构建一个内部静态类，在<code class="highlighter-rouge">getInstance()</code>方法内引用这个类的静态变量触发其初始化。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Singleton</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="nf">Singleton</span><span class="o">()</span> <span class="o">{}</span>
+
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">InstanceHandler</span> <span class="o">{</span>
+        <span class="kd">final</span> <span class="kd">static</span> <span class="n">Singleton</span> <span class="n">INSTANCE</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Singleton</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">Singleton</span> <span class="nf">getInstance</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">InstanceHandler</span><span class="o">.</span><span class="na">INSTANCE</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="枚举单例">枚举单例</h2>
+<p>最后算是 Java 的一点私货，<strong>只有一个实例的枚举类本身就是一个单例实现</strong>，而且只有当它的实例对象被访问时才会触发对象的创建，其他如<code class="highlighter-rouge">Singleton.class.getName()</code>的方法不会创建实例（这类反射方法会触发类的初始化）。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="n">Singleton</span> <span class="o">{</span>
+    <span class="n">INSTANCE</span><span class="o">;</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">otherMethod</span><span class="o">(){}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>(End)</p>
+
+
+        </article>
+        <hr>
+
+        
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <h2 id="similar_posts">Similar Posts</h2>
+                        <ul>
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/03/03/aop/">Spring（二）AOP
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/02/28/javaio/">Java 网络 I/O 模型
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/02/25/map1/">Java核心类库学习（三）Map
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/02/18/collection1/">Java核心类库学习（二）Collection
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/24/jmm/">JMM小结
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/17/sringioc/">Spring（一）IoC
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+            
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
+        
+        
+            </ul>
+        
+
+        <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2019/03/04/redis2/">Redis 原理与实现小结</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+        <h2 id="comments">Comments</h2>
+        
+
+
+<div id="disqus_thread"></div>
+<script>
+    /**
+     * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function() {
+        this.page.url = 'http://localhost:4000/2019/03/06/singleton/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2019/03/06/singleton/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+
+    (function() { // DON'T EDIT BELOW THIS LINE
+        var d = document,
+            s = d.createElement('script');
+
+        s.src = '//cui1994.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                    <li><a href="#comments">Comments</a></li>
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+/**
+ * target _blank
+ */
+(function() {
+    var aTags = document.querySelectorAll('article a:not([id])')
+    for (var i = 0; i < aTags.length; i++) {
+        aTags[i].setAttribute('target', '_blank')
+    }
+}());
+</script>
+<script src="/js/pageContent.js " charset="utf-8"></script>
+
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+             感谢你来到这里 
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/Cui1994" title="GitHub"><i class="fa fa-github" aria-hidden="true"></i></a>  
+            <a href="mailto:jintao.cui66@gmail.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>        
+        </p>
+        <p>
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次，本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>
