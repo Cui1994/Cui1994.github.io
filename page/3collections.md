@@ -41,6 +41,15 @@ type: page
 
 * [Simple图床](https://sm.ms/)
 
+## Code Style
+
+* [IntelliJ Java Google Style](https://github.com/google/styleguide/blob/gh-pages/intellij-java-google-style.xml)
+
+## IDEA Plugins
+
+* Alibaba Java Coding Guidelines
+
+* IdeaVim
 
 ## 问题
 

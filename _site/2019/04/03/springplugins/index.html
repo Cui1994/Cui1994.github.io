@@ -6,15 +6,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Java并发编程 线程同步机制</title>
-    <meta name="description" content="对Java在并发环境下线程安全的实现方式做点笔记。">
+    <title>两个常用的 Mybatis 插件</title>
+    <meta name="description" content="得空试了试 Mybatis 两个常用的插件，MyBatis Generator（MBG）和 Mybatis PageHelper（分页插件），效果确实是有的，解放了生产力，不用再对着表中的字段一行行手写 PO 对象和 Mapper 了，处理重复的分页需求时也会优雅许多。但话又说回来，既然是工具，肯定会有蹩脚的地方...">
 
     <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
     <link rel="icon" href="/favicon.ico?" type="image/x-icon">
     <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
     <link rel="stylesheet" href="/css/main.css ">
-    <link rel="canonical" href="http://localhost:4000/2019/01/10/thread1/">
+    <link rel="canonical" href="http://localhost:4000/2019/04/03/springplugins/">
     <link rel="alternate" type="application/rss+xml" title="awakeBird" href="http://localhost:4000/feed.xml ">
 
 
@@ -120,11 +120,11 @@
 
         <div class="page clearfix" post>
     <div class="left">
-        <h1>Java并发编程 线程同步机制</h1>
+        <h1>两个常用的 Mybatis 插件</h1>
         <div class="label">
 
             <div class="label-card">
-                <i class="fa fa-calendar"></i>2019-01-10
+                <i class="fa fa-calendar"></i>2019-04-03
             </div>
 
             <div class="label-card">
@@ -164,14 +164,11 @@
         <!--a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a-->
         <a href="/tag/#Java" title="Tag: Java" rel="tag">Java</a>&nbsp;
     
-        <!--a href="/tag/#%E5%A4%9A%E7%BA%BF%E7%A8%8B" title="Tag: 多线程" rel="tag">多线程</a-->
-        <a href="/tag/#多线程" title="Tag: 多线程" rel="tag">多线程</a>&nbsp;
+        <!--a href="/tag/#Plugin" title="Tag: Plugin" rel="tag">Plugin</a-->
+        <a href="/tag/#Plugin" title="Tag: Plugin" rel="tag">Plugin</a>&nbsp;
     
-        <!--a href="/tag/#%E5%B9%B6%E5%8F%91" title="Tag: 并发" rel="tag">并发</a-->
-        <a href="/tag/#并发" title="Tag: 并发" rel="tag">并发</a>&nbsp;
-    
-        <!--a href="/tag/#%E7%AC%94%E8%AE%B0" title="Tag: 笔记" rel="tag">笔记</a-->
-        <a href="/tag/#笔记" title="Tag: 笔记" rel="tag">笔记</a>
+        <!--a href="/tag/#Mybatis" title="Tag: Mybatis" rel="tag">Mybatis</a-->
+        <a href="/tag/#Mybatis" title="Tag: Mybatis" rel="tag">Mybatis</a>
     
   
 
@@ -183,164 +180,130 @@
         <hr>
         <article itemscope itemtype="http://schema.org/BlogPosting">
         <ul id="markdown-toc">
-  <li><a href="#基础知识" id="markdown-toc-基础知识">基础知识</a>    <ul>
-      <li><a href="#线程生命周期" id="markdown-toc-线程生命周期">线程生命周期</a></li>
-      <li><a href="#竞态" id="markdown-toc-竞态">竞态</a></li>
-      <li><a href="#线程安全" id="markdown-toc-线程安全">线程安全</a>        <ul>
-          <li><a href="#原子性-atomic" id="markdown-toc-原子性-atomic"><strong>原子性 Atomic</strong></a></li>
-          <li><a href="#可见性-visibility" id="markdown-toc-可见性-visibility"><strong>可见性 Visibility</strong></a></li>
-          <li><a href="#有序性-odering" id="markdown-toc-有序性-odering"><strong>有序性 Odering</strong></a></li>
-        </ul>
-      </li>
-      <li><a href="#上下文切换" id="markdown-toc-上下文切换">上下文切换</a></li>
-    </ul>
+  <li><a href="#mbg" id="markdown-toc-mbg">MBG</a></li>
+  <li><a href="#pagehelper" id="markdown-toc-pagehelper">Pagehelper</a></li>
+</ul>
+
+<p><img src="https://picsum.photos/800/300/?image=296" alt="" />
+得空试了试 Mybatis 两个常用的插件，<strong>MyBatis Generator（MBG）</strong>和 <strong>Mybatis PageHelper（分页插件）</strong>，效果确实是有的，解放了生产力，不用再对着表中的字段一行行手写 PO 对象和 Mapper 了，处理重复的分页需求时也会优雅许多。但话又说回来，既然是工具，肯定会有蹩脚的地方，作为使用方，要么了解这些 point 并加以注意，要么想办法定制或者改造这些工具为自己所用，显然后者要高明一些，但需要额外的动手成本，需要一些权衡。本文对这两个插件的简单用法和使用过程中的一些问题做点笔记。</p>
+
+<h2 id="mbg">MBG</h2>
+
+<p>MBG 简单来讲就是一个代码生成器，可以直接连接数据库，根据表生成对应实体类、Mapper 接口和 sql 文件，项目初期借助这个东西可以避免大量重复劳动。中文文档在这边 <a href="https://www.kancloud.cn/wizardforcel/java-opensource-doc/152983">MyBatis Generator 介绍</a>。</p>
+
+<p>添加项目依赖，这部分要注意两点。</p>
+<ul>
+  <li>要在 plugin 里添加 mysql 驱动的依赖，否则会在执行 plugin 时找不到相应的驱动包。</li>
+  <li>mysql 驱动的版本需要与 mysql 的版本相匹配，否则会出现因为无法识别主键而没有生成主键相关接口等一系列怪问题。</li>
+</ul>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;build&gt;</span>
+    <span class="nt">&lt;plugins&gt;</span>
+        <span class="nt">&lt;plugin&gt;</span>
+            <span class="nt">&lt;groupId&gt;</span>org.springframework.boot<span class="nt">&lt;/groupId&gt;</span>
+            <span class="nt">&lt;artifactId&gt;</span>spring-boot-maven-plugin<span class="nt">&lt;/artifactId&gt;</span>
+        <span class="nt">&lt;/plugin&gt;</span>
+        <span class="nt">&lt;plugin&gt;</span>
+            <span class="nt">&lt;groupId&gt;</span>org.mybatis.generator<span class="nt">&lt;/groupId&gt;</span>
+            <span class="nt">&lt;artifactId&gt;</span>mybatis-generator-maven-plugin<span class="nt">&lt;/artifactId&gt;</span>
+            <span class="nt">&lt;configuration&gt;</span>
+                <span class="nt">&lt;verbose&gt;</span>true<span class="nt">&lt;/verbose&gt;</span>
+                <span class="nt">&lt;overwrite&gt;</span>true<span class="nt">&lt;/overwrite&gt;</span>
+            <span class="nt">&lt;/configuration&gt;</span>
+            <span class="nt">&lt;dependencies&gt;</span>
+                <span class="nt">&lt;dependency&gt;</span>
+                    <span class="nt">&lt;groupId&gt;</span>mysql<span class="nt">&lt;/groupId&gt;</span>
+                    <span class="nt">&lt;artifactId&gt;</span>mysql-connector-java<span class="nt">&lt;/artifactId&gt;</span>
+                    <span class="nt">&lt;version&gt;</span>${mysql.version}<span class="nt">&lt;/version&gt;</span>
+                <span class="nt">&lt;/dependency&gt;</span>
+            <span class="nt">&lt;/dependencies&gt;</span>
+            <span class="nt">&lt;version&gt;</span>1.3.5<span class="nt">&lt;/version&gt;</span>
+        <span class="nt">&lt;/plugin&gt;</span>
+    <span class="nt">&lt;/plugins&gt;</span>
+<span class="nt">&lt;/build&gt;</span>
+</code></pre></div></div>
+
+<p>配置<code class="highlighter-rouge">generatorConfig.xml</code>文件，这里的配置规则在文档中有详细说明，这里记录下我目前感觉好用的配置项。</p>
+<ul>
+  <li>注释项全部禁用，避免每次生成后引发版本控制问题。
+    <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="nt">&lt;commentGenerator&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"suppressAllComments"</span> <span class="na">value=</span><span class="s">"true"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"suppressDate"</span> <span class="na">value=</span><span class="s">"true"</span> <span class="nt">/&gt;</span>
+  <span class="nt">&lt;/commentGenerator&gt;</span>
+</code></pre></div>    </div>
   </li>
-  <li><a href="#java的线程同步机制" id="markdown-toc-java的线程同步机制">Java的线程同步机制</a>    <ul>
-      <li><a href="#锁-lock" id="markdown-toc-锁-lock">锁 Lock</a></li>
-      <li><a href="#volatile" id="markdown-toc-volatile">volatile</a></li>
-      <li><a href="#cas" id="markdown-toc-cas">CAS</a></li>
-      <li><a href="#安全发布" id="markdown-toc-安全发布">安全发布</a></li>
-    </ul>
+  <li>数据表生成的配置项中，将 Example 相关的方法全部禁用，Example 方法目前个人感觉意义不大，有需要完全可以手写，而且生成的代码很难维护，用到生产上估计是自寻死路。
+    <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="nt">&lt;table</span> <span class="na">schema=</span><span class="s">"test"</span> <span class="na">tableName=</span><span class="s">"student"</span> <span class="na">domainObjectName=</span><span class="s">"Student"</span>
+    <span class="na">enableCountByExample=</span><span class="s">"false"</span> <span class="na">enableUpdateByExample=</span><span class="s">"false"</span>
+    <span class="na">enableDeleteByExample=</span><span class="s">"false"</span> <span class="na">enableSelectByExample=</span><span class="s">"false"</span>
+    <span class="na">selectByExampleQueryId=</span><span class="s">"false"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;/table&gt;</span>
+</code></pre></div>    </div>
   </li>
 </ul>
 
-<p><img src="https://picsum.photos/800/300/?image=1047" alt="" />
-对Java在并发环境下线程安全的实现方式做点笔记。</p>
+<p>之后运行插件，就可以顺利生成对应的代码文件了。下面说一个基本上都会遇到的小坑，MBG 在生成 DO 类时，会用 Byte 类型来表述 MySQL 中的 tinyint 类型的字段。这个大家普遍给出的解决方案是重新指定新的<code class="highlighter-rouge">JavaTypeResolver</code>类，将 Integer 和 tinyint 进行关联。当然也可以直接修改相应的 DO 类，将 Byte 改为 Integer。（我是这么干的）</p>
 
-<h2 id="基础知识">基础知识</h2>
-<p>先介绍一些Java线程相关的基础概念</p>
+<p>相比上面的问题，DO 类中自动生成的 set 和 get 方法才是最让我蛋疼的，如果想用 lombok 库中的注解来修饰 DO 类，需要手动将这些 set 和 get 方法删掉，不过目前来看没什么好的解决办法，毕竟工具只是工具，想一下手不动也不太可能。</p>
 
-<h3 id="线程生命周期">线程生命周期</h3>
+<p>总的来说 MBG 还是蛮推荐使用的，简洁高效，默认生成的一些主键查询的方法基本都会用到，省时省力。</p>
 
-<p>Java中线程也是一个对象，由<code class="highlighter-rouge">Thread</code>类创建，其状态<code class="highlighter-rouge">STATE</code>有：</p>
-<ul>
-  <li><strong>NEW</strong> 已创建未启动</li>
-  <li><strong>RUNABLE</strong>：已获得CPU资源（RUNNING）和可被CPU调度（READY）状态</li>
-  <li><strong>BLOCKED</strong>：阻塞状态，进行I/O调用和请求被其他线程占有的锁</li>
-  <li><strong>WAITING</strong>：等待其他线程特定的操作</li>
-  <li><strong>TIMED_WATING</strong>：并非无限制等待，到达一定时间后变为RUNABLE状态</li>
-  <li><strong>TERMINATED</strong>：终止</li>
-</ul>
+<h2 id="pagehelper">Pagehelper</h2>
 
-<p>线程生命周期如下：
-<img src="https://i.loli.net/2019/01/10/5c3745b60784c.png" alt="" /></p>
+<p>相比 MBG，分页插件做的事要稍微高级一点，你只需要实现一个<code class="highlighter-rouge">getList</code>的接口，它会这个接口的 sql 进行拦截和修饰，使其具有分页功能。效果就是，你不需要为所有类似运营台的分页需求都去重复实现 LIMIT OFFSET 的 sql，也不需要新增 COUNT 查询，分页插件直接包办，代码也很优雅。官方文档在这 <a href="https://github.com/pagehelper/Mybatis-PageHelper/blob/master/wikis/en/HowToUse.md">Mybatis-PageHelper</a></p>
 
-<h3 id="竞态">竞态</h3>
-<p><strong>相同输入得不到相同输入，计算结果与时间有关的状态即为竞态。</strong></p>
+<p>这里我在 Spring Boot 中引入 pagehelper。</p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;dependency&gt;</span>
+    <span class="nt">&lt;groupId&gt;</span>com.github.pagehelper<span class="nt">&lt;/groupId&gt;</span>
+    <span class="nt">&lt;artifactId&gt;</span>pagehelper-spring-boot-starter<span class="nt">&lt;/artifactId&gt;</span>
+    <span class="nt">&lt;version&gt;</span>1.2.3<span class="nt">&lt;/version&gt;</span>
+<span class="nt">&lt;/dependency&gt;</span>
+</code></pre></div></div>
 
-<p>竞态产生的原因一般是<strong>多个线程在不加控制的条件下并发更新、读取了同一个共享变量</strong>，引发竞态的模式主要有两种：</p>
-<ul>
-  <li>read-and-modify</li>
-  <li>check-then-action</li>
-</ul>
+<p>并在<code class="highlighter-rouge">application.properties</code>中引入相关配置，这样配置就完成了。</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#pagehelper
+pagehelper.helperDialect=mysql
+pagehelper.reasonable=true
+pagehelper.supportMethodsArguments=true
+pagehelper.params=count=countSql
+</code></pre></div></div>
 
-<h3 id="线程安全">线程安全</h3>
-<p><strong>一个类在单线程下运行正常，在多线程环境下也能运行正常，</strong>就称这个类是线程安全的。如果一个类是线程安全的，就不会引发竞态。标准库中一些常见的类都不是线程安全的，如<code class="highlighter-rouge">ArrayList</code>、<code class="highlighter-rouge">HashMap</code>、<code class="highlighter-rouge">SimpleDateFormat</code>。</p>
-
-<p>线程安全需要保证三个条件：原子性、可见性和有序性。</p>
-
-<h5 id="原子性-atomic"><strong>原子性 Atomic</strong></h5>
-<p>线程读写某个变量的操作，从其他线程看不存在中间状态，要么执行发生，要么未发生，就称其满足原子性。</p>
-
-<p>Java原子性的方式主要是：</p>
-<ul>
-  <li>锁（指代码中的锁，也叫软件锁）</li>
-  <li>CAS（硬件锁）</li>
-</ul>
-
-<blockquote>
-  <p>Java中对基本类型的写操作，除了long和double外都是原子性的。</p>
-</blockquote>
-
-<h5 id="可见性-visibility"><strong>可见性 Visibility</strong></h5>
-<p>线程对共享变量的更新对其他线程可见，即其他线程在线程更新之后立即可以读到最新值，就称其满足可见性。</p>
-
-<p>下面两个问题会影响可见性：</p>
-<ul>
-  <li>编译优化，如将<code class="highlighter-rouge">while</code>循环内的判断优化至循环外。</li>
-  <li>计算机存储结构，处理器会缓存一些变量的更新。</li>
-</ul>
-
-<blockquote>
-  <p>CPU有自己的缓存单元，包括寄存器 Registerr，高速缓存 Cache，写缓冲器 Store Buffer，无效化队列 Invalidate Queue</p>
-</blockquote>
-
-<p>Java的一些同步机制会使CPU缓存同步，即使CPU可以读到另一个CPU上的缓存：</p>
-<ul>
-  <li><strong>写线程冲刷处理器缓存</strong>：更新一个变量后使处理器对变量的修改写入Cache或RAM中，而不是停留在Store Cache</li>
-  <li><strong>读线程刷新处理器缓存</strong>：读取一个变量的值时，如果其他处理器已经更新，需要进行缓存同步</li>
-</ul>
-
-<h5 id="有序性-odering"><strong>有序性 Odering</strong></h5>
-<p>线程执行的内存访问操作在其他线程看来没有发生变化，就称其满足有序性。<strong>重排序</strong>会影响有序性。</p>
-
-<h3 id="上下文切换">上下文切换</h3>
-<p>一个线程被暂停，另一个线程获取CPU控制权的过程，称作上下文切换。切换过程包括<strong>线程切出 Switch out</strong>和<strong>线程切入 Switch in</strong>。</p>
-
-<p>线程在进行上下文切换时需要在<strong>内存</strong>中读取或保存自己的运行状态，包括<strong>通用寄存器</strong>的内容和<strong>程序计数器</strong>的内容。</p>
-
-<p>上下文切换可分为两种方式：</p>
-<ul>
-  <li><strong>自发性上下文切换</strong>：线程主动让出CPU控制权，如调用<code class="highlighter-rouge">wait</code>/<code class="highlighter-rouge">sleep</code>/<code class="highlighter-rouge">yield</code>/<code class="highlighter-rouge">join</code>/<code class="highlighter-rouge">park</code>、进行I/O操作或请求其他线程持有的锁。</li>
-  <li><strong>非自发性上下文切换</strong>：线程的CPU时间片耗尽或被其他高优先级线程（如GC）夺取CPU控制权。</li>
-</ul>
-
-<p>上下文切换时有开销的：</p>
-<ul>
-  <li>直接开销：<strong>CPU调度</strong>的开销和<strong>保存/恢复上下文</strong>的开销。</li>
-  <li>间接开销：高速缓存重新加载和高速缓存被冲刷（Flush到二级缓冲）。</li>
-</ul>
-
-<h2 id="java的线程同步机制">Java的线程同步机制</h2>
-<p>每种同步机制需要分析其是否满足原子性、可见性和有序性，是否存在上下文切换开销。</p>
-
-<h3 id="锁-lock">锁 Lock</h3>
-<p>Java中锁的实现有两种</p>
-<ul>
-  <li>内部锁：<code class="highlighter-rouge">synchronize</code>关键字</li>
-  <li>显式锁：<code class="highlighter-rouge">java.concurrent.locks.Lock</code>接口的实现类</li>
-</ul>
-
-<p>用锁实现线程同步可以满足原子性、可见性、有序性，存在上下文开销</p>
-<ul>
-  <li>原子性：被锁同步的代码块称作<strong>临界区</strong>，同一时间只有一个线程可以访问临界区。</li>
-  <li>可见性：Java中获得锁（Acquire）刷新处理器缓存，释放锁（Release）会冲刷处理器缓存。</li>
-  <li>有序性：临界区内的指令不会被重排序到临界区外。</li>
-  <li>上下文切换开销：请求被其他线程持有的锁会发生上下文切换。</li>
-</ul>
-
-<h3 id="volatile">volatile</h3>
-<p>用<code class="highlighter-rouge">volatile</code>修饰的变量满足可见性、有序性和写操作的原子性，但不具有计算的原子性，不存在上下文切换。</p>
-<ul>
-  <li>可见性：变量不会被缓存在Store Cache中，即写操作之后会冲刷处理器缓存，读操作之前会刷新处理器缓存。</li>
-  <li>有序性：编译器不会对该变量上的操作与其他内存操作进行重排序。</li>
-  <li>原子性：不具有自增等计算的原子性</li>
-</ul>
-
-<h3 id="cas">CAS</h3>
-<p><code class="highlighter-rouge">java.util.concurrent.atomic</code>中的原子类借助CAS实现了可见性和原子性，它的计算实现基于一种乐观锁的思想：<strong>执行某种操作，如果不成功就一直执行直到成功为止</strong>。这里借助一段源码加强理解。</p>
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kt">int</span> <span class="nf">getAndAddInt</span><span class="o">(</span><span class="n">Object</span> <span class="n">var1</span><span class="o">,</span> <span class="kt">long</span> <span class="n">var2</span><span class="o">,</span> <span class="kt">int</span> <span class="n">var4</span><span class="o">)</span> <span class="o">{</span>
-    <span class="kt">int</span> <span class="n">var5</span><span class="o">;</span>
-    <span class="k">do</span> <span class="o">{</span>
-        <span class="n">var5</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">getIntVolatile</span><span class="o">(</span><span class="n">var1</span><span class="o">,</span> <span class="n">var2</span><span class="o">);</span>
-    <span class="o">}</span> <span class="k">while</span><span class="o">(!</span><span class="k">this</span><span class="o">.</span><span class="na">compareAndSwapInt</span><span class="o">(</span><span class="n">var1</span><span class="o">,</span> <span class="n">var2</span><span class="o">,</span> <span class="n">var5</span><span class="o">,</span> <span class="n">var5</span> <span class="o">+</span> <span class="n">var4</span><span class="o">));</span>
-
-    <span class="k">return</span> <span class="n">var5</span><span class="o">;</span>
+<p>使用姿势有很多，可以参照文档来，这里列出个人比较喜欢的一种，分页逻辑应该放在 Service 或者 Manager 层内。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Override</span>
+<span class="kd">public</span> <span class="n">StudentListDTO</span> <span class="nf">getStudentList</span><span class="o">(</span><span class="nd">@NotNull</span> <span class="n">Integer</span> <span class="n">page</span><span class="o">,</span> <span class="nd">@NotNull</span> <span class="n">Integer</span> <span class="n">pageSize</span><span class="o">)</span> <span class="o">{</span>
+<span class="n">PageHelper</span><span class="o">.</span><span class="na">startPage</span><span class="o">(</span><span class="n">page</span><span class="o">,</span> <span class="n">pageSize</span><span class="o">);</span>
+<span class="n">List</span><span class="o">&lt;</span><span class="n">Student</span><span class="o">&gt;</span> <span class="n">students</span> <span class="o">=</span> <span class="n">studentDao</span><span class="o">.</span><span class="na">selectList</span><span class="o">();</span>
+<span class="n">Long</span> <span class="n">total</span> <span class="o">=</span> <span class="o">((</span><span class="n">Page</span><span class="o">)</span> <span class="n">students</span><span class="o">).</span><span class="na">getTotal</span><span class="o">();</span>
+<span class="k">return</span> <span class="n">StudentListDTO</span><span class="o">.</span><span class="na">builder</span><span class="o">()</span>
+    <span class="o">.</span><span class="na">studentList</span><span class="o">(</span><span class="n">students</span><span class="o">)</span>
+    <span class="o">.</span><span class="na">total</span><span class="o">(</span><span class="n">total</span><span class="o">)</span>
+    <span class="o">.</span><span class="na">build</span><span class="o">();</span>
 <span class="o">}</span>
 </code></pre></div></div>
-<p>CAS的问题是<code class="highlighter-rouge">ABA</code>问题，可以借助<code class="highlighter-rouge">AtomicStampedReference</code>类解决。</p>
 
-<h3 id="安全发布">安全发布</h3>
-<p>安全发布一个对象有以下几种方式：</p>
-<ul>
-  <li>在静态初始化函数中初始化一个对象的引用<code class="highlighter-rouge">static</code></li>
-  <li>将某个对象的引用保存在<code class="highlighter-rouge">volatile</code>类型的域或<code class="highlighter-rouge">AtomicReference</code>对象中</li>
-  <li>将对象的引用保存在正确构造对象的<code class="highlighter-rouge">final</code>类型的域中</li>
-  <li>将对象的引用保存在由锁保护的域中</li>
-</ul>
+<p>我们其实只实现了<code class="highlighter-rouge">selectList()</code>的接口，借助 PageHelper 实现了分页功能。如果去查看 MySQL 的 general-log 的话可以看到 sql 中加入了 LIMIT 部分，同时在执行这条 sql 之前还额外执行了一次 count 查询。</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>2019-04-02T17:31:30.093839Z   220 Query SELECT count(0) FROM student
+2019-04-02T17:31:30.102127Z   220 Query SELECT
+
+    id,
+    name,
+    school_id,
+    grade,
+    class_no,
+    created_at,
+    updated_at,
+    is_deleted
+
+    FROM
+    student
+    ORDER BY
+    id
+    DESC LIMIT 2
+</code></pre></div></div>
+
+<p>关于分页插件的使用，总的看下来没什么问题，但用到生产时需要当心，毕竟隐式添加了数据库查询。</p>
 
 <p>(End)</p>
-
 
         </article>
         <hr>
@@ -356,48 +319,6 @@
                         <ul>
                         
                         <li class="relatedPost">
-                            <a href="/2019/04/03/springplugins/">两个常用的 Mybatis 插件
-                            
-                            </a>
-                        </li>
-                        
-                        
-                    
-                
-                    
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-                    
-                
-                    
-                
-            
-        
-            
-            
-                
-                    
-                        
-                        <li class="relatedPost">
                             <a href="/2019/03/06/singleton/">看似简单的单例模式
                             
                             </a>
@@ -410,8 +331,6 @@
                 
                     
                 
-                    
-                
             
                 
                     
@@ -420,11 +339,7 @@
                 
                     
                 
-                    
-                
             
-                
-                    
                 
                     
                 
@@ -443,8 +358,6 @@
                 
                     
                 
-                    
-                
             
                 
                     
@@ -453,11 +366,7 @@
                 
                     
                 
-                    
-                
             
-                
-                    
                 
                     
                 
@@ -485,8 +394,6 @@
                 
                     
                 
-                    
-                
             
                 
                     
@@ -495,11 +402,7 @@
                 
                     
                 
-                    
-                
             
-                
-                    
                 
                     
                 
@@ -527,8 +430,6 @@
                 
                     
                 
-                    
-                
             
                 
                     
@@ -537,11 +438,7 @@
                 
                     
                 
-                    
-                
             
-                
-                    
                 
                     
                 
@@ -560,8 +457,6 @@
                 
                     
                 
-                    
-                
             
                 
                     
@@ -570,11 +465,7 @@
                 
                     
                 
-                    
-                
             
-                
-                    
                 
                     
                 
@@ -602,8 +493,6 @@
                 
                     
                 
-                    
-                
             
                 
                     
@@ -612,11 +501,7 @@
                 
                     
                 
-                    
-                
             
-                
-                    
                 
                     
                 
@@ -644,8 +529,6 @@
                 
                     
                 
-                    
-                
             
                 
                     
@@ -654,11 +537,7 @@
                 
                     
                 
-                    
-                
             
-                
-                    
                 
                     
                 
@@ -677,6 +556,12 @@
                 
                     
                 
+            
+                
+                    
+                
+                    
+                
                     
                 
             
@@ -687,11 +572,43 @@
                 
                     
                 
+            
+        
+            
+            
+                
+                    
+                        
+                        <li class="relatedPost">
+                            <a href="/2019/01/24/jmm/">JMM小结
+                            
+                            </a>
+                        </li>
+                        
+                        
+                    
+                
+                    
+                
                     
                 
             
                 
                     
+                
+                    
+                
+                    
+                
+            
+                
+                    
+                
+                    
+                
+                    
+                
+            
                 
                     
                 
@@ -710,31 +627,7 @@
                 
                     
                 
-                    
-                
             
-                
-                    
-                
-                    
-                
-                    
-                
-                    
-                
-            
-                
-                    
-                
-                    
-                
-                    
-                
-                    
-                
-            
-                
-                    
                 
                     
                 
@@ -751,13 +644,11 @@
         <div class="post-recent">
     <div class="pre">
         
-        <p><strong>上一篇</strong> <a href="/2019/01/09/gc/">JVM基础 GC及内存分配</a></p>
+        <p><strong>上一篇</strong> <a href="/2019/03/06/singleton/">看似简单的单例模式</a></p>
         
     </div>
     <div class="nex">
 
-        
-        <p><strong>下一篇</strong> <a href="/2019/01/14/excutors/">Java核心类库学习（一） 线程池</a></p>
         
     </div>
 </div>
@@ -775,8 +666,8 @@
      */
 
     var disqus_config = function() {
-        this.page.url = 'http://localhost:4000/2019/01/10/thread1/'; // Replace PAGE_URL with your page's canonical URL variable
-        this.page.identifier = 'http://localhost:4000/2019/01/10/thread1/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+        this.page.url = 'http://localhost:4000/2019/04/03/springplugins/'; // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = 'http://localhost:4000/2019/04/03/springplugins/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
     };
 
     (function() { // DON'T EDIT BELOW THIS LINE

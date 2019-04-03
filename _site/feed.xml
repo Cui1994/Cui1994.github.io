@@ -5,9 +5,31 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Wed, 06 Mar 2019 15:12:30 +0800</pubDate>
-    <lastBuildDate>Wed, 06 Mar 2019 15:12:30 +0800</lastBuildDate>
+    <pubDate>Wed, 03 Apr 2019 10:44:09 +0800</pubDate>
+    <lastBuildDate>Wed, 03 Apr 2019 10:44:09 +0800</lastBuildDate>
     <generator>Jekyll v3.8.4</generator>
+    
+      <item>
+        <title>两个常用的 Mybatis 插件</title>
+        <description>
+&lt;img src=&quot;https://picsum.photos/800/300/?image=296&quot; alt=&quot;&quot; /&gt;
+得空试了试 Mybatis 两个常用的插件，&lt;strong&gt;MyBatis Generator（MBG）&lt;/strong&gt;和 &lt;strong&gt;Mybatis PageHelper（分页插件）&lt;/strong&gt;，效果确实是有的，解放了生产力，不用再对着表中的字段一行行手写 PO 对象和 Mapper 了，处理重复的分页需求时也会优雅许多。但话又说回来，既然是工具，肯定会有蹩脚的地方，作为使用方，要么了解这些 point 并加以注意，要么想办法定制或者改造这些工具为自己所用，显然后者要高明一些，但需要额外的动手成本，需要一些权衡。本文对这两个插件的简单用法和使用过程中的一些问题做点笔记。
+
+</description>
+        <pubDate>Wed, 03 Apr 2019 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2019/04/03/springplugins/</link>
+        <guid isPermaLink="true">http://localhost:4000/2019/04/03/springplugins/</guid>
+        
+        <category>Java</category>
+        
+        <category>Plugin</category>
+        
+        <category>Mybatis</category>
+        
+        
+        <category>Java</category>
+        
+      </item>
     
       <item>
         <title>看似简单的单例模式</title>
@@ -213,26 +235,6 @@ Java中的集合分为三类，Set、Map 和 List，它们都处于&lt;code clas
         <category>JMM</category>
         
         <category>内存屏障</category>
-        
-        
-        <category>Java</category>
-        
-      </item>
-    
-      <item>
-        <title>Spring（一）IoC</title>
-        <description>
-&lt;img src=&quot;https://picsum.photos/800/300/?image=594&quot; alt=&quot;&quot; /&gt;
-对Spring IoC相关的知识做点笔记，涉及内容有Ioc概念、Spring Ioc容器、注入方式、容器启动方式以及Bean的生命周期。本篇不涉及源码的解读，只是介绍相关接口的功能和继承关系以及其实现类，大部分源于王福强的《Spring揭秘》一书，少部分源自其他博文。
-
-</description>
-        <pubDate>Thu, 17 Jan 2019 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2019/01/17/sringioc/</link>
-        <guid isPermaLink="true">http://localhost:4000/2019/01/17/sringioc/</guid>
-        
-        <category>Java</category>
-        
-        <category>Spring</category>
         
         
         <category>Java</category>
