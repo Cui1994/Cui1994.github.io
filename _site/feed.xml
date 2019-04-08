@@ -5,15 +5,36 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Wed, 03 Apr 2019 10:44:09 +0800</pubDate>
-    <lastBuildDate>Wed, 03 Apr 2019 10:44:09 +0800</lastBuildDate>
+    <pubDate>Tue, 09 Apr 2019 00:14:18 +0800</pubDate>
+    <lastBuildDate>Tue, 09 Apr 2019 00:14:18 +0800</lastBuildDate>
     <generator>Jekyll v3.8.4</generator>
+    
+      <item>
+        <title>我对影视作品的理解</title>
+        <description>
+&lt;img src=&quot;https://i.loli.net/2019/04/08/5cab68086a5a1.jpg&quot; alt=&quot;&quot; /&gt;
+
+写这篇文章的缘由是前几天刚补完刷爆盆友圈的《爱，死亡和机器人》，这部 Netflix 的新作由 18 个短片构成，除了个别剧集质量略显一般，其他大部分短片都兼具艺术性与故事性，表现出上乘的质量。于是，我随了一波大流，把这份现代影视工业的硕果分享给好友，当他问起我好看在哪里时，我却尬住了，它好像哪儿哪儿都好，只是要把这些好的地方说出来并不是件易事。我突然很佩服那些活跃在各个公众号里的影评人，第一时间就能把新片新剧的长处短处分析的头头是道，而我等普通群众呢，真的是「奈何本屌没文化，一句牛逼行天下」。我并不想成为很专业的影评人，一来影视相关的专业技能确实不够，二来文字能力也一般般，&lt;strong&gt;但我也不满足做个稀里糊涂的观众，以致于想分享好东西的时候都只能「这片子牛逼嗷，看就完事儿了铁汁」&lt;/strong&gt;。我觉得每个人对于影视作品应该都是有自己的理解的，毕竟从小到大看了那么多，只是需要一些沉淀和积累。于是，我把自己看过的、喜欢的影视作品又重新捡了起来，发现想法还挺多的，有了这篇文章。
+
+</description>
+        <pubDate>Mon, 08 Apr 2019 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2019/04/08/myvideos/</link>
+        <guid isPermaLink="true">http://localhost:4000/2019/04/08/myvideos/</guid>
+        
+        <category>电影</category>
+        
+        <category>电视</category>
+        
+        
+        <category>杂谈</category>
+        
+      </item>
     
       <item>
         <title>两个常用的 Mybatis 插件</title>
         <description>
 &lt;img src=&quot;https://picsum.photos/800/300/?image=296&quot; alt=&quot;&quot; /&gt;
-得空试了试 Mybatis 两个常用的插件，&lt;strong&gt;MyBatis Generator（MBG）&lt;/strong&gt;和 &lt;strong&gt;Mybatis PageHelper（分页插件）&lt;/strong&gt;，效果确实是有的，解放了生产力，不用再对着表中的字段一行行手写 PO 对象和 Mapper 了，处理重复的分页需求时也会优雅许多。但话又说回来，既然是工具，肯定会有蹩脚的地方，作为使用方，要么了解这些 point 并加以注意，要么想办法定制或者改造这些工具为自己所用，显然后者要高明一些，但需要额外的动手成本，需要一些权衡。本文对这两个插件的简单用法和使用过程中的一些问题做点笔记。
+得空试了试 Mybatis 两个常用的插件，&lt;strong&gt;MyBatis Generator（MBG）&lt;/strong&gt;和 &lt;strong&gt;Mybatis PageHelper（分页插件）&lt;/strong&gt;，效果确实是有的，解放了生产力，不用再对着表中的字段一行行手写 DO 类和 Mapper 了，处理重复的分页需求时也会优雅许多。但话又说回来，既然是工具，肯定会有蹩脚的地方，作为使用方，要么了解这些 point 并加以注意，要么想办法定制或者改造这些工具为自己所用，显然后者要高明一些，但需要额外的动手成本，需要一些权衡。本文对这两个插件的简单用法和使用过程中的一些问题做点笔记。
 
 </description>
         <pubDate>Wed, 03 Apr 2019 00:00:00 +0800</pubDate>
@@ -214,30 +235,6 @@ Java中的集合分为三类，Set、Map 和 List，它们都处于&lt;code clas
         
         
         <category>Python</category>
-        
-      </item>
-    
-      <item>
-        <title>JMM小结</title>
-        <description>
-&lt;img src=&quot;https://picsum.photos/800/300/?image=177&quot; alt=&quot;&quot; /&gt;
-在上一篇&lt;a href=&quot;https://cui1994.github.io/2019/01/10/thread1/&quot;&gt;Java并发编程 线程同步机制&lt;/a&gt;中提到了几种Java线程同步机制，实际上，Java并发编程的前提是Java的内存模型JMM，这里补一下这方面的知识，对 volatile 、锁和 final 的语义做进一步的理解。
-
-</description>
-        <pubDate>Thu, 24 Jan 2019 00:00:00 +0800</pubDate>
-        <link>http://localhost:4000/2019/01/24/jmm/</link>
-        <guid isPermaLink="true">http://localhost:4000/2019/01/24/jmm/</guid>
-        
-        <category>Java</category>
-        
-        <category>并发</category>
-        
-        <category>JMM</category>
-        
-        <category>内存屏障</category>
-        
-        
-        <category>Java</category>
         
       </item>
     

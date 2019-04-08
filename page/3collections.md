@@ -29,6 +29,8 @@ type: page
 
 ## 应用
 
+* [Gliffy Chrome](https://chrome.google.com/webstore/detail/gliffy-diagrams/bhmicilclplefnflapjmnngmkkkkpfad/related?hl=zh-CN)
+
 * [Mac桌面控制SizeUp](http://www.irradiatedsoftware.com/sizeup/)
 
 * [Sourcetree](https://www.sourcetreeapp.com/)
