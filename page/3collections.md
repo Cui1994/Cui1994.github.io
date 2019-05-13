@@ -19,6 +19,8 @@ type: page
 
 * [《领域驱动设计》](https://book.douban.com/subject/26819666/)
 
+* [《How Tomact Works》](https://book.douban.com/subject/1943128/)
+
 ## 博文
 
 * [进击的Java新人系列](https://zhuanlan.zhihu.com/p/24393775?refer=hinus)
@@ -52,6 +54,11 @@ type: page
 * Alibaba Java Coding Guidelines
 
 * IdeaVim
+
+* Lombok Annocation Processors
+
+* Free MyBatis Plugin
+
 
 ## 问题
 
