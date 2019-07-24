@@ -45,6 +45,12 @@ type: page
 
 * [Simple图床](https://sm.ms/)
 
+* [Paste](https://pasteapp.me/)
+
+* [OmniGraffle](http://www.pc6.com/mac/111747.html)
+
+* VUCA 版型
+
 ## Code Style
 
 * [IntelliJ Java Google Style](https://github.com/google/styleguide/blob/gh-pages/intellij-java-google-style.xml)

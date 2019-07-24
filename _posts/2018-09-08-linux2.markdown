@@ -52,9 +52,9 @@ numwrite = pwrite(fd, buffer, count, offset)
 本质上，内核只维护一种文件类型，即字节流序列。
 进程用一个很小的非负整数代指打开的文件，shell会始终打开三个文件描述符，所有shell启动的程序都会继承这三个描述符：
 
-- fd=1 标准输入（文件流stdin）
-- fd=2 标准输出（文件流stdout）
-- fd=0 标准错误（文件流stderr）
+- fd=0 标准输入（文件流stdin）
+- fd=1 标准输出（文件流stdout）
+- fd=2 标准错误（文件流stderr）
 
 ### open的flags参数
 包括三部分内容：访问模式、创建标志和一打开文件的状态标志。常见如下：
