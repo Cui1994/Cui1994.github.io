@@ -21,6 +21,12 @@ type: page
 
 * [《How Tomact Works》](https://book.douban.com/subject/1943128/)
 
+* [《Effective Java》]()
+  
+* [《企业应用架构模式》](https://book.douban.com/subject/1230559/)
+
+* [《敏捷软件开发》](https://book.douban.com/subject/1140457/)
+
 ## 博文
 
 * [进击的Java新人系列](https://zhuanlan.zhihu.com/p/24393775?refer=hinus)
