@@ -30,11 +30,11 @@ thrift --gen java simpleservic.thrift
 生成的 java 代码中与客户端相关的包括下面几部分（省略了具体内容）：
 ```java
 public class SimpleService {
-　　public interface Iface {}
-　　public interface AsyncIface {}
- 
-　　public static class Client {}
-　　public static class AsyncClient {}   
+    public interface Iface {}
+    public interface AsyncIface {}
+    
+    public static class Client {}
+    public static class AsyncClient {}   
 }
 ```
 两个接口分别是接口方法的同步和异步调用接口，实现类是具体 Client 实现，其已经生成了具体的读写逻辑，只需要在实例化时传入具体的 protocol 即可完成接口调用，下面我们在项目中引入 client。
