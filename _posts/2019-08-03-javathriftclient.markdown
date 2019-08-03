@@ -143,7 +143,7 @@ public class ThriftClientConfiguration {
 
     @Bean
     public SimpleService.Iface thriftClient() {
-        return (SimpleService.Iface) new ThriftClientProxy().newInstance(host, port);
+        return (SimpleService.Iface) new ThriftClientProxy().newInstance(SimpleService.class, host, port);
     }
 }
 ```
