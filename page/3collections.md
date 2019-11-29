@@ -57,6 +57,8 @@ type: page
 
 * VUCA 版型
 
+* [彩云小译](https://chrome.google.com/webstore/detail/lingocloud-web-translatio/jmpepeebcbihafjjadogphmbgiffiajh)
+
 ## Code Style
 
 * [IntelliJ Java Google Style](https://github.com/google/styleguide/blob/gh-pages/intellij-java-google-style.xml)
