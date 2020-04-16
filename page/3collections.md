@@ -27,6 +27,8 @@ type: page
 
 * [《敏捷软件开发》](https://book.douban.com/subject/1140457/)
 
+* [《Java 并发编程的艺术》](https://shop18793264.m.youzan.com/wscgoods/detail/35z7jjvd4r4oo)
+
 ## 博文
 
 * [进击的Java新人系列](https://zhuanlan.zhihu.com/p/24393775?refer=hinus)
@@ -34,6 +36,10 @@ type: page
 * [JoeCao微服务系列](https://github.com/JoeCao/JoeCao.github.io/issues/3)
 
 * [Spring4all](http://www.spring4all.com/)
+
+* [关于 SQL null 值的解释](https://mitchum.blog/null-values-in-sql-queries/)
+
+* [Git from the inside out](https://codewords.recurse.com/issues/two/git-from-the-inside-out)
 
 ## 应用
 
@@ -82,6 +88,7 @@ type: page
 
 * [Maven依赖冲突的处理方法](https://my.oschina.net/LucasZhu/blog/1556772)
 
+* [IDEA Maven 项目无法编译语言版本失败问题](https://stackoverflow.com/questions/37787079/intellij-unable-to-use-newer-java-8-classes-error-usage-of-api-documented)
 
 ## Comments
 
