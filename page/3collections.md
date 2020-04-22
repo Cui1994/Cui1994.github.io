@@ -29,6 +29,8 @@ type: page
 
 * [《Java 并发编程的艺术》](https://shop18793264.m.youzan.com/wscgoods/detail/35z7jjvd4r4oo)
 
+* [《Java 实战》](https://www.ituring.com.cn/book/2659)
+
 ## 博文
 
 * [进击的Java新人系列](https://zhuanlan.zhihu.com/p/24393775?refer=hinus)
@@ -40,6 +42,8 @@ type: page
 * [关于 SQL null 值的解释](https://mitchum.blog/null-values-in-sql-queries/)
 
 * [Git from the inside out](https://codewords.recurse.com/issues/two/git-from-the-inside-out)
+
+* [Git 内部机制与存储对象的图形化简介](https://www.atjiang.com/git-internals-basic/)
 
 ## 应用
 
