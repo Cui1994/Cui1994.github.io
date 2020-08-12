@@ -1,0 +1,102 @@
+---
+layout: post
+category: "Java"
+title:  "Java 对象序列化时的问题"
+tags: [jackson, 序列化]
+---
+
+* content
+{:toc}
+
+![image.png](https://i.loli.net/2020/08/12/Fzqo36fPehUgWHc.png)
+
+以 Jackson 为例，展示几个 Java 对象序列化时容易忽略的问题。
+
+
+
+
+
+
+## What happend
+看个例子
+```java
+@Data
+@ToString
+@Builder
+public class Person {
+
+    private String name;
+    private Integer age;
+    private boolean isStudent;
+    private Boolean isBlackHair;
+
+    public String getAddress() {
+        System.out.println("Call getAddress ....");
+        return "Shanghai";
+    }
+
+    public Boolean isMan() {
+        System.out.println("Call isMan ...");
+        return true;
+    }
+
+    public String test() {
+        System.out.println("Call test ...");
+        return "test";
+    }
+    
+    public static void main(String[] args) {
+        Person person = Person.builder().age(10).name("kid").isStudent(true).build();
+        String jsonStr = JacksonUtil.objectToJson(person);
+        System.out.println(jsonStr);
+    }
+}
+```
+
+运行之后的结果如下：
+```shell
+Call getAddress ....
+Call isMan ...
+{"name":"kid","age":10,"isBlackHair":null,"address":"Shanghai","man":true,"student":true}
+```
+
+其实会有两个问题：
+1、我们并没有真正执行 `getAddress` 和 `isMan` 方法，在序列化后方法触发。
+2、序列化后的 Json 串中多了 `address` 和 `man` 字段。
+3、定义的 `isStudent` 字段序列化后变成了 `student` 字段。
+
+
+## Why
+
+两方面的原因导致了上面的问题，Jackson 序列化的规则和 Java POJO 对象的定义规则。
+
+Jackson是通过以下顺序来检测JSON的属性名的：
+- public 的成员变量
+- public的 getter 方法
+- 所有作用域的 setter 方法
+
+我们的类中定义的字段都为 private 作用域，命中第二条规则。因此，即使我们没有定义字段，只要写了 public 的 getter 方法，在序列化时就会触发 getter 方法执行并将返回值作为 json 对应字段的值。
+
+第二个，Java 中 POJO 对象的定义为只有 setter 和 getter 方法的简单对象，对于 boolean 类型，除了一般的 `getProperty` 形式的 getter 方法外，还可以使用 `isProperty` 的 getter 方法，这里就会有问题。
+
+我们使用了 `Lambok` 的 `@Data` 注解自动为 `Person` 类生成 getter 和 setter 方法，如果是 boolean 会自动以 `isProperty` 的形式生成 getter 方法，但如果字段本身就是以 `is` 开头，则不会再生成 `isIsProperty` 的 getter 方法，而是直接以字段名作为 getter 方法名称，在 Jackson 进行序列化时，将 getter 方法名称反推为字段名时去除了 `is` 前缀，所以字段名被更改。
+```java
+    // 反编译后的 getter 方法
+    public boolean isStudent() {
+        return this.isStudent;
+    }
+```
+
+字段如果是 Boolean 包装类型，会生成 `getProperty` getter 方法，不会有上述问题。
+
+
+## How to Fix
+这里只是以 Jackson 为例，上面提到的问题很多序列化框架都有，在开发中应该考虑到字段在序列化中是否会引起问题。
+
+对于 boolean 类型的变量，阿里巴巴 Java 开发手册明确禁止以 `is` 开头。（虽然 Boolean 类型没有问题，但最好还是遵循这一规范）。
+>【强制】 POJO 类中布尔类型的变量，都不要加 is ，否则部分框架解析会引起序列化错误。
+> 反例：定义为基本数据类型 boolean isSuccess;的属性，它的方法也是 isSuccess() ，RPC框架在反向解析的时候，“以为”对应的属性名称是 success ，导致属性获取不到，进而抛出异常。
+
+对于 `getXXX` 和 `isXX` 在序列化自动解析的问题，其实 POJO 对象原则上是不允许写除了字段 getter setter 方法之外的方法的，如果非要写额外的方法，也不要以 `get` 和 `is` 开头。
+
+(End)
