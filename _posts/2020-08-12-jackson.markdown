@@ -60,10 +60,10 @@ Call isMan ...
 {"name":"kid","age":10,"isBlackHair":null,"address":"Shanghai","man":true,"student":true}
 ```
 
-其实会有两个问题：
-1、我们并没有真正执行 `getAddress` 和 `isMan` 方法，在序列化后方法触发。
-2、序列化后的 Json 串中多了 `address` 和 `man` 字段。
-3、定义的 `isStudent` 字段序列化后变成了 `student` 字段。
+其实会有三个问题：
+- 1、我们并没有真正执行 `getAddress` 和 `isMan` 方法，在序列化后方法触发。
+- 2、序列化后的 Json 串中多了 `address` 和 `man` 字段。
+- 3、定义的 `isStudent` 字段序列化后变成了 `student` 字段。
 
 
 ## Why
